@@ -1,0 +1,20 @@
+agents:
+  queue: "aws-v3-build-node-ami-0386a14a5b63702a4"
+steps:
+  - label: "Build"
+    command: |
+      docker compose run --build --rm builder echo Done
+    plugins:
+      - hasura/smooth-secrets#v1.3.2:
+          secrets:
+            - strategy: aws-secrets-manager
+              key: github-user-keys/hasura-ci
+              type: ssh
+              region: us-east-2
+      - hasura/smooth-checkout#v4.3.2:
+          repos:
+            - config:
+                - url: git@github.com:hasura/ndc-hub.git
+          delete_checkout: true
+          # The following option makes sure that we get a unique folder to perform our CI build everytime
+          interpolate_checkout_path: "$BUILDKITE_BUILD_CHECKOUT_PATH/$BUILDKITE_BUILD_ID/$BUILDKITE_JOB_ID"

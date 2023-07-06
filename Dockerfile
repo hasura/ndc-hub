@@ -1,0 +1,20 @@
+FROM rust:1.68.2-slim-buster AS build
+
+WORKDIR app
+
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive \
+    apt-get install --no-install-recommends --assume-yes \
+      lld protobuf-compiler libssl-dev ssh git pkg-config
+
+ENV CARGO_HOME=/app/.cargo
+ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
+
+COPY . .
+
+RUN cargo build --release
+
+FROM debian:buster-slim as connector
+COPY --from=build /app/target/release/ndc_hub_example ./ndc_hub_example
+ENTRYPOINT [ "/ndc_hub_example" ]
+CMD [ "serve", "--port", "8080" ]
