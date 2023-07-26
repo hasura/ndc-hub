@@ -8,6 +8,10 @@ In addition, this library adopts certain conventions which are not covered by th
 - State management
 - Trace collection
 
+## 🚨 Alpha Warning 🚨
+
+This is currently alpha-quality software, and subject to breaking changes. It is shared here to provide an early preview of what can be expected for connector development in future, and feedback is welcome! If you have any comments, please create an issue.
+
 ## Getting started
 
 ```sh
