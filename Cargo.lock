@@ -951,8 +951,8 @@ dependencies = [
 
 [[package]]
 name = "ndc-client"
-version = "1.0.0"
-source = "git+http://github.com/hasura/ndc-spec.git?rev=04346c9#04346c97105e57c64693d839e69f7c27a364bee4"
+version = "0.1.0"
+source = "git+http://github.com/hasura/ndc-spec.git?rev=2052934#2052934375d213631d1505d593a337796ab1ec35"
 dependencies = [
  "async-trait",
  "clap",
@@ -1530,6 +1530,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02c613288622e5f0c3fdc5dbd4db1c5fbe752746b1d1a56a0630b78fd00de44f"
 dependencies = [
  "dyn-clone",
+ "indexmap",
  "schemars_derive",
  "serde",
  "serde_json",
