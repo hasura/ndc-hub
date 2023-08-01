@@ -952,7 +952,7 @@ dependencies = [
 [[package]]
 name = "ndc-client"
 version = "0.1.0"
-source = "git+http://github.com/hasura/ndc-spec.git?rev=2052934#2052934375d213631d1505d593a337796ab1ec35"
+source = "git+http://github.com/hasura/ndc-spec.git?rev=f3a6759#f3a675975a24a6a7672dd7692c95a4c669555611"
 dependencies = [
  "async-trait",
  "clap",
