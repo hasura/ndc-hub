@@ -12,8 +12,8 @@ This allows Hasura users to instantly get a powerful Hasura GraphQL API (paginat
 ## Registry
 
 There are 2 connectors you can start trying out today, and we'll gradually add more to this list:
-1. hasura/clickhouse <!-- TODO: Add link -->
-2. hasura/weaviate <!-- TODO: Add link -->
+1. [hasura/clickhouse](https://github.com/hasura/clickhouse_gdc_v2)
+2. [hasura/weaviate](https://github.com/hasura/weaviate_gdc)
 
 ## SDK & Guides
 
