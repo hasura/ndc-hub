@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use clap::Args;
 use ndc_client::models;
-use std::{collections::HashMap, error::Error};
+use std::{collections::BTreeMap, error::Error};
 use thiserror::Error;
 
 /// Errors which occur when trying to validate connector
@@ -293,10 +293,11 @@ impl Connector for Example {
         _configuration: &Self::Configuration,
     ) -> Result<models::SchemaResponse, SchemaError> {
         Ok(models::SchemaResponse {
-            commands: vec![],
-            tables: vec![],
-            object_types: HashMap::new(),
-            scalar_types: HashMap::new(),
+            collections: vec![],
+            functions: vec![],
+            procedures: vec![],
+            object_types: BTreeMap::new(),
+            scalar_types: BTreeMap::new(),
         })
     }
 

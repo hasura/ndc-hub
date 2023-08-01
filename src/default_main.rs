@@ -61,7 +61,7 @@ pub struct ServerState<C: Connector> {
 /// The intent is that this function can replace your `main` function
 /// entirely, if you implement the [`Connector`] trait:
 ///
-/// ```
+/// ```ignore
 /// struct MyConnector { /* ... */ }
 ///
 /// impl Connector for MyConnector { /* ... */ }
