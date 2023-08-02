@@ -110,6 +110,7 @@ where
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
+    // TODO: Move to init_server_state
     let _tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
@@ -133,7 +134,7 @@ where
         ))
         .install_batch(opentelemetry::runtime::Tokio);
 
-    let server_state = init_server_state::<C>(serve_command.configuration).await;
+    let server_state = init_server_state::<C>(serve_command.configuration).await; // Shouldn't this be initialized prior to request handling?
 
     let router = create_router::<C>(server_state);
 
