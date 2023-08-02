@@ -12,14 +12,23 @@ name = "ndc_hub_example"
 path = "bin/main.rs"
 
 [dependencies]
+axum-tracing-opentelemetry = { version = "0.11.0", features = [
+    "otlp",
+    "tracing_subscriber_ext",
+    "zipkin",                 # provides b3 and b3multi propagators
+] }
+opentelemetry = "0.19.0" # must be same version axum-tracing-opentelemetry uses
+opentelemetry-otlp = { version = "0.12.0", features = [
+    "reqwest-client",
+] } # must be same version axum-tracing-opentelemetry uses
 async-trait = "0.1.68"
 axum = "0.6.18"
 axum-macros = "0.3.7"
 clap = { version = "4.3.9", features = ["derive", "env"] }
 ndc-client = { git = "http://github.com/hasura/ndc-spec.git", rev = "f3a6759" }
-opentelemetry = { version = "0.18.0", features = ["rt-tokio"] }
-opentelemetry_sdk = "0.18.0"
-opentelemetry-otlp = "0.11.0"
+# opentelemetry = { version = "0.18.0", features = ["rt-tokio"] }
+# opentelemetry_sdk = "0.18.0"
+# opentelemetry-otlp = "0.11.0"
 opentelemetry-semantic-conventions = "0.10.0"
 prometheus = "0.13.3"
 serde = "1.0.164"
