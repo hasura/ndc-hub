@@ -235,6 +235,11 @@ pub trait Connector {
     ) -> Result<models::QueryResponse, QueryError>;
 }
 
+async fn nonsense_function() -> () {
+    info_span!("Spanning from inside an async function: nonsense_function");
+    return ();
+}
+
 #[derive(Clone, Default)]
 pub struct Example {}
 
@@ -295,6 +300,12 @@ impl Connector for Example {
     ) -> Result<models::SchemaResponse, SchemaError> {
 
         info_span!("trying sub-span get_schema");
+
+        // Testing out spanning across async boundaries
+        let delegator_span = info_span!("trying sub-span delegation to async function inside get_schema");
+        delegator_span.in_scope(|| async {
+            nonsense_function().await;
+        }).await;
 
         Ok(models::SchemaResponse {
             collections: vec![],

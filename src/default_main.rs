@@ -11,13 +11,11 @@ use ndc_client::models::{
     QueryResponse, SchemaResponse,
 };
 
-// use opentelemetry_sdk::{propagation::TraceContextPropagator, trace::Tracer};
 use prometheus::Registry;
 use serde::{de::DeserializeOwned, Serialize};
 use std::error::Error;
 use std::net::SocketAddr;
 use tower_http::trace::TraceLayer;
-// use opentelemetry::trace::Tracer as Tracer2;
 use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trace_layer};
 
 #[derive(Parser)]
@@ -159,29 +157,6 @@ where
         .await
         .unwrap();
 
-    // let tracer = opentelemetry_otlp::new_pipeline()
-    //     .tracing()
-    //     .with_exporter(
-    //         opentelemetry_otlp::new_exporter().tonic().with_endpoint(
-    //             otlp_endpoint
-    //                 .unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT.into()),
-    //         ),
-    //     )
-    //     .with_trace_config(opentelemetry::sdk::trace::config().with_resource(
-    //         opentelemetry_sdk::Resource::new(vec![
-    //             KeyValue::new(
-    //                 opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-    //                 "ndc-hub",
-    //             ),
-    //             KeyValue::new(
-    //                 opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
-    //                 env!("CARGO_PKG_VERSION"),
-    //             ),
-    //         ]),
-    //     ))
-    //     .install_batch(opentelemetry::runtime::Tokio)
-    //     .expect("failed to create tracer");
-
     ServerState::<C> {
         configuration,
         state,
@@ -190,34 +165,12 @@ where
     }
 }
 
-// // Example taken from https://docs.rs/axum/latest/axum/middleware/fn.from_fn_with_state.html
-// async fn otlp_middleware<B>(
-//     State(tracer): State<Arc<sdk::trace::Tracer>>,
-//     // you can add more extractors here but the last
-//     // extractor must implement `FromRequest` which
-//     // `Request` does
-//     request: Request<B>,
-//     next: Next<B>,
-// ) -> axum::response::Response {
-//     let response: Response<BoxBody> = tracer.in_span("request", |cx| async {
-//         // TODO: Enrich with MD about route, etc.
-//         next.run(request).await
-//     }).await;
-
-//     response
-// }
-
 pub fn create_router<'a, C: Connector + Clone + 'static>(state: ServerState<C>) -> Router
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
     C::Configuration: Serialize + Clone + Sync + Send,
     C::State: Sync + Send + Clone,
 {
-
-    // let tracer = state.tracer.clone();
-
-    // * Pass tracing middleware struct in via ServerState.
-    // * Create OTel Trace Middleware w/ helper
     Router::new()
         .route("/capabilities", get(get_capabilities::<C>))
         .route("/health", get(get_health::<C>))
@@ -227,21 +180,9 @@ where
         .route("/explain", post(post_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
         .with_state(state)
-        .layer(
-            TraceLayer::new_for_http()
-            // .on_response(|response: &Response<BoxBody>, latency: Duration, span: &Span| {
-            //     // Using callback implementation as documented here: https://docs.rs/tower-http/0.4.1/tower_http/trace/index.html
-            //     // Unfortunately, there's extensive work required to make the request available in the on_response callback.
-            //     // Also, `in_span` is the tracer method documented, and this wants to wrap the execution, as opposed to append to the prior on_request trace.
-            //     tracing::debug!("response generated in {:?}", latency)
-            // })
-        )
-        // .layer(from_fn_with_state(tracer, otlp_middleware))
-        // * Add as .layer
+        .layer(TraceLayer::new_for_http())
         .layer(response_with_trace_layer())
-        // set up `TraceLayer` from tower-http
         .layer(opentelemetry_tracing_layer())
-
 }
 
 async fn get_metrics<C: Connector>(
