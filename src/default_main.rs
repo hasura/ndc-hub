@@ -154,7 +154,6 @@ where
         configuration,
         state,
         metrics,
-        // tracer:Arc::new(tracer),
     }
 }
 
