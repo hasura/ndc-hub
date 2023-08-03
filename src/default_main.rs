@@ -106,12 +106,6 @@ where
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
     C::State: Sync + Send + Clone,
 {
-    // global::set_text_map_propagator(TraceContextPropagator::new());
-
-    // tracing_subscriber::fmt()
-    //     .with_max_level(tracing::Level::DEBUG)
-    //     .init();
-
     let server_state = init_server_state::<C>(serve_command.configuration /*  , serve_command.otlp_endpoint */).await; // Shouldn't this be initialized prior to request handling?
 
     let router = create_router::<C>(server_state);
