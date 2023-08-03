@@ -10,7 +10,7 @@ use ndc_client::models::{
     CapabilitiesResponse, ExplainResponse, MutationRequest, MutationResponse, QueryRequest,
     QueryResponse, SchemaResponse,
 };
-use opentelemetry_otlp::{OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
+
 // use opentelemetry_sdk::{propagation::TraceContextPropagator, trace::Tracer};
 use prometheus::Registry;
 use serde::{de::DeserializeOwned, Serialize};

@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use clap::Args;
 use ndc_client::models;
+use tracing::info_span;
 use std::{collections::BTreeMap, error::Error};
 use thiserror::Error;
 
@@ -292,6 +293,9 @@ impl Connector for Example {
     async fn get_schema(
         _configuration: &Self::Configuration,
     ) -> Result<models::SchemaResponse, SchemaError> {
+
+        info_span!("trying sub-span get_schema");
+
         Ok(models::SchemaResponse {
             collections: vec![],
             functions: vec![],
