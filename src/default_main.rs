@@ -132,7 +132,6 @@ where
 /// Initialize the server state from the configuration file.
 pub async fn init_server_state<C: Connector + Clone + Default + 'static>(
     config_file: String,
-    // otlp_endpoint: Option<String>,
 ) -> ServerState<C>
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
