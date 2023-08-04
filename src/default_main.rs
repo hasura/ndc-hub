@@ -13,7 +13,7 @@ use ndc_client::models::{
 
 use prometheus::Registry;
 use serde::{de::DeserializeOwned, Serialize};
-use std::error::Error;
+use std::{error::Error, env};
 use std::net::SocketAddr;
 use tower_http::trace::TraceLayer;
 use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trace_layer};
@@ -106,7 +106,12 @@ where
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
     C::State: Sync + Send + Clone,
 {
-    let server_state = init_server_state::<C>(serve_command.configuration /*  , serve_command.otlp_endpoint */).await; // Shouldn't this be initialized prior to request handling?
+    // Set endpoint ENV picked up by macros in `traces` crate via CLI option if used
+    serve_command.otlp_endpoint.map(|e| {
+        env::set_var(opentelemetry_otlp::OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, e);
+    });
+
+    let server_state = init_server_state::<C>(serve_command.configuration).await;
 
     let router = create_router::<C>(server_state);
 
