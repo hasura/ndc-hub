@@ -43,7 +43,7 @@ struct ServeCommand {
     #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
     configuration: String,
     #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
-    otlp_endpoint: Option<String>,
+    otlp_endpoint: Option<String>, // TODO: Figure out if we want to use this, or use OTEL_EXPORTER_OTLP_TRACES_ENDPOINT instead
     #[arg(long, value_name = "PORT", env = "PORT")]
     port: Option<String>,
 }
