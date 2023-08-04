@@ -88,8 +88,6 @@ where
 {
     let CliArgs { command } = CliArgs::<C>::parse();
 
-    axum_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers().expect("Couldn't init OT");
-
     match command {
         Command::Serve(serve_command) => serve::<C>(serve_command).await,
         Command::GenerateConfiguration(configure_command) => {
@@ -110,6 +108,8 @@ where
     serve_command.otlp_endpoint.map(|e| {
         env::set_var(opentelemetry_otlp::OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, e);
     });
+
+    axum_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers().expect("Couldn't init OT");
 
     let server_state = init_server_state::<C>(serve_command.configuration).await;
 
