@@ -22,7 +22,8 @@ opentelemetry_sdk = "0.18.0"
 opentelemetry-otlp = "0.11.0"
 opentelemetry-semantic-conventions = "0.10.0"
 prometheus = "0.13.3"
-serde = "1.0.164"
+schemars = { version = "0.8.12", features = ["smol_str"] }
+serde = { version = "1.0.164", features = ["derive"] }
 serde_json = { version = "1.0.97", features = ["raw_value"] }
 thiserror = "1.0"
 tokio = { version =  "1.28.2", features = ["fs", "signal"] }
