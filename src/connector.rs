@@ -24,6 +24,15 @@ pub enum InitializationError {
     Other(Box<dyn Error>),
 }
 
+/// Errors which occur when trying to update metrics.
+///
+/// See [`Connector::fetch_metrics`].
+#[derive(Debug, Error)]
+pub enum FetchMetricsError {
+    #[error("error fetching metrics: {0}")]
+    Other(Box<dyn Error>),
+}
+
 /// Errors which occur when checking connector health.
 ///
 /// See [`Connector::health_check`].
@@ -180,6 +189,18 @@ pub trait Connector {
         metrics: &mut prometheus::Registry,
     ) -> Result<Self::State, InitializationError>;
 
+    /// Update any metrics from the state
+    /// 
+    /// Note: some metrics can be updated directly, and do not
+    /// need to be updated here. This function can be useful to 
+    /// query metrics which cannot be updated directly, e.g. 
+    /// the number of idle connections in a connection pool
+    /// can be polled but not updated directly.
+    fn fetch_metrics(
+        configuration: &Self::Configuration,
+        state: &Self::State,
+    ) -> Result<(), FetchMetricsError>;
+
     /// Check the health of the connector.
     ///
     /// For example, this function should check that the connector
@@ -263,6 +284,13 @@ impl Connector for Example {
         _configuration: &Self::Configuration,
         _metrics: &mut prometheus::Registry,
     ) -> Result<Self::State, InitializationError> {
+        Ok(())
+    }
+
+    fn fetch_metrics(
+        _configuration: &Self::Configuration,
+        _state: &Self::State,
+    ) -> Result<(), FetchMetricsError> {
         Ok(())
     }
 
