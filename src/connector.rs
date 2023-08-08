@@ -3,6 +3,7 @@ use clap::Args;
 use ndc_client::models;
 use std::{collections::BTreeMap, error::Error};
 use thiserror::Error;
+use serde::Serialize;
 
 /// Errors which occur when trying to validate connector
 /// configuration.
@@ -14,13 +15,14 @@ pub enum ValidateError {
     ValidateError(Vec<InvalidRange>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize)]
 pub struct InvalidRange {
-    pub path: Vec<KeyOrIndex>,
-    pub message: String,
+    path: Vec<KeyOrIndex>,
+    message: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
 pub enum KeyOrIndex {
     Key(String),
     Index(u32),

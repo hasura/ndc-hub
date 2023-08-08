@@ -1,5 +1,5 @@
 use crate::{
-    connector::{self, Connector, SchemaError},
+    connector::{Connector, InvalidRange, SchemaError},
     routes,
 };
 use axum::{
@@ -330,21 +330,10 @@ struct ValidateResponse {
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct ValidateErrors {
-    ranges: Vec<InvalidRange>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct InvalidRange {
-    path: Vec<KeyOrIndex>,
-    message: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(untagged)]
-pub enum KeyOrIndex {
-    Key(String),
-    Index(u32),
+#[serde(tag = "type")]
+enum ValidateErrors {
+    InvalidConfiguration { ranges: Vec<InvalidRange> },
+    UnableToBuildSchema,
 }
 
 async fn post_validate<C: Connector>(
@@ -356,31 +345,15 @@ where
     let configuration = C::validate_raw_configuration(&configuration)
         .await
         .map_err(|e| match e {
-            crate::connector::ValidateError::ValidateError(ranges) => {
-                let ranges = ranges
-                    .into_iter()
-                    .map(|r| {
-                        let path = r
-                            .path
-                            .into_iter()
-                            .map(|e| match e {
-                                connector::KeyOrIndex::Key(k) => KeyOrIndex::Key(k),
-                                connector::KeyOrIndex::Index(i) => KeyOrIndex::Index(i),
-                            })
-                            .collect();
-                        InvalidRange {
-                            path,
-                            message: r.message,
-                        }
-                    })
-                    .collect();
-                (StatusCode::BAD_REQUEST, Json(ValidateErrors { ranges }))
-            }
+            crate::connector::ValidateError::ValidateError(ranges) => (
+                StatusCode::BAD_REQUEST,
+                Json(ValidateErrors::InvalidConfiguration { ranges }),
+            ),
         })?;
     let schema = C::get_schema(&configuration).await.map_err(|e| match e {
         SchemaError::Other(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ValidateErrors { ranges: vec![] }),
+            Json(ValidateErrors::UnableToBuildSchema),
         ),
     })?;
     Ok(Json(ValidateResponse { schema }))
