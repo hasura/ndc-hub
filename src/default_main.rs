@@ -105,6 +105,7 @@ where
     C::State: Sync + Send + Clone,
 {
     // Set endpoint ENV picked up by macros in `traces` crate via CLI option if used
+    // TODO: Check that tracing library doesn't have a better way to do this.
     serve_command.otlp_endpoint.map(|e| {
         env::set_var(opentelemetry_otlp::OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, e);
     });
