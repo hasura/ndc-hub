@@ -180,6 +180,16 @@ pub trait Connector {
         metrics: &mut prometheus::Registry,
     ) -> Result<Self::State, InitializationError>;
 
+    /// Update any metrics from the state
+    ///
+    /// Useful to query a connection pool
+    /// and use it to update metrics
+    /// rather than polling with a timer
+    fn fetch_metrics(
+        state: &Self::State,
+        metrics: &prometheus::Registry,
+    ) -> Result<(), InitializationError>;
+
     /// Check the health of the connector.
     ///
     /// For example, this function should check that the connector
@@ -263,6 +273,13 @@ impl Connector for Example {
         _configuration: &Self::Configuration,
         _metrics: &mut prometheus::Registry,
     ) -> Result<Self::State, InitializationError> {
+        Ok(())
+    }
+
+    fn fetch_metrics(
+        _state: &Self::State,
+        _metrics: &prometheus::Registry,
+    ) -> Result<(), InitializationError> {
         Ok(())
     }
 

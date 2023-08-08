@@ -4,9 +4,16 @@ use prometheus::{Encoder, Registry, TextEncoder};
 
 use crate::connector::{Connector, HealthError};
 
-pub fn get_metrics<C: Connector>(metrics: Registry) -> Result<String, StatusCode> {
+pub fn get_metrics<C: Connector>(
+    metrics: Registry,
+    state: &C::State,
+) -> Result<String, StatusCode> {
     let mut buffer = vec![];
     let encoder = TextEncoder::new();
+
+    // ask the connector to update all it's metrics
+    C::fetch_metrics(state, &metrics).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
     let metric_families = metrics.gather();
     encoder
         .encode(&metric_families, &mut buffer)
