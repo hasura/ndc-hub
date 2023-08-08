@@ -1,4 +1,7 @@
-use crate::{connector::Connector, routes};
+use crate::{
+    connector::{Connector, SchemaError},
+    routes,
+};
 use axum::{
     extract::State,
     http::StatusCode,
@@ -94,7 +97,7 @@ pub struct ServerState<C: Connector> {
 /// - Logs are written to stdout
 pub async fn default_main<C: Connector + Clone + Default + 'static>() -> Result<(), Box<dyn Error>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send + Clone,
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
     C::State: Sync + Send + Clone,
 {
@@ -255,7 +258,7 @@ async fn configuration<C: Connector + 'static>(
     command: ConfigurationCommand,
 ) -> Result<(), Box<dyn Error>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Clone + Sync + Send,
 {
     match command.command {
         ConfigurationSubcommand::Serve(serve_command) => {
@@ -268,7 +271,7 @@ async fn serve_configuration<C: Connector + 'static>(
     serve_command: ServeConfigurationCommand,
 ) -> Result<(), Box<dyn Error>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Clone + Sync + Send,
 {
     let port = serve_command.port.unwrap_or("9100".into());
     let address = SocketAddr::new("0.0.0.0".parse()?, port.parse()?);
@@ -278,8 +281,7 @@ where
     let router = Router::new()
         .route("/", get(get_empty::<C>).post(post_update::<C>))
         .route("/schema", get(get_config_schema::<C>))
-        // .route("/validate", post(post_validate::<C>));
-        ;
+        .route("/validate", post(post_validate::<C>));
 
     axum::Server::bind(&address)
         .serve(router.into_make_service())
@@ -306,11 +308,10 @@ async fn post_update<C: Connector>(
 where
     C::RawConfiguration: Serialize + DeserializeOwned,
 {
-    Ok(Json(
-        C::update_configuration(&configuration)
-            .await
-            .map_err(|e| StatusCode::INTERNAL_SERVER_ERROR)?,
-    ))
+    let updated = C::update_configuration(&configuration)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Json(updated))
 }
 
 async fn get_config_schema<C: Connector>() -> Json<RootSchema>
@@ -321,34 +322,34 @@ where
     Json(schema)
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 struct ValidateRequest<C: Connector> {
     configuration: C::RawConfiguration,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Serialize)]
 struct ValidateResponse {
     schema: SchemaResponse,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Serialize)]
 struct ValidateErrors {
     ranges: Vec<InvalidRange>,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct InvalidRange {
     path: Vec<String>,
     message: String,
 }
 
-async fn post_validate<'a, C: Connector>(
-    request: Json<ValidateRequest<C>>,
+async fn post_validate<C: Connector>(
+    Json(configuration): Json<C::RawConfiguration>,
 ) -> Result<Json<ValidateResponse>, (StatusCode, Json<ValidateErrors>)>
 where
     C::RawConfiguration: DeserializeOwned,
 {
-    let configuration = C::validate_raw_configuration(&request.configuration)
+    let configuration = C::validate_raw_configuration(&configuration)
         .await
         .map_err(|e| match e {
             crate::connector::ValidateError::ValidateError(ranges) => (
@@ -364,7 +365,12 @@ where
                 }),
             ),
         })?;
-    let schema = C::get_schema(&configuration).await.map_err(|e| todo!())?;
+    let schema = C::get_schema(&configuration).await.map_err(|e| match e {
+        SchemaError::Other(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ValidateErrors { ranges: vec![] }),
+        ),
+    })?;
     Ok(Json(ValidateResponse { schema }))
 }
 

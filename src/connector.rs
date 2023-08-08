@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use clap::Args;
 use ndc_client::models;
-use serde::de::DeserializeOwned;
 use std::{collections::BTreeMap, error::Error};
 use thiserror::Error;
 
@@ -167,7 +166,7 @@ pub enum MutationError {
 #[async_trait]
 pub trait Connector {
     /// The type of unvalidated, raw configuration, as provided by the user.
-    type RawConfiguration : DeserializeOwned + serde::Serialize;
+    type RawConfiguration;
     /// The type of validated configuration
     type Configuration;
     /// The type of unserializable state
