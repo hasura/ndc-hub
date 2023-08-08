@@ -208,7 +208,6 @@ dependencies = [
  "opentelemetry 0.19.0",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions 0.11.0",
- "opentelemetry-zipkin",
  "tower",
  "tower-http",
  "tracing",
@@ -1185,26 +1184,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "opentelemetry-zipkin"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1fd48caee5e1db71454c95be32d1daeb6fae265321ff8f51b1efc8a50b0be80"
-dependencies = [
- "async-trait",
- "futures-core",
- "http",
- "once_cell",
- "opentelemetry 0.19.0",
- "opentelemetry-http",
- "opentelemetry-semantic-conventions 0.11.0",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror",
- "typed-builder",
-]
-
-[[package]]
 name = "opentelemetry_api"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2174,17 +2153,6 @@ name = "try-lock"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3528ecfd12c466c6f163363caf2d02a71161dd5e1cc6ae7b34207ea2d42d81ed"
-
-[[package]]
-name = "typed-builder"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6179333b981641242a768f30f371c9baccbfcc03749627000c500ab88bf4528b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
 
 [[package]]
 name = "unicase"
