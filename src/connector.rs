@@ -16,8 +16,14 @@ pub enum ValidateError {
 
 #[derive(Debug)]
 pub struct InvalidRange {
-    pub path: Vec<String>,
+    pub path: Vec<KeyOrIndex>,
     pub message: String,
+}
+
+#[derive(Debug)]
+pub enum KeyOrIndex {
+    Key(String),
+    Index(u32),
 }
 
 /// Errors which occur when trying to validate connector

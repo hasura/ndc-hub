@@ -1,5 +1,5 @@
 use crate::{
-    connector::{Connector, SchemaError},
+    connector::{self, Connector, SchemaError},
     routes,
 };
 use axum::{
@@ -259,6 +259,7 @@ async fn configuration<C: Connector + 'static>(
 ) -> Result<(), Box<dyn Error>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Clone + Sync + Send,
+    C::Configuration: Sync + Send,
 {
     match command.command {
         ConfigurationSubcommand::Serve(serve_command) => {
@@ -271,7 +272,8 @@ async fn serve_configuration<C: Connector + 'static>(
     serve_command: ServeConfigurationCommand,
 ) -> Result<(), Box<dyn Error>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Clone + Sync + Send,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
+    C::Configuration: Sync + Send,
 {
     let port = serve_command.port.unwrap_or("9100".into());
     let address = SocketAddr::new("0.0.0.0".parse()?, port.parse()?);
@@ -322,11 +324,6 @@ where
     Json(schema)
 }
 
-#[derive(Debug, Clone, serde::Deserialize)]
-struct ValidateRequest<C: Connector> {
-    configuration: C::RawConfiguration,
-}
-
 #[derive(Debug, Clone, Serialize)]
 struct ValidateResponse {
     schema: SchemaResponse,
@@ -339,8 +336,15 @@ struct ValidateErrors {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct InvalidRange {
-    path: Vec<String>,
+    path: Vec<KeyOrIndex>,
     message: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+pub enum KeyOrIndex {
+    Key(String),
+    Index(u32),
 }
 
 async fn post_validate<C: Connector>(
@@ -352,35 +356,32 @@ where
     let configuration = C::validate_raw_configuration(&configuration)
         .await
         .map_err(|e| match e {
-            crate::connector::ValidateError::ValidateError(ranges) => (
-                StatusCode::BAD_REQUEST,
-                Json(ValidateErrors {
-                    ranges: ranges
-                        .into_iter()
-                        .map(|r| InvalidRange {
-                            path: r.path,
+            crate::connector::ValidateError::ValidateError(ranges) => {
+                let ranges = ranges
+                    .into_iter()
+                    .map(|r| {
+                        let path = r
+                            .path
+                            .into_iter()
+                            .map(|e| match e {
+                                connector::KeyOrIndex::Key(k) => KeyOrIndex::Key(k),
+                                connector::KeyOrIndex::Index(i) => KeyOrIndex::Index(i),
+                            })
+                            .collect();
+                        InvalidRange {
+                            path,
                             message: r.message,
-                        })
-                        .collect(),
-                }),
-            ),
+                        }
+                    })
+                    .collect();
+                (StatusCode::BAD_REQUEST, Json(ValidateErrors { ranges }))
+            }
         })?;
     let schema = C::get_schema(&configuration).await.map_err(|e| match e {
-        SchemaError::Other(e) => (
+        SchemaError::Other(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ValidateErrors { ranges: vec![] }),
         ),
     })?;
     Ok(Json(ValidateResponse { schema }))
 }
-
-// async fn configure<C: Connector + Clone + Default + 'static>(
-//     args: GenerateConfigurationCommand,
-// ) -> Result<(), Box<dyn Error>>
-// where
-//     C::RawConfiguration: DeserializeOwned + Serialize,
-// {
-//     let configuration = C::update_configuration(&args).await?;
-//     println!("{}", serde_json::to_string_pretty(&configuration)?);
-//     Ok(())
-// }
