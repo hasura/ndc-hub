@@ -3,13 +3,37 @@ use clap::Args;
 use ndc_client::models;
 use std::{collections::BTreeMap, error::Error};
 use thiserror::Error;
+use serde::Serialize;
 
 /// Errors which occur when trying to validate connector
 /// configuration.
 ///
 /// See [`Connector::validate_raw_configuration`].
 #[derive(Debug, Error)]
-pub enum ConfigurationError {
+pub enum ValidateError {
+    #[error("error validating configuration: {0:?}")]
+    ValidateError(Vec<InvalidRange>),
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct InvalidRange {
+    pub path: Vec<KeyOrIndex>,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+pub enum KeyOrIndex {
+    Key(String),
+    Index(u32),
+}
+
+/// Errors which occur when trying to validate connector
+/// configuration.
+///
+/// See [`Connector::update_configuration`].
+#[derive(Debug, Error)]
+pub enum UpdateConfigurationError {
     #[error("error validating configuration: {0}")]
     Other(Box<dyn Error>),
 }
@@ -158,8 +182,6 @@ pub enum MutationError {
 /// connection string would be state.
 #[async_trait]
 pub trait Connector {
-    /// The type of command line arguments to generate a configuration
-    type ConfigureArgs;
     /// The type of unvalidated, raw configuration, as provided by the user.
     type RawConfiguration;
     /// The type of validated configuration
@@ -167,15 +189,17 @@ pub trait Connector {
     /// The type of unserializable state
     type State;
 
-    async fn configure(
-        args: &Self::ConfigureArgs,
-    ) -> Result<Self::RawConfiguration, ConfigurationError>;
+    fn make_empty_configuration() -> Self::RawConfiguration;
+
+    async fn update_configuration(
+        config: &Self::RawConfiguration,
+    ) -> Result<Self::RawConfiguration, UpdateConfigurationError>;
 
     /// Validate the raw configuration provided by the user,
     /// returning a configuration error or a validated [`Connector::Configuration`].
     async fn validate_raw_configuration(
         configuration: &Self::RawConfiguration,
-    ) -> Result<Self::Configuration, ConfigurationError>;
+    ) -> Result<Self::Configuration, ValidateError>;
 
     /// Initialize the connector's in-memory state.
     ///
@@ -263,20 +287,23 @@ pub struct ExampleConfigureArgs {}
 
 #[async_trait]
 impl Connector for Example {
-    type ConfigureArgs = ExampleConfigureArgs;
     type RawConfiguration = ();
     type Configuration = ();
     type State = ();
 
-    async fn configure(
-        _args: &Self::ConfigureArgs,
-    ) -> Result<Self::RawConfiguration, ConfigurationError> {
+    fn make_empty_configuration() -> Self::RawConfiguration {
+        ()
+    }
+
+    async fn update_configuration(
+        _config: &Self::RawConfiguration,
+    ) -> Result<Self::RawConfiguration, UpdateConfigurationError> {
         Ok(())
     }
 
     async fn validate_raw_configuration(
         _configuration: &Self::Configuration,
-    ) -> Result<Self::Configuration, ConfigurationError> {
+    ) -> Result<Self::Configuration, ValidateError> {
         Ok(())
     }
 
