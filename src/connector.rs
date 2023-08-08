@@ -17,8 +17,8 @@ pub enum ValidateError {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct InvalidRange {
-    path: Vec<KeyOrIndex>,
-    message: String,
+    pub path: Vec<KeyOrIndex>,
+    pub message: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
