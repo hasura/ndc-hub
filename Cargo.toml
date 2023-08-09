@@ -12,12 +12,11 @@ name = "ndc_hub_example"
 path = "bin/main.rs"
 
 [dependencies]
-axum-tracing-opentelemetry = { version = "0.11.0", features = [
-    "otlp",
-    "tracing_subscriber_ext",
-] }
-opentelemetry = "0.19.0" # must be same version axum-tracing-opentelemetry uses
-opentelemetry-otlp = { version = "0.12.0", features = [
+opentelemetry = { version = "0.20", features = [
+  "rt-tokio",
+  "trace",
+], default-features = false }
+opentelemetry-otlp = { version = "0.13.0", features = [
     "reqwest-client",
 ] } # must be same version axum-tracing-opentelemetry uses
 async-trait = "0.1.68"
@@ -25,7 +24,7 @@ axum = "0.6.18"
 axum-macros = "0.3.7"
 clap = { version = "4.3.9", features = ["derive", "env"] }
 ndc-client = { git = "http://github.com/hasura/ndc-spec.git", rev = "f3a6759" }
-opentelemetry-semantic-conventions = "0.10.0"
+opentelemetry-semantic-conventions = "0.12.0"
 prometheus = "0.13.3"
 serde = "1.0.164"
 serde_json = { version = "1.0.97", features = ["raw_value"] }
@@ -33,5 +32,14 @@ thiserror = "1.0"
 tokio = { version =  "1.28.2", features = ["fs", "signal"] }
 tower-http = { version = "0.4.1", features = ["trace"] }
 tracing = "0.1.37"
-tracing-subscriber = "0.3.17"
 uuid = "1.3.4"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "ansi",
+  "env-filter",
+  "fmt",
+  "json",
+] }
+tracing-opentelemetry = "0.20.0"
+opentelemetry_sdk = "0.20.0"
+opentelemetry_api = "0.20.0"
+axum-tracing-opentelemetry = "0.13.1"

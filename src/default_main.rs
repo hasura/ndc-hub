@@ -3,20 +3,23 @@ use axum::{
     extract::State,
     http::StatusCode,
     routing::{get, post},
-    Json, Router
+    Json, Router,
 };
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use clap::{Args, Parser, Subcommand};
 use ndc_client::models::{
     CapabilitiesResponse, ExplainResponse, MutationRequest, MutationResponse, QueryRequest,
     QueryResponse, SchemaResponse,
 };
-
+use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
+use opentelemetry_api::KeyValue;
+use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
 use prometheus::Registry;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{error::Error, env};
+use std::error::Error;
 use std::net::SocketAddr;
 use tower_http::trace::TraceLayer;
-use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trace_layer};
+use tracing_subscriber::{prelude::*, EnvFilter};
 
 #[derive(Parser)]
 struct CliArgs<C: Connector>
@@ -53,7 +56,6 @@ pub struct ServerState<C: Connector> {
     configuration: C::Configuration,
     state: C::State,
     metrics: Registry,
-    // tracer: Arc<sdk::trace::Tracer>,
 }
 
 /// A default main function for a connector.
@@ -96,6 +98,46 @@ where
     }
 }
 
+fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
+    global::set_text_map_propagator(TraceContextPropagator::new());
+
+    let tracer = opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(
+            opentelemetry_otlp::new_exporter().tonic().with_endpoint(
+                serve_command
+                    .otlp_endpoint
+                    .clone()
+                    .unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT.into()),
+            ),
+        )
+        .with_trace_config(opentelemetry::sdk::trace::config().with_resource(
+            opentelemetry::sdk::Resource::new(vec![
+                KeyValue::new(
+                    opentelemetry_semantic_conventions::resource::SERVICE_NAME,
+                    "ndc-hub",
+                ),
+                KeyValue::new(
+                    opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
+                    env!("CARGO_PKG_VERSION"),
+                ),
+            ]),
+        ))
+        .install_batch(opentelemetry::runtime::Tokio)?;
+
+    let subscriber = tracing_subscriber::registry()
+        .with(
+            tracing_opentelemetry::layer()
+                .with_exception_field_propagation(true)
+                .with_tracer(tracer),
+        )
+        .with(tracing_subscriber::fmt::layer().json())
+        .with(EnvFilter::builder().parse("info,otel::tracing=trace,otel=error").unwrap());
+
+    tracing::subscriber::set_global_default(subscriber)?;
+    Ok(())
+}
+
 async fn serve<C: Connector + Clone + Default + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error>>
@@ -106,11 +148,11 @@ where
 {
     // Set endpoint ENV picked up by macros in `traces` crate via CLI option if used
     // TODO: Check that tracing library doesn't have a better way to do this.
-    serve_command.otlp_endpoint.map(|e| {
-        env::set_var(opentelemetry_otlp::OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, e);
-    });
+    // serve_command.otlp_endpoint.map(|e| {
+    //     env::set_var(opentelemetry_otlp::OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, e);
+    // });
 
-    axum_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers().expect("Couldn't init OT");
+    init_tracing(&serve_command).expect("Couldn't init OT");
 
     let server_state = init_server_state::<C>(serve_command.configuration).await;
 
@@ -179,8 +221,8 @@ where
         .route("/mutation", post(post_mutation::<C>))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
-        .layer(response_with_trace_layer())
-        .layer(opentelemetry_tracing_layer())
+        .layer(OtelInResponseLayer::default())
+        .layer(OtelAxumLayer::default())
 }
 
 async fn get_metrics<C: Connector>(
