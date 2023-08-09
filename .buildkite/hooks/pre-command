@@ -14,6 +14,9 @@ function clean_up_containers {
   docker container rm --volumes "$@"
 }
 
+# do generic Docker clean up
+docker image prune -f -a --filter "until=24h"
+
 # Read the list of containers from `docker container ls`
 mapfile -t CONTAINERS < <(docker container ls --all --format='{{ .Names }}')
 
