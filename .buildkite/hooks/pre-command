@@ -16,6 +16,8 @@ function clean_up_containers {
 
 # do generic Docker clean up
 docker image prune -f -a
+docker container prune -f
+docker volume prune -f
 
 # Read the list of containers from `docker container ls`
 mapfile -t CONTAINERS < <(docker container ls --all --format='{{ .Names }}')
