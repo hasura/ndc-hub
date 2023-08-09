@@ -1,9 +1,10 @@
 use async_trait::async_trait;
 use clap::Args;
 use ndc_client::models;
-use tracing::info_span;
 use std::{collections::BTreeMap, error::Error};
 use thiserror::Error;
+use tracing::info_span;
+use tracing::Instrument;
 
 /// Errors which occur when trying to validate connector
 /// configuration.
@@ -235,11 +236,6 @@ pub trait Connector {
     ) -> Result<models::QueryResponse, QueryError>;
 }
 
-async fn nonsense_function() -> () {
-    info_span!("Spanning from inside an async function: nonsense_function");
-    return ();
-}
-
 #[derive(Clone, Default)]
 pub struct Example {}
 
@@ -298,14 +294,12 @@ impl Connector for Example {
     async fn get_schema(
         _configuration: &Self::Configuration,
     ) -> Result<models::SchemaResponse, SchemaError> {
-
-        info_span!("trying sub-span get_schema");
-
-        // Testing out spanning across async boundaries
-        let delegator_span = info_span!("trying sub-span delegation to async function inside get_schema");
-        delegator_span.in_scope(|| async {
-            nonsense_function().await;
-        }).await;
+        async {
+            info_span!("inside tracing example");
+            return ();
+        }
+        .instrument(info_span!("tracing example"))
+        .await;
 
         Ok(models::SchemaResponse {
             collections: vec![],
