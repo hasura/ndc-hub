@@ -51,3 +51,25 @@ curl http://localhost:8100/schema
 ```
 
 (the default port 8100 can be changed using `--port`)
+
+## Tracing
+
+The serve command emits OTLP trace information. This can be used to see details of requests across services.
+
+To enable tracing you must:
+
+* Use the NDC-Hub option `--otlp-endpoint` e.g. `http://localhost:4317`
+* Or, set the NDC-Hub ENV Variable `OTLP_ENDPOINT`
+* Or, set the `tracing` ENV Variable `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`
+
+For additional service information you can:
+
+* Set `OTEL_SERVICE_NAME` e.g. `ndc_hub_example`
+* Set `OTEL_RESOURCE_ATTRIBUTES` e.g. `key=value, k = v , a= x, a=z`
+
+
+To view trace information during local development you can run a Jager server via Docker:
+
+```
+docker run --name jaeger -e COLLECTOR_OTLP_ENABLED=true -p 16686:16686 -p 4317:4317 -p 4318:4318 jaegertracing/all-in-one:1.45
+```

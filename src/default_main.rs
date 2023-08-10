@@ -13,15 +13,21 @@ use ndc_client::models::{
     CapabilitiesResponse, ExplainResponse, MutationRequest, MutationResponse, QueryRequest,
     QueryResponse, SchemaResponse,
 };
-use opentelemetry::{global, KeyValue};
+use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
+use opentelemetry_api::KeyValue;
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
-use opentelemetry_sdk::propagation::TraceContextPropagator;
+use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
 use std::error::Error;
 use std::{env, net::SocketAddr};
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower_http::{
+    cors::CorsLayer,
+    trace::{DefaultMakeSpan, TraceLayer},
+};
+use tracing::Level;
+use tracing_subscriber::{prelude::*, EnvFilter};
 
 #[derive(Parser)]
 struct CliArgs {
@@ -42,7 +48,7 @@ struct ServeCommand {
     #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
     configuration: String,
     #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
-    otlp_endpoint: Option<String>,
+    otlp_endpoint: Option<String>, // NOTE: `tracing` crate uses `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` ENV variable, but we want to control the endpoint via CLI interface
     #[arg(long, value_name = "PORT", env = "PORT")]
     port: Option<String>,
 }
@@ -109,6 +115,52 @@ where
     }
 }
 
+fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
+    global::set_text_map_propagator(TraceContextPropagator::new());
+
+    let tracer = opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(
+            opentelemetry_otlp::new_exporter().tonic().with_endpoint(
+                serve_command
+                    .otlp_endpoint
+                    .clone()
+                    .unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT.into()),
+            ),
+        )
+        .with_trace_config(
+            opentelemetry::sdk::trace::config()
+                .with_resource(opentelemetry::sdk::Resource::new(vec![
+                    KeyValue::new(
+                        opentelemetry_semantic_conventions::resource::SERVICE_NAME,
+                        "ndc-hub",
+                    ),
+                    KeyValue::new(
+                        opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
+                        env!("CARGO_PKG_VERSION"),
+                    ),
+                ]))
+                .with_sampler(Sampler::ParentBased(Box::new(Sampler::AlwaysOn))),
+        )
+        .install_batch(opentelemetry::runtime::Tokio)?;
+
+    tracing_subscriber::registry()
+        .with(
+            tracing_opentelemetry::layer()
+                .with_exception_field_propagation(true)
+                .with_tracer(tracer),
+        )
+        .with(EnvFilter::builder().parse("info,otel::tracing=trace,otel=debug")?)
+        .with(
+            tracing_subscriber::fmt::layer()
+                .json()
+                .with_timer(tracing_subscriber::fmt::time::time()),
+        )
+        .init();
+
+    Ok(())
+}
+
 async fn serve<C: Connector + Clone + Default + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error>>
@@ -117,38 +169,13 @@ where
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
     C::State: Sync + Send + Clone,
 {
-    global::set_text_map_propagator(TraceContextPropagator::new());
-
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
-        .init();
-
-    let _tracer = opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter().tonic().with_endpoint(
-                serve_command
-                    .otlp_endpoint
-                    .unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT.into()),
-            ),
-        )
-        .with_trace_config(opentelemetry::sdk::trace::config().with_resource(
-            opentelemetry_sdk::Resource::new(vec![
-                KeyValue::new(
-                    opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-                    "ndc-hub",
-                ),
-                KeyValue::new(
-                    opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
-                    env!("CARGO_PKG_VERSION"),
-                ),
-            ]),
-        ))
-        .install_batch(opentelemetry::runtime::Tokio);
+    init_tracing(&serve_command).expect("Unable to initialize tracing");
 
     let server_state = init_server_state::<C>(serve_command.configuration).await;
 
-    let router = create_router::<C>(server_state);
+    let router = create_router::<C>(server_state).layer(
+        TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
+    );
 
     let port = serve_command.port.unwrap_or("8100".into());
     let address = SocketAddr::new("0.0.0.0".parse()?, port.parse()?);
@@ -161,6 +188,8 @@ where
             tokio::signal::ctrl_c()
                 .await
                 .expect("unable to install signal handler");
+
+            opentelemetry::global::shutdown_tracer_provider();
         })
         .await?;
 
@@ -210,7 +239,6 @@ where
         .route("/explain", post(post_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
         .with_state(state)
-        .layer(TraceLayer::new_for_http())
 }
 
 async fn get_metrics<C: Connector>(

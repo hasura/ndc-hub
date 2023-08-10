@@ -3,6 +3,8 @@ use clap::Args;
 use ndc_client::models;
 use std::{collections::BTreeMap, error::Error};
 use thiserror::Error;
+use tracing::info_span;
+use tracing::Instrument;
 use serde::Serialize;
 
 /// Errors which occur when trying to validate connector
@@ -347,6 +349,13 @@ impl Connector for Example {
     async fn get_schema(
         _configuration: &Self::Configuration,
     ) -> Result<models::SchemaResponse, SchemaError> {
+        async {
+            info_span!("inside tracing example");
+            return ();
+        }
+        .instrument(info_span!("tracing example"))
+        .await;
+
         Ok(models::SchemaResponse {
             collections: vec![],
             functions: vec![],
