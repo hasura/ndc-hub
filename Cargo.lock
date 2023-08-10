@@ -898,7 +898,7 @@ dependencies = [
 [[package]]
 name = "ndc-client"
 version = "0.1.0"
-source = "git+http://github.com/hasura/ndc-spec.git?rev=f3a6759#f3a675975a24a6a7672dd7692c95a4c669555611"
+source = "git+http://github.com/hasura/ndc-spec.git?tag=v0.1.0-rc.1#2763ec4df5f9276e1122abf88510c43befa12d2f"
 dependencies = [
  "async-trait",
  "clap",
@@ -931,6 +931,7 @@ dependencies = [
  "opentelemetry_api 0.20.0",
  "opentelemetry_sdk 0.20.0",
  "prometheus",
+ "schemars",
  "serde",
  "serde_json",
  "thiserror",

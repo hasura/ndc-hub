@@ -21,7 +21,7 @@ There are 2 connectors you can start trying out today, and we'll gradually add m
 
 The best way to get started developing Hasura native data connectors is to [read the specification](http://hasura.github.io/ndc-spec/) and familiarise yourself with the [reference implementation](https://github.com/hasura/ndc-spec/tree/main/ndc-reference).
 
-### Rusk SDK
+### Rust SDK
 
 This repository provides a Rust crate to aid development of [Hasura Native Data Connectors](https://hasura.github.io/ndc-spec/). Developers can implement a trait, and derive an executable which can be used to run a connector which is compatible with the specification.
 

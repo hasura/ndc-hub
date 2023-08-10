@@ -5,13 +5,37 @@ use std::{collections::BTreeMap, error::Error};
 use thiserror::Error;
 use tracing::info_span;
 use tracing::Instrument;
+use serde::Serialize;
 
 /// Errors which occur when trying to validate connector
 /// configuration.
 ///
 /// See [`Connector::validate_raw_configuration`].
 #[derive(Debug, Error)]
-pub enum ConfigurationError {
+pub enum ValidateError {
+    #[error("error validating configuration: {0:?}")]
+    ValidateError(Vec<InvalidRange>),
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct InvalidRange {
+    pub path: Vec<KeyOrIndex>,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+pub enum KeyOrIndex {
+    Key(String),
+    Index(u32),
+}
+
+/// Errors which occur when trying to validate connector
+/// configuration.
+///
+/// See [`Connector::update_configuration`].
+#[derive(Debug, Error)]
+pub enum UpdateConfigurationError {
     #[error("error validating configuration: {0}")]
     Other(Box<dyn Error>),
 }
@@ -23,6 +47,15 @@ pub enum ConfigurationError {
 #[derive(Debug, Error)]
 pub enum InitializationError {
     #[error("error initializing connector state: {0}")]
+    Other(Box<dyn Error>),
+}
+
+/// Errors which occur when trying to update metrics.
+///
+/// See [`Connector::fetch_metrics`].
+#[derive(Debug, Error)]
+pub enum FetchMetricsError {
+    #[error("error fetching metrics: {0}")]
     Other(Box<dyn Error>),
 }
 
@@ -151,8 +184,6 @@ pub enum MutationError {
 /// connection string would be state.
 #[async_trait]
 pub trait Connector {
-    /// The type of command line arguments to generate a configuration
-    type ConfigureArgs;
     /// The type of unvalidated, raw configuration, as provided by the user.
     type RawConfiguration;
     /// The type of validated configuration
@@ -160,15 +191,17 @@ pub trait Connector {
     /// The type of unserializable state
     type State;
 
-    async fn configure(
-        args: &Self::ConfigureArgs,
-    ) -> Result<Self::RawConfiguration, ConfigurationError>;
+    fn make_empty_configuration() -> Self::RawConfiguration;
+
+    async fn update_configuration(
+        config: &Self::RawConfiguration,
+    ) -> Result<Self::RawConfiguration, UpdateConfigurationError>;
 
     /// Validate the raw configuration provided by the user,
     /// returning a configuration error or a validated [`Connector::Configuration`].
     async fn validate_raw_configuration(
         configuration: &Self::RawConfiguration,
-    ) -> Result<Self::Configuration, ConfigurationError>;
+    ) -> Result<Self::Configuration, ValidateError>;
 
     /// Initialize the connector's in-memory state.
     ///
@@ -181,6 +214,18 @@ pub trait Connector {
         configuration: &Self::Configuration,
         metrics: &mut prometheus::Registry,
     ) -> Result<Self::State, InitializationError>;
+
+    /// Update any metrics from the state
+    /// 
+    /// Note: some metrics can be updated directly, and do not
+    /// need to be updated here. This function can be useful to 
+    /// query metrics which cannot be updated directly, e.g. 
+    /// the number of idle connections in a connection pool
+    /// can be polled but not updated directly.
+    fn fetch_metrics(
+        configuration: &Self::Configuration,
+        state: &Self::State,
+    ) -> Result<(), FetchMetricsError>;
 
     /// Check the health of the connector.
     ///
@@ -244,20 +289,23 @@ pub struct ExampleConfigureArgs {}
 
 #[async_trait]
 impl Connector for Example {
-    type ConfigureArgs = ExampleConfigureArgs;
     type RawConfiguration = ();
     type Configuration = ();
     type State = ();
 
-    async fn configure(
-        _args: &Self::ConfigureArgs,
-    ) -> Result<Self::RawConfiguration, ConfigurationError> {
+    fn make_empty_configuration() -> Self::RawConfiguration {
+        ()
+    }
+
+    async fn update_configuration(
+        _config: &Self::RawConfiguration,
+    ) -> Result<Self::RawConfiguration, UpdateConfigurationError> {
         Ok(())
     }
 
     async fn validate_raw_configuration(
         _configuration: &Self::Configuration,
-    ) -> Result<Self::Configuration, ConfigurationError> {
+    ) -> Result<Self::Configuration, ValidateError> {
         Ok(())
     }
 
@@ -265,6 +313,13 @@ impl Connector for Example {
         _configuration: &Self::Configuration,
         _metrics: &mut prometheus::Registry,
     ) -> Result<Self::State, InitializationError> {
+        Ok(())
+    }
+
+    fn fetch_metrics(
+        _configuration: &Self::Configuration,
+        _state: &Self::State,
+    ) -> Result<(), FetchMetricsError> {
         Ok(())
     }
 

@@ -1,11 +1,14 @@
-use crate::{connector::Connector, routes};
+use crate::{
+    connector::{Connector, InvalidRange, SchemaError},
+    routes,
+};
 use axum::{
     extract::State,
     http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
-use clap::{Args, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use ndc_client::models::{
     CapabilitiesResponse, ExplainResponse, MutationRequest, MutationResponse, QueryRequest,
     QueryResponse, SchemaResponse,
@@ -15,31 +18,29 @@ use opentelemetry_api::KeyValue;
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
 use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
+use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
 use std::error::Error;
-use std::net::SocketAddr;
-use tower_http::trace::{DefaultMakeSpan, TraceLayer};
+use std::{env, net::SocketAddr};
+use tower_http::{
+    cors::CorsLayer,
+    trace::{DefaultMakeSpan, TraceLayer},
+};
 use tracing::Level;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 #[derive(Parser)]
-struct CliArgs<C: Connector>
-where
-    C::ConfigureArgs: Clone + Send + Sync + Args,
-{
+struct CliArgs {
     #[command(subcommand)]
-    command: Command<C>,
+    command: Command,
 }
 
 #[derive(Clone, Subcommand)]
-enum Command<C: Connector>
-where
-    C::ConfigureArgs: Clone + Send + Sync + Args,
-{
+enum Command {
     #[command(arg_required_else_help = true)]
     Serve(ServeCommand),
     #[command()]
-    GenerateConfiguration(C::ConfigureArgs),
+    Configuration(ConfigurationCommand),
 }
 
 #[derive(Clone, Parser)]
@@ -48,6 +49,24 @@ struct ServeCommand {
     configuration: String,
     #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
     otlp_endpoint: Option<String>, // NOTE: `tracing` crate uses `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` ENV variable, but we want to control the endpoint via CLI interface
+    #[arg(long, value_name = "PORT", env = "PORT")]
+    port: Option<String>,
+}
+
+#[derive(Clone, Parser)]
+struct ConfigurationCommand {
+    #[command(subcommand)]
+    command: ConfigurationSubcommand,
+}
+
+#[derive(Clone, Subcommand)]
+enum ConfigurationSubcommand {
+    #[command()]
+    Serve(ServeConfigurationCommand),
+}
+
+#[derive(Clone, Parser)]
+struct ServeConfigurationCommand {
     #[arg(long, value_name = "PORT", env = "PORT")]
     port: Option<String>,
 }
@@ -84,18 +103,15 @@ pub struct ServerState<C: Connector> {
 /// - Logs are written to stdout
 pub async fn default_main<C: Connector + Clone + Default + 'static>() -> Result<(), Box<dyn Error>>
 where
-    C::ConfigureArgs: Clone + Send + Sync + Args,
-    C::RawConfiguration: Serialize + DeserializeOwned + Sync + Send,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send + Clone,
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
     C::State: Sync + Send + Clone,
 {
-    let CliArgs { command } = CliArgs::<C>::parse();
+    let CliArgs { command } = CliArgs::parse();
 
     match command {
         Command::Serve(serve_command) => serve::<C>(serve_command).await,
-        Command::GenerateConfiguration(configure_command) => {
-            configure::<C>(configure_command).await
-        }
+        Command::Configuration(configure_command) => configuration::<C>(configure_command).await,
     }
 }
 
@@ -208,7 +224,7 @@ where
     }
 }
 
-pub fn create_router<'a, C: Connector + Clone + 'static>(state: ServerState<C>) -> Router
+pub fn create_router<C: Connector + Clone + 'static>(state: ServerState<C>) -> Router
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
     C::Configuration: Serialize + Clone + Sync + Send,
@@ -228,7 +244,7 @@ where
 async fn get_metrics<C: Connector>(
     State(state): State<ServerState<C>>,
 ) -> Result<String, StatusCode> {
-    routes::get_metrics::<C>(state.metrics)
+    routes::get_metrics::<C>(&state.configuration, &state.state, state.metrics)
 }
 
 async fn get_capabilities<C: Connector>() -> Json<CapabilitiesResponse> {
@@ -266,14 +282,112 @@ async fn post_query<C: Connector>(
     routes::post_query::<C>(&state.configuration, &state.state, request).await
 }
 
-async fn configure<C: Connector + Clone + Default + 'static>(
-    args: C::ConfigureArgs,
+async fn configuration<C: Connector + 'static>(
+    command: ConfigurationCommand,
 ) -> Result<(), Box<dyn Error>>
 where
-    C::ConfigureArgs: Clone + Send + Sync + Args,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Clone + Sync + Send,
+    C::Configuration: Sync + Send,
+{
+    match command.command {
+        ConfigurationSubcommand::Serve(serve_command) => {
+            serve_configuration::<C>(serve_command).await
+        }
+    }
+}
+
+async fn serve_configuration<C: Connector + 'static>(
+    serve_command: ServeConfigurationCommand,
+) -> Result<(), Box<dyn Error>>
+where
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
+    C::Configuration: Sync + Send,
+{
+    let port = serve_command.port.unwrap_or("9100".into());
+    let address = SocketAddr::new("0.0.0.0".parse()?, port.parse()?);
+
+    println!("Starting server on {}", address);
+
+    let cors = CorsLayer::new()
+        .allow_origin(tower_http::cors::Any)
+        .allow_headers(tower_http::cors::Any);
+
+    let router = Router::new()
+        .route("/", get(get_empty::<C>).post(post_update::<C>))
+        .route("/schema", get(get_config_schema::<C>))
+        .route("/validate", post(post_validate::<C>))
+        .layer(cors);
+
+    axum::Server::bind(&address)
+        .serve(router.into_make_service())
+        .with_graceful_shutdown(async {
+            tokio::signal::ctrl_c()
+                .await
+                .expect("unable to install signal handler");
+        })
+        .await?;
+
+    Ok(())
+}
+
+async fn get_empty<C: Connector>() -> Json<C::RawConfiguration>
+where
     C::RawConfiguration: Serialize,
 {
-    let configuration = C::configure(&args).await?;
-    println!("{}", serde_json::to_string_pretty(&configuration)?);
-    Ok(())
+    Json(C::make_empty_configuration())
+}
+
+async fn post_update<C: Connector>(
+    Json(configuration): Json<C::RawConfiguration>,
+) -> Result<Json<C::RawConfiguration>, StatusCode>
+where
+    C::RawConfiguration: Serialize + DeserializeOwned,
+{
+    let updated = C::update_configuration(&configuration)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Json(updated))
+}
+
+async fn get_config_schema<C: Connector>() -> Json<RootSchema>
+where
+    C::RawConfiguration: JsonSchema,
+{
+    let schema = schemars::schema_for!(C::RawConfiguration);
+    Json(schema)
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct ValidateResponse {
+    schema: SchemaResponse,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type")]
+enum ValidateErrors {
+    InvalidConfiguration { ranges: Vec<InvalidRange> },
+    UnableToBuildSchema,
+}
+
+async fn post_validate<C: Connector>(
+    Json(configuration): Json<C::RawConfiguration>,
+) -> Result<Json<ValidateResponse>, (StatusCode, Json<ValidateErrors>)>
+where
+    C::RawConfiguration: DeserializeOwned,
+{
+    let configuration = C::validate_raw_configuration(&configuration)
+        .await
+        .map_err(|e| match e {
+            crate::connector::ValidateError::ValidateError(ranges) => (
+                StatusCode::BAD_REQUEST,
+                Json(ValidateErrors::InvalidConfiguration { ranges }),
+            ),
+        })?;
+    let schema = C::get_schema(&configuration).await.map_err(|e| match e {
+        SchemaError::Other(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ValidateErrors::UnableToBuildSchema),
+        ),
+    })?;
+    Ok(Json(ValidateResponse { schema }))
 }
