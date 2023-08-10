@@ -53,7 +53,6 @@ pub struct ServerState<C: Connector> {
     configuration: C::Configuration,
     state: C::State,
     metrics: Registry,
-    // tracer: Arc<sdk::trace::Tracer>,
 }
 
 /// A default main function for a connector.
