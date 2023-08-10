@@ -21,7 +21,7 @@ use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
 use std::error::Error;
 use std::{env, net::SocketAddr};
-use tower_http::trace::TraceLayer;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 #[derive(Parser)]
 struct CliArgs {
@@ -280,10 +280,15 @@ where
 
     println!("Starting server on {}", address);
 
+    let cors = CorsLayer::new()
+        .allow_origin(tower_http::cors::Any)
+        .allow_headers(tower_http::cors::Any);
+
     let router = Router::new()
         .route("/", get(get_empty::<C>).post(post_update::<C>))
         .route("/schema", get(get_config_schema::<C>))
-        .route("/validate", post(post_validate::<C>));
+        .route("/validate", post(post_validate::<C>))
+        .layer(cors);
 
     axum::Server::bind(&address)
         .serve(router.into_make_service())
