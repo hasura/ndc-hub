@@ -34,6 +34,7 @@ In addition, this library adopts certain conventions which are not covered by th
 #### Getting Started with the SDK
 
 ```sh
+cd rust-connector-sdk
 cargo build
 ```
 
