@@ -36,7 +36,7 @@ struct CliArgs {
 }
 
 #[derive(Clone, Subcommand)]
-enum Command {
+pub enum Command {
     #[command(arg_required_else_help = true)]
     Serve(ServeCommand),
     #[command()]
@@ -44,7 +44,7 @@ enum Command {
 }
 
 #[derive(Clone, Parser)]
-struct ServeCommand {
+pub struct ServeCommand {
     #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
     configuration: String,
     #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
@@ -54,7 +54,7 @@ struct ServeCommand {
 }
 
 #[derive(Clone, Parser)]
-struct ConfigurationCommand {
+pub struct ConfigurationCommand {
     #[command(subcommand)]
     command: ConfigurationSubcommand,
 }
@@ -108,7 +108,38 @@ where
     C::State: Sync + Send + Clone,
 {
     let CliArgs { command } = CliArgs::parse();
+    run_with_command::<C>(command).await
+}
 
+/// Given a configuration file path, serve the connector with that configuration. This is useful in
+/// situations such as testing where you don't want to (or can't) pass arguments via the command
+/// line.
+pub async fn serve_with_configuration_file<C: Connector + Clone + Default + 'static>(
+    configuration: String,
+) -> Result<(), Box<dyn Error>>
+where
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send + Clone,
+    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
+    C::State: Sync + Send + Clone,
+{
+    run_with_command::<C>(Command::Serve(ServeCommand {
+        configuration,
+        otlp_endpoint: None,
+        port: None,
+    }))
+    .await
+}
+
+/// Run the connector with the given command. Boilerplate factored out of
+/// `serve_with_configuration_file` and `default_main`.
+async fn run_with_command<C: Connector + Clone + Default + 'static>(
+    command: Command,
+) -> Result<(), Box<dyn Error>>
+where
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send + Clone,
+    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
+    C::State: Sync + Send + Clone,
+{
     match command {
         Command::Serve(serve_command) => serve::<C>(serve_command).await,
         Command::Configuration(configure_command) => configuration::<C>(configure_command).await,
