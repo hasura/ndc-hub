@@ -36,7 +36,7 @@ struct CliArgs {
 }
 
 #[derive(Clone, Subcommand)]
-pub enum Command {
+enum Command {
     #[command(arg_required_else_help = true)]
     Serve(ServeCommand),
     #[command()]
@@ -44,7 +44,7 @@ pub enum Command {
 }
 
 #[derive(Clone, Parser)]
-pub struct ServeCommand {
+struct ServeCommand {
     #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
     configuration: String,
     #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
@@ -54,7 +54,7 @@ pub struct ServeCommand {
 }
 
 #[derive(Clone, Parser)]
-pub struct ConfigurationCommand {
+struct ConfigurationCommand {
     #[command(subcommand)]
     command: ConfigurationSubcommand,
 }
