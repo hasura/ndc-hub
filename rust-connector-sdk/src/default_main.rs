@@ -2,6 +2,7 @@ use crate::{
     connector::{Connector, InvalidRange, SchemaError},
     routes,
 };
+use async_trait::async_trait;
 use axum::{
     extract::State,
     http::StatusCode,
@@ -20,7 +21,7 @@ use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
-use std::error::Error;
+use std::{error::Error, process::exit};
 use std::{env, net::SocketAddr};
 use tower_http::{
     cors::CorsLayer,
@@ -41,6 +42,8 @@ enum Command {
     Serve(ServeCommand),
     #[command()]
     Configuration(ConfigurationCommand),
+    #[command()]
+    Test(TestCommand),
 }
 
 #[derive(Clone, Parser)]
@@ -69,6 +72,14 @@ enum ConfigurationSubcommand {
 struct ServeConfigurationCommand {
     #[arg(long, value_name = "PORT", env = "PORT")]
     port: Option<String>,
+}
+
+#[derive(Clone, Parser)]
+struct TestCommand {
+    #[arg(long, value_name = "PORT", env = "PORT")]
+    seed: Option<String>,
+    #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
+    configuration: String,
 }
 
 #[derive(Debug, Clone)]
@@ -112,6 +123,7 @@ where
     match command {
         Command::Serve(serve_command) => serve::<C>(serve_command).await,
         Command::Configuration(configure_command) => configuration::<C>(configure_command).await,
+        Command::Test(test_command) => test::<C>(test_command).await,
     }
 }
 
@@ -390,4 +402,86 @@ where
         ),
     })?;
     Ok(Json(ValidateResponse { schema }))
+}
+
+struct ConnectorAdapter<C: Connector> {
+    configuration: C::Configuration,
+    state: C::State,
+}
+
+#[async_trait]
+impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C>
+where
+    C::Configuration: Send + Sync + 'static,
+    C::State: Send + Sync + 'static,
+{
+    async fn get_capabilities(
+        &self,
+    ) -> Result<ndc_client::models::CapabilitiesResponse, ndc_test::Error> {
+        Ok(C::get_capabilities().await)
+    }
+
+    async fn get_schema(&self) -> Result<ndc_client::models::SchemaResponse, ndc_test::Error> {
+        match C::get_schema(&self.configuration).await {
+            Ok(response) => Ok(response),
+            Err(err) => Err(ndc_test::Error::OtherError(err.into()))
+        }
+    }
+
+    async fn query(
+        &self,
+        request: ndc_client::models::QueryRequest,
+    ) -> Result<ndc_client::models::QueryResponse, ndc_test::Error> {
+        match C::query(&self.configuration, &self.state, request).await {
+            Ok(response) => Ok(response),
+            Err(err) => Err(ndc_test::Error::OtherError(err.into()))
+        }
+    }
+}
+
+async fn test<C: Connector + 'static>(command: TestCommand) -> Result<(), Box<dyn Error>>
+where
+    C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Sync + Send + 'static,
+    C::State: Send + Sync + 'static,
+{
+    let test_configuration = ndc_test::TestConfiguration { seed: command.seed };
+
+    let configuration_json = std::fs::read_to_string(command.configuration).unwrap();
+    let raw_configuration =
+        serde_json::de::from_str::<C::RawConfiguration>(configuration_json.as_str()).unwrap();
+    let configuration = C::validate_raw_configuration(&raw_configuration)
+        .await
+        .unwrap();
+
+    let mut metrics = Registry::new();
+    let state = C::try_init_state(&configuration, &mut metrics)
+        .await
+        .unwrap();
+
+    let connector = ConnectorAdapter::<C> { configuration, state };
+    let results = ndc_test::test_connector(&test_configuration, &connector).await;
+
+    if !results.failures.is_empty() {
+        println!();
+        println!(
+            "\x1b[1;31mFailed with {0} test failures:\x1b[22;0m",
+            results.failures.len()
+        );
+
+        let mut ix = 1;
+        for failure in results.failures {
+            println!();
+            println!("[{0}] {1}", ix, failure.name);
+            for path_element in failure.path {
+                println!("  in {0}", path_element);
+            }
+            println!("Details: {0}", failure.error);
+            ix += 1;
+        }
+
+        exit(1)
+    }
+
+    Ok(())
 }
