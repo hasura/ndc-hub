@@ -1,5 +1,5 @@
 use crate::{
-    connector::{Connector, InvalidRange, SchemaError},
+    connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
     routes,
 };
 use axum::{
@@ -10,8 +10,8 @@ use axum::{
 };
 use clap::{Parser, Subcommand};
 use ndc_client::models::{
-    CapabilitiesResponse, ExplainResponse, MutationRequest, MutationResponse, QueryRequest,
-    QueryResponse, SchemaResponse,
+    CapabilitiesResponse, ErrorResponse, ExplainResponse, MutationRequest, MutationResponse,
+    QueryRequest, QueryResponse, SchemaResponse,
 };
 use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
 use opentelemetry_api::KeyValue;
@@ -243,7 +243,7 @@ where
 
 async fn get_metrics<C: Connector>(
     State(state): State<ServerState<C>>,
-) -> Result<String, StatusCode> {
+) -> Result<String, (StatusCode, Json<ErrorResponse>)> {
     routes::get_metrics::<C>(&state.configuration, &state.state, state.metrics)
 }
 
@@ -257,28 +257,28 @@ async fn get_health<C: Connector>(State(state): State<ServerState<C>>) -> Status
 
 async fn get_schema<C: Connector>(
     State(state): State<ServerState<C>>,
-) -> Result<Json<SchemaResponse>, StatusCode> {
+) -> Result<Json<SchemaResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::get_schema::<C>(&state.configuration).await
 }
 
 async fn post_explain<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<QueryRequest>,
-) -> Result<Json<ExplainResponse>, StatusCode> {
+) -> Result<Json<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_explain::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_mutation<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<MutationRequest>,
-) -> Result<Json<MutationResponse>, StatusCode> {
+) -> Result<Json<MutationResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_mutation::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_query<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<QueryRequest>,
-) -> Result<Json<QueryResponse>, StatusCode> {
+) -> Result<Json<QueryResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_query::<C>(&state.configuration, &state.state, request).await
 }
 
@@ -339,13 +339,17 @@ where
 
 async fn post_update<C: Connector>(
     Json(configuration): Json<C::RawConfiguration>,
-) -> Result<Json<C::RawConfiguration>, StatusCode>
+) -> Result<Json<C::RawConfiguration>, (StatusCode, String)>
 where
     C::RawConfiguration: Serialize + DeserializeOwned,
 {
     let updated = C::update_configuration(&configuration)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|err| match err {
+            UpdateConfigurationError::Other(err) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+            }
+        })?;
     Ok(Json(updated))
 }
 
