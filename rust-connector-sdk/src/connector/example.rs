@@ -47,7 +47,7 @@ impl Connector for Example {
         _configuration: &Self::Configuration,
         _state: &Self::State,
     ) -> Result<(), HealthError> {
-        Err(HealthError::Other("Nah.".into()))
+        Ok(())
     }
 
     async fn get_capabilities() -> models::CapabilitiesResponse {

@@ -264,7 +264,9 @@ async fn get_capabilities<C: Connector>() -> Json<CapabilitiesResponse> {
     routes::get_capabilities::<C>().await
 }
 
-async fn get_health<C: Connector>(State(state): State<ServerState<C>>) -> StatusCode {
+async fn get_health<C: Connector>(
+    State(state): State<ServerState<C>>,
+) -> Result<(), (StatusCode, Json<ErrorResponse>)> {
     routes::get_health::<C>(&state.configuration, &state.state).await
 }
 

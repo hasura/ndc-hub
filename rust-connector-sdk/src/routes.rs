@@ -1,5 +1,5 @@
 use axum::{http::StatusCode, Json};
-use ndc_client::models::{self, CapabilitiesResponse};
+use ndc_client::models;
 use prometheus::{Registry, TextEncoder};
 
 use crate::connector::{Connector, HealthError};
@@ -35,21 +35,24 @@ pub fn get_metrics<C: Connector>(
     })
 }
 
-pub async fn get_capabilities<C: Connector>() -> Json<CapabilitiesResponse> {
+pub async fn get_capabilities<C: Connector>() -> Json<models::CapabilitiesResponse> {
     Json(C::get_capabilities().await)
 }
 
 pub async fn get_health<C: Connector>(
     configuration: &C::Configuration,
     state: &C::State,
-) -> StatusCode {
+) -> Result<(), (StatusCode, Json<models::ErrorResponse>)> {
     // the context extractor will error if the deployment can't be found.
     match C::health_check(&configuration, &state).await {
-        Ok(_) => StatusCode::NO_CONTENT,
-        Err(HealthError::Other(_)) => {
-            // TODO: log error
-            StatusCode::SERVICE_UNAVAILABLE
-        }
+        Ok(()) => Ok(()),
+        Err(HealthError::Other(err)) => Err((
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(models::ErrorResponse {
+                message: err.to_string(),
+                details: serde_json::Value::Null,
+            }),
+        )),
     }
 }
 
