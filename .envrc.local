@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+use flake
+
+source_env ../.envrc
