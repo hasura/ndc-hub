@@ -77,6 +77,8 @@ struct ServeConfigurationCommand {
 
 #[derive(Clone, Parser)]
 struct CheckHealthCommand {
+    #[arg(long, value_name = "HOST")]
+    host: Option<String>,
     #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
     port: Port,
 }
@@ -412,10 +414,9 @@ where
 }
 
 async fn check_health(
-    CheckHealthCommand { port }: CheckHealthCommand,
+    CheckHealthCommand { host, port }: CheckHealthCommand,
 ) -> Result<(), Box<dyn Error>> {
-    let socket = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::LOCALHOST), port);
-    match check_health::check_health(socket).await {
+    match check_health::check_health(host, port).await {
         Ok(()) => {
             println!("Health check succeeded.");
             Ok(())

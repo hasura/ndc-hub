@@ -44,3 +44,4 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "json",
 ] }
 tracing-opentelemetry = "0.20.0"
+url = "2.4.1"
