@@ -27,10 +27,9 @@ use tower_http::{
 use tracing::Level;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
-use crate::{
-    connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
-    routes,
-};
+use crate::check_health;
+use crate::connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError};
+use crate::routes;
 
 #[derive(Parser)]
 struct CliArgs {
@@ -44,6 +43,8 @@ enum Command {
     Serve(ServeCommand),
     #[command()]
     Configuration(ConfigurationCommand),
+    #[command()]
+    CheckHealth(CheckHealthCommand),
 }
 
 #[derive(Clone, Parser)]
@@ -71,6 +72,12 @@ enum ConfigurationSubcommand {
 #[derive(Clone, Parser)]
 struct ServeConfigurationCommand {
     #[arg(long, value_name = "PORT", env = "PORT", default_value = "9100")]
+    port: Port,
+}
+
+#[derive(Clone, Parser)]
+struct CheckHealthCommand {
+    #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
     port: Port,
 }
 
@@ -117,6 +124,7 @@ where
     match command {
         Command::Serve(serve_command) => serve::<C>(serve_command).await,
         Command::Configuration(configure_command) => configuration::<C>(configure_command).await,
+        Command::CheckHealth(check_health_command) => check_health(check_health_command).await,
     }
 }
 
@@ -399,4 +407,20 @@ where
         ),
     })?;
     Ok(Json(ValidateResponse { schema }))
+}
+
+async fn check_health(
+    CheckHealthCommand { port }: CheckHealthCommand,
+) -> Result<(), Box<dyn Error>> {
+    let socket = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::LOCALHOST), port);
+    match check_health::check_health(socket).await {
+        Ok(()) => {
+            println!("Health check succeeded.");
+            Ok(())
+        }
+        Err(err) => {
+            println!("Health check failed with {}", err);
+            Err(err.into())
+        }
+    }
 }
