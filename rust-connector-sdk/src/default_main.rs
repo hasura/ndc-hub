@@ -415,11 +415,11 @@ async fn check_health(
     let socket = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::LOCALHOST), port);
     match check_health::check_health(socket).await {
         Ok(()) => {
-            eprintln!("Health check succeeded.");
+            println!("Health check succeeded.");
             Ok(())
         }
         Err(err) => {
-            eprintln!("Health check failed.");
+            println!("Health check failed.");
             Err(err.into())
         }
     }
