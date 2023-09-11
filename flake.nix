@@ -39,6 +39,11 @@
         buildInputs = pkgs.lib.optionals pkgs.stdenv.isDarwin [
           pkgs.darwin.apple_sdk.frameworks.Security
           pkgs.libiconv
+        ]
+
+        ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+          pkgs.pkg-config
+          pkgs.openssl
         ];
       };
 
