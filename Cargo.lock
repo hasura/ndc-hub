@@ -906,7 +906,6 @@ dependencies = [
  "axum",
  "axum-macros",
  "clap",
- "log",
  "ndc-client",
  "opentelemetry",
  "opentelemetry-appender-log",

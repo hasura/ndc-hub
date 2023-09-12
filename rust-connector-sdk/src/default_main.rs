@@ -11,7 +11,6 @@ use ndc_client::models::{
 };
 use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
 use opentelemetry_api::KeyValue;
-use opentelemetry_appender_log::OpenTelemetryLogBridge;
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
 use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
@@ -178,9 +177,7 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
         )
         .build();
 
-    // configure the `log` crate to output via OpenTelemetry
-    let otel_log_appender = OpenTelemetryLogBridge::new(&logger_provider);
-    log::set_boxed_logger(Box::new(otel_log_appender)).unwrap();
+    global::set_logger_provider(logger_provider);
 
     tracing_subscriber::registry()
         .with(
