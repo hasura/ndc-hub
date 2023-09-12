@@ -1,7 +1,7 @@
-use crate::{
-    connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
-    routes,
-};
+use std::env;
+use std::error::Error;
+use std::net;
+
 use axum::{
     extract::State,
     http::StatusCode,
@@ -20,14 +20,16 @@ use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
-use std::error::Error;
-use std::{env, net::SocketAddr};
 use tower_http::{
     cors::CorsLayer,
     trace::{DefaultMakeSpan, TraceLayer},
 };
 use tracing::Level;
 use tracing_subscriber::{prelude::*, EnvFilter};
+
+use crate::check_health;
+use crate::connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError};
+use crate::routes;
 
 #[derive(Parser)]
 struct CliArgs {
@@ -41,6 +43,8 @@ enum Command {
     Serve(ServeCommand),
     #[command()]
     Configuration(ConfigurationCommand),
+    #[command()]
+    CheckHealth(CheckHealthCommand),
 }
 
 #[derive(Clone, Parser)]
@@ -49,8 +53,8 @@ struct ServeCommand {
     configuration: String,
     #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
     otlp_endpoint: Option<String>, // NOTE: `tracing` crate uses `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` ENV variable, but we want to control the endpoint via CLI interface
-    #[arg(long, value_name = "PORT", env = "PORT")]
-    port: Option<String>,
+    #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
+    port: Port,
 }
 
 #[derive(Clone, Parser)]
@@ -67,9 +71,19 @@ enum ConfigurationSubcommand {
 
 #[derive(Clone, Parser)]
 struct ServeConfigurationCommand {
-    #[arg(long, value_name = "PORT", env = "PORT")]
-    port: Option<String>,
+    #[arg(long, value_name = "PORT", env = "PORT", default_value = "9100")]
+    port: Port,
 }
+
+#[derive(Clone, Parser)]
+struct CheckHealthCommand {
+    #[arg(long, value_name = "HOST")]
+    host: Option<String>,
+    #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
+    port: Port,
+}
+
+type Port = u16;
 
 #[derive(Debug, Clone)]
 pub struct ServerState<C: Connector> {
@@ -112,6 +126,7 @@ where
     match command {
         Command::Serve(serve_command) => serve::<C>(serve_command).await,
         Command::Configuration(configure_command) => configuration::<C>(configure_command).await,
+        Command::CheckHealth(check_health_command) => check_health(check_health_command).await,
     }
 }
 
@@ -177,8 +192,8 @@ where
         TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
     );
 
-    let port = serve_command.port.unwrap_or("8100".into());
-    let address = SocketAddr::new("0.0.0.0".parse()?, port.parse()?);
+    let port = serve_command.port;
+    let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
 
     println!("Starting server on {}", address);
 
@@ -251,7 +266,9 @@ async fn get_capabilities<C: Connector>() -> Json<CapabilitiesResponse> {
     routes::get_capabilities::<C>().await
 }
 
-async fn get_health<C: Connector>(State(state): State<ServerState<C>>) -> StatusCode {
+async fn get_health<C: Connector>(
+    State(state): State<ServerState<C>>,
+) -> Result<(), (StatusCode, Json<ErrorResponse>)> {
     routes::get_health::<C>(&state.configuration, &state.state).await
 }
 
@@ -303,8 +320,8 @@ where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
     C::Configuration: Sync + Send,
 {
-    let port = serve_command.port.unwrap_or("9100".into());
-    let address = SocketAddr::new("0.0.0.0".parse()?, port.parse()?);
+    let port = serve_command.port;
+    let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
 
     println!("Starting server on {}", address);
 
@@ -394,4 +411,19 @@ where
         ),
     })?;
     Ok(Json(ValidateResponse { schema }))
+}
+
+async fn check_health(
+    CheckHealthCommand { host, port }: CheckHealthCommand,
+) -> Result<(), Box<dyn Error>> {
+    match check_health::check_health(host, port).await {
+        Ok(()) => {
+            println!("Health check succeeded.");
+            Ok(())
+        }
+        Err(err) => {
+            println!("Health check failed.");
+            Err(err.into())
+        }
+    }
 }
