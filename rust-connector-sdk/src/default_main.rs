@@ -1,7 +1,3 @@
-use std::env;
-use std::error::Error;
-use std::net;
-
 use axum::{
     extract::State,
     http::StatusCode,
@@ -15,11 +11,15 @@ use ndc_client::models::{
 };
 use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
 use opentelemetry_api::KeyValue;
+use opentelemetry_appender_log::OpenTelemetryLogBridge;
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
 use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
+use std::env;
+use std::error::Error;
+use std::net;
 use tower_http::{
     cors::CorsLayer,
     trace::{DefaultMakeSpan, TraceLayer},
@@ -133,6 +133,17 @@ where
 fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
+    let resource = opentelemetry::sdk::Resource::new(vec![
+        KeyValue::new(
+            opentelemetry_semantic_conventions::resource::SERVICE_NAME,
+            "ndc-hub",
+        ),
+        KeyValue::new(
+            opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
+            env!("CARGO_PKG_VERSION"),
+        ),
+    ]);
+
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
@@ -145,19 +156,31 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
         )
         .with_trace_config(
             opentelemetry::sdk::trace::config()
-                .with_resource(opentelemetry::sdk::Resource::new(vec![
-                    KeyValue::new(
-                        opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-                        "ndc-hub",
-                    ),
-                    KeyValue::new(
-                        opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
-                        env!("CARGO_PKG_VERSION"),
-                    ),
-                ]))
+                .with_resource(resource.clone())
                 .with_sampler(Sampler::ParentBased(Box::new(Sampler::AlwaysOn))),
         )
         .install_batch(opentelemetry::runtime::Tokio)?;
+
+    let logger_provider = opentelemetry_sdk::logs::LoggerProvider::builder()
+        .with_config(opentelemetry_sdk::logs::Config {
+            resource: std::borrow::Cow::Owned(resource),
+        })
+        .with_simple_exporter(
+            opentelemetry_otlp::LogExporterBuilder::Tonic(
+                opentelemetry_otlp::new_exporter().tonic().with_endpoint(
+                    serve_command
+                        .otlp_endpoint
+                        .clone()
+                        .unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT.into()),
+                ),
+            )
+            .build_log_exporter()?,
+        )
+        .build();
+
+    // configure the `log` crate to output via OpenTelemetry
+    let otel_log_appender = OpenTelemetryLogBridge::new(&logger_provider);
+    log::set_boxed_logger(Box::new(otel_log_appender)).unwrap();
 
     tracing_subscriber::registry()
         .with(

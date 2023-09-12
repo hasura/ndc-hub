@@ -16,14 +16,18 @@ async-trait = "0.1.68"
 axum = "0.6.18"
 axum-macros = "0.3.7"
 clap = { version = "4.3.9", features = ["derive", "env"] }
+log = {version = "0.4.17"}
 ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.3" }
 opentelemetry = { version = "0.20", features = [
   "rt-tokio",
   "trace",
+  "logs"
 ], default-features = false }
+opentelemetry-appender-log = { version = "0.1.0", default-features = false }
 opentelemetry_sdk = "0.20.0"
 opentelemetry_api = "0.20.0"
 opentelemetry-otlp = { version = "0.13.0", features = [
+    "logs",
     "reqwest-client",
 ] }
 opentelemetry-semantic-conventions = "0.12.0"
