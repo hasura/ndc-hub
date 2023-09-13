@@ -1,0 +1,31 @@
+{
+    "tile": {
+      "description": "Connect to user-supplied typescript functions and expose them to Hasura Cloud v3 project",
+      "title": "Typescript (Deno) Connector",
+      "media": "registry/typescript-deno/logo.png",
+      "tags": ["typescript", "actions"],
+      "latest_version": ""
+    },
+    "author": {
+      "support_email": "support@hasura.io",
+      "homepage": "https://hasura.io",
+      "name": "Hasura"
+    },
+    "is_verified": false,
+    "is_hosted_by_hasura": false,
+    "source_code": {
+      "is_open_source": true,
+      "repository": "https://github.com/hasura/ndc-typescript-deno/",
+      "version": [
+        {
+          "tag": "",
+          "hash": "",
+          "is_verified": ""
+        }
+      ]
+    },
+    "documentation": {
+      "overview": "https://github.com/hasura/ndc-typescript-deno/#overview",
+      "deployment": "https://github.com/hasura/ndc-typescript-deno/#deployment-for-hasura-users"
+    }
+  }
