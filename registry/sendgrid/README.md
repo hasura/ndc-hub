@@ -9,6 +9,7 @@ https://github.com/hasura/ndc-sendgrid/tree/main#sendgrid-connector
 
 * [Create a SendGrid API account](https://signup.sendgrid.com/)
 * [Create an API key](https://app.sendgrid.com/settings/api_keys)
+* Create a share service token
 
 You will need the Hasura
 [V3 CLI](https://github.com/hasura/v3-cli)
@@ -28,7 +29,7 @@ You will need to have a configuration file available with your sendgrid credenti
 
 Deploy and name the connector with the following command referencing your config:
 
-> hasura3 connector create sendgrid:v1 --github-repo-url https://github.com/hasura/ndc-sendgrid/tree/main --volume ./sendgrid.connector.configuration.json:/config.json
+> hasura3 connector create sendgrid:v1 --github-repo-url https://github.com/hasura/ndc-sendgrid/tree/main --volume ./sendgrid.connector.configuration.json:/config.json --env SERVICE_TOKEN_SECRET=MY-SERVICE-TOKEN
 
 Monitor the deployment status by name:
 
