@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use async_trait::async_trait;
 use opentelemetry::logs::Logger;
 use opentelemetry::logs::LoggerProvider;
+use opentelemetry::trace::TraceContextExt;
 use tracing::info_span;
 use tracing::Instrument;
 
@@ -54,8 +55,11 @@ impl Connector for Example {
 
         let logger = provider.logger("ndc_hub_example");
 
+        let context = opentelemetry::Context::current();
+
         let log_record = opentelemetry::logs::LogRecordBuilder::new()
             .with_severity_number(opentelemetry::logs::Severity::Info)
+            .with_span_context(context.span().span_context())
             .with_attribute("event.name", "health-check-success")
             .with_attribute("event.domain", "database")
             .with_body("Health check OK!".into())
