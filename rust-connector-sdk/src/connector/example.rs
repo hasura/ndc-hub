@@ -15,9 +15,7 @@ impl Connector for Example {
     type Configuration = ();
     type State = ();
 
-    fn make_empty_configuration() -> Self::RawConfiguration {
-        ()
-    }
+    fn make_empty_configuration() -> Self::RawConfiguration {}
 
     async fn update_configuration(
         _config: &Self::RawConfiguration,
@@ -73,7 +71,6 @@ impl Connector for Example {
     ) -> Result<models::SchemaResponse, SchemaError> {
         async {
             info_span!("inside tracing example");
-            return ();
         }
         .instrument(info_span!("tracing example"))
         .await;

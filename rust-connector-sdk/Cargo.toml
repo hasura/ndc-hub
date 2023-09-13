@@ -16,8 +16,8 @@ async-trait = "^0.1.68"
 axum = "^0.6.18"
 axum-macros = "^0.3.7"
 clap = { version = "^4.3.9", features = ["derive", "env"] }
-ndc-client = { git = "http://github.com/hasura/ndc-spec.git", rev = "ab25865b795c86fc1d50dd13ebbbe8e26b1cdf8e" }
-ndc-test = { git = "http://github.com/hasura/ndc-spec.git", rev = "ab25865b795c86fc1d50dd13ebbbe8e26b1cdf8e" }
+ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.4" }
+ndc-test = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.4" }
 opentelemetry = { version = "^0.20", features = [
   "rt-tokio",
   "trace",
@@ -29,6 +29,7 @@ opentelemetry-otlp = { version = "^0.13.0", features = [
 ] }
 opentelemetry-semantic-conventions = "^0.12.0"
 prometheus = "^0.13.3"
+reqwest = "^0.11.20"
 schemars = { version = "^0.8.12", features = ["smol_str"] }
 serde = { version = "^1.0.164", features = ["derive"] }
 serde_json = { version = "^1.0.97", features = ["raw_value"] }
@@ -44,3 +45,4 @@ tracing-subscriber = { version = "^0.3", default-features = false, features = [
   "json",
 ] }
 tracing-opentelemetry = "^0.20.0"
+url = "2.4.1"

@@ -1,7 +1,9 @@
 use crate::{
-    connector::{Connector, InvalidRange, SchemaError},
+    check_health,
+    connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
     routes,
 };
+
 use async_trait::async_trait;
 use axum::{
     extract::State,
@@ -11,8 +13,8 @@ use axum::{
 };
 use clap::{Parser, Subcommand};
 use ndc_client::models::{
-    CapabilitiesResponse, ExplainResponse, MutationRequest, MutationResponse, QueryRequest,
-    QueryResponse, SchemaResponse,
+    CapabilitiesResponse, ErrorResponse, ExplainResponse, MutationRequest, MutationResponse,
+    QueryRequest, QueryResponse, SchemaResponse,
 };
 use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
 use opentelemetry_api::KeyValue;
@@ -21,8 +23,9 @@ use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
-use std::{error::Error, process::exit};
-use std::{env, net::SocketAddr};
+use std::{env, process::exit};
+use std::error::Error;
+use std::net;
 use tower_http::{
     cors::CorsLayer,
     trace::{DefaultMakeSpan, TraceLayer},
@@ -44,6 +47,8 @@ enum Command {
     Configuration(ConfigurationCommand),
     #[command()]
     Test(TestCommand),
+    #[command()]
+    CheckHealth(CheckHealthCommand),
 }
 
 #[derive(Clone, Parser)]
@@ -52,8 +57,8 @@ struct ServeCommand {
     configuration: String,
     #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
     otlp_endpoint: Option<String>, // NOTE: `tracing` crate uses `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` ENV variable, but we want to control the endpoint via CLI interface
-    #[arg(long, value_name = "PORT", env = "PORT")]
-    port: Option<String>,
+    #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
+    port: Port,
 }
 
 #[derive(Clone, Parser)]
@@ -70,8 +75,8 @@ enum ConfigurationSubcommand {
 
 #[derive(Clone, Parser)]
 struct ServeConfigurationCommand {
-    #[arg(long, value_name = "PORT", env = "PORT")]
-    port: Option<String>,
+    #[arg(long, value_name = "PORT", env = "PORT", default_value = "9100")]
+    port: Port,
 }
 
 #[derive(Clone, Parser)]
@@ -81,6 +86,16 @@ struct TestCommand {
     #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
     configuration: String,
 }
+
+#[derive(Clone, Parser)]
+struct CheckHealthCommand {
+    #[arg(long, value_name = "HOST")]
+    host: Option<String>,
+    #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
+    port: Port,
+}
+
+type Port = u16;
 
 #[derive(Debug, Clone)]
 pub struct ServerState<C: Connector> {
@@ -124,6 +139,7 @@ where
         Command::Serve(serve_command) => serve::<C>(serve_command).await,
         Command::Configuration(configure_command) => configuration::<C>(configure_command).await,
         Command::Test(test_command) => test::<C>(test_command).await,
+        Command::CheckHealth(check_health_command) => check_health(check_health_command).await,
     }
 }
 
@@ -189,8 +205,8 @@ where
         TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
     );
 
-    let port = serve_command.port.unwrap_or("8100".into());
-    let address = SocketAddr::new("0.0.0.0".parse()?, port.parse()?);
+    let port = serve_command.port;
+    let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
 
     println!("Starting server on {}", address);
 
@@ -255,7 +271,7 @@ where
 
 async fn get_metrics<C: Connector>(
     State(state): State<ServerState<C>>,
-) -> Result<String, StatusCode> {
+) -> Result<String, (StatusCode, Json<ErrorResponse>)> {
     routes::get_metrics::<C>(&state.configuration, &state.state, state.metrics)
 }
 
@@ -263,34 +279,36 @@ async fn get_capabilities<C: Connector>() -> Json<CapabilitiesResponse> {
     routes::get_capabilities::<C>().await
 }
 
-async fn get_health<C: Connector>(State(state): State<ServerState<C>>) -> StatusCode {
+async fn get_health<C: Connector>(
+    State(state): State<ServerState<C>>,
+) -> Result<(), (StatusCode, Json<ErrorResponse>)> {
     routes::get_health::<C>(&state.configuration, &state.state).await
 }
 
 async fn get_schema<C: Connector>(
     State(state): State<ServerState<C>>,
-) -> Result<Json<SchemaResponse>, StatusCode> {
+) -> Result<Json<SchemaResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::get_schema::<C>(&state.configuration).await
 }
 
 async fn post_explain<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<QueryRequest>,
-) -> Result<Json<ExplainResponse>, StatusCode> {
+) -> Result<Json<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_explain::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_mutation<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<MutationRequest>,
-) -> Result<Json<MutationResponse>, StatusCode> {
+) -> Result<Json<MutationResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_mutation::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_query<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<QueryRequest>,
-) -> Result<Json<QueryResponse>, StatusCode> {
+) -> Result<Json<QueryResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_query::<C>(&state.configuration, &state.state, request).await
 }
 
@@ -315,8 +333,8 @@ where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
     C::Configuration: Sync + Send,
 {
-    let port = serve_command.port.unwrap_or("9100".into());
-    let address = SocketAddr::new("0.0.0.0".parse()?, port.parse()?);
+    let port = serve_command.port;
+    let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
 
     println!("Starting server on {}", address);
 
@@ -351,13 +369,17 @@ where
 
 async fn post_update<C: Connector>(
     Json(configuration): Json<C::RawConfiguration>,
-) -> Result<Json<C::RawConfiguration>, StatusCode>
+) -> Result<Json<C::RawConfiguration>, (StatusCode, String)>
 where
     C::RawConfiguration: Serialize + DeserializeOwned,
 {
     let updated = C::update_configuration(&configuration)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|err| match err {
+            UpdateConfigurationError::Other(err) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+            }
+        })?;
     Ok(Json(updated))
 }
 
@@ -424,7 +446,7 @@ where
     async fn get_schema(&self) -> Result<ndc_client::models::SchemaResponse, ndc_test::Error> {
         match C::get_schema(&self.configuration).await {
             Ok(response) => Ok(response),
-            Err(err) => Err(ndc_test::Error::OtherError(err.into()))
+            Err(err) => Err(ndc_test::Error::OtherError(err.into())),
         }
     }
 
@@ -434,7 +456,7 @@ where
     ) -> Result<ndc_client::models::QueryResponse, ndc_test::Error> {
         match C::query(&self.configuration, &self.state, request).await {
             Ok(response) => Ok(response),
-            Err(err) => Err(ndc_test::Error::OtherError(err.into()))
+            Err(err) => Err(ndc_test::Error::OtherError(err.into())),
         }
     }
 }
@@ -459,7 +481,10 @@ where
         .await
         .unwrap();
 
-    let connector = ConnectorAdapter::<C> { configuration, state };
+    let connector = ConnectorAdapter::<C> {
+        configuration,
+        state,
+    };
     let results = ndc_test::test_connector(&test_configuration, &connector).await;
 
     if !results.failures.is_empty() {
@@ -484,4 +509,18 @@ where
     }
 
     Ok(())
+}
+async fn check_health(
+    CheckHealthCommand { host, port }: CheckHealthCommand,
+) -> Result<(), Box<dyn Error>> {
+    match check_health::check_health(host, port).await {
+        Ok(()) => {
+            println!("Health check succeeded.");
+            Ok(())
+        }
+        Err(err) => {
+            println!("Health check failed.");
+            Err(err.into())
+        }
+    }
 }
