@@ -23,5 +23,9 @@
           "is_verified": ""
         }
       ]
+    },
+    "documentation": {
+      "overview": "https://github.com/hasura/ndc-sendgrid/tree/main#sendgrid-connector",
+      "deployment": "https://github.com/hasura/ndc-sendgrid/tree/main#for-hasura-users"
     }
   }
