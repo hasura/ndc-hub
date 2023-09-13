@@ -206,6 +206,7 @@ where
                 let auth_header = request.headers().get("Authorization")
                     .map(|v| v.clone());
 
+                // NOTE: The comparison should probably be more permissive to allow for whitespace, etc.
                 if auth_header == expected_auth_header { return Ok(()); }
                 Err((StatusCode::UNAUTHORIZED, "").into_response())
             })
