@@ -55,6 +55,8 @@ struct ServeCommand {
     otlp_endpoint: Option<String>, // NOTE: `tracing` crate uses `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` ENV variable, but we want to control the endpoint via CLI interface
     #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
     port: Port,
+    #[arg(long, value_name = "SERVICE_TOKEN_SECRET", env = "SERVICE_TOKEN_SECRET")]
+    service_token_secret: Option<String>,
 }
 
 #[derive(Clone, Parser)]
