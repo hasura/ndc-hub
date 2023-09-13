@@ -200,9 +200,22 @@ where
     axum::Server::bind(&address)
         .serve(router.into_make_service())
         .with_graceful_shutdown(async {
-            tokio::signal::ctrl_c()
-                .await
-                .expect("unable to install signal handler");
+            let sigint = async {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("unable to install signal handler")
+            };
+            let sigterm = async {
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                    .expect("failed to install signal handler")
+                    .recv()
+                    .await;
+            };
+
+            tokio::select! {
+                _ = sigint => (),
+                _ = sigterm => (),
+            }
 
             opentelemetry::global::shutdown_tracer_provider();
         })
