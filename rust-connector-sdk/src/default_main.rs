@@ -16,6 +16,7 @@ use ndc_client::models::{
     CapabilitiesResponse, ErrorResponse, ExplainResponse, MutationRequest, MutationResponse,
     QueryRequest, QueryResponse, SchemaResponse,
 };
+use ndc_test::report;
 use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
 use opentelemetry_api::KeyValue;
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
@@ -489,21 +490,7 @@ where
 
     if !results.failures.is_empty() {
         println!();
-        println!(
-            "\x1b[1;31mFailed with {0} test failures:\x1b[22;0m",
-            results.failures.len()
-        );
-
-        let mut ix = 1;
-        for failure in results.failures {
-            println!();
-            println!("[{0}] {1}", ix, failure.name);
-            for path_element in failure.path {
-                println!("  in {0}", path_element);
-            }
-            println!("Details: {0}", failure.error);
-            ix += 1;
-        }
+        println!("{}", report(results));
 
         exit(1)
     }
