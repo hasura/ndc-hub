@@ -193,7 +193,7 @@ where
     let server_state = init_server_state::<C>(serve_command.configuration).await;
 
     let expected_auth_header: Option<HeaderValue> = serve_command.service_token_secret.and_then(|service_token_secret| {
-        let expected_bearer = format!("Bearer {}", service_token_secret); // TODO
+        let expected_bearer = format!("Bearer {}", service_token_secret);
         HeaderValue::from_str(&expected_bearer).ok()
     }); 
 
