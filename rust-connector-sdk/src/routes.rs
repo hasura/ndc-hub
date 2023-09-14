@@ -44,7 +44,7 @@ pub async fn get_health<C: Connector>(
     state: &C::State,
 ) -> Result<(), (StatusCode, Json<models::ErrorResponse>)> {
     // the context extractor will error if the deployment can't be found.
-    match C::health_check(&configuration, &state).await {
+    match C::health_check(configuration, state).await {
         Ok(()) => Ok(()),
         Err(HealthError::Other(err)) => Err((
             StatusCode::SERVICE_UNAVAILABLE,
@@ -59,7 +59,7 @@ pub async fn get_health<C: Connector>(
 pub async fn get_schema<C: Connector>(
     configuration: &C::Configuration,
 ) -> Result<Json<models::SchemaResponse>, (StatusCode, Json<models::ErrorResponse>)> {
-    Ok(Json(C::get_schema(&configuration).await.map_err(
+    Ok(Json(C::get_schema(configuration).await.map_err(
         |e| match e {
             crate::connector::SchemaError::Other(err) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -81,7 +81,7 @@ pub async fn post_explain<C: Connector>(
     Json(request): Json<models::QueryRequest>,
 ) -> Result<Json<models::ExplainResponse>, (StatusCode, Json<models::ErrorResponse>)> {
     Ok(Json(
-        C::explain(&configuration, &state, request)
+        C::explain(configuration, state, request)
             .await
             .map_err(|e| match e {
                 crate::connector::ExplainError::Other(err) => (
@@ -124,7 +124,7 @@ pub async fn post_mutation<C: Connector>(
     Json(request): Json<models::MutationRequest>,
 ) -> Result<Json<models::MutationResponse>, (StatusCode, Json<models::ErrorResponse>)> {
     Ok(Json(
-        C::mutation(&configuration, &state, request)
+        C::mutation(configuration, state, request)
             .await
             .map_err(|e| match e {
                 crate::connector::MutationError::Other(err) => (
@@ -187,7 +187,7 @@ pub async fn post_query<C: Connector>(
     Json(request): Json<models::QueryRequest>,
 ) -> Result<Json<models::QueryResponse>, (StatusCode, Json<models::ErrorResponse>)> {
     Ok(Json(
-        C::query(&configuration, &state, request)
+        C::query(configuration, state, request)
             .await
             .map_err(|e| match e {
                 crate::connector::QueryError::Other(err) => (
