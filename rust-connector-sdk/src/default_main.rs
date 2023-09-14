@@ -4,10 +4,12 @@ use std::net;
 
 use axum::{
     extract::State,
-    http::StatusCode,
+    http::{StatusCode, Request, HeaderValue},
     routing::{get, post},
-    Json, Router,
+    Json, Router, body::Body, response::IntoResponse,
 };
+use tower_http::validate_request::ValidateRequestHeaderLayer;
+
 use clap::{Parser, Subcommand};
 use ndc_client::models::{
     CapabilitiesResponse, ErrorResponse, ExplainResponse, MutationRequest, MutationResponse,
@@ -55,6 +57,8 @@ struct ServeCommand {
     otlp_endpoint: Option<String>, // NOTE: `tracing` crate uses `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` ENV variable, but we want to control the endpoint via CLI interface
     #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
     port: Port,
+    #[arg(long, value_name = "SERVICE_TOKEN_SECRET", env = "SERVICE_TOKEN_SECRET")]
+    service_token_secret: Option<String>,
 }
 
 #[derive(Clone, Parser)]
@@ -188,9 +192,25 @@ where
 
     let server_state = init_server_state::<C>(serve_command.configuration).await;
 
-    let router = create_router::<C>(server_state).layer(
-        TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
-    );
+    let expected_auth_header: Option<HeaderValue> = serve_command.service_token_secret.and_then(|service_token_secret| {
+        let expected_bearer = format!("Bearer {}", service_token_secret);
+        HeaderValue::from_str(&expected_bearer).ok()
+    }); 
+
+    let router = create_router::<C>(server_state)
+        .layer(
+            TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
+        ).layer(
+            ValidateRequestHeaderLayer::custom(move |request: &mut Request<Body>| {
+                // Validate the request
+                let auth_header = request.headers().get("Authorization")
+                    .map(|v| v.clone());
+
+                // NOTE: The comparison should probably be more permissive to allow for whitespace, etc.
+                if auth_header == expected_auth_header { return Ok(()); }
+                Err((StatusCode::UNAUTHORIZED, "").into_response())
+            })
+        );
 
     let port = serve_command.port;
     let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
