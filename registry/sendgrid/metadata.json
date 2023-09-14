@@ -4,7 +4,7 @@
       "title": "SendGrid Native Data Connector",
       "media": "registry/sendgrid/logo.png",
       "tags": [],
-      "latest_version": ""
+      "latest_version": "v0.1"
     },
     "author": {
       "support_email": "support@hasura.io",
@@ -18,9 +18,9 @@
       "repository": "https://github.com/hasura/ndc-sendgrid/",
       "version": [
         {
-          "tag": "",
-          "hash": "",
-          "is_verified": ""
+          "tag": "v0.1",
+          "hash": "8dc16c427e4e0136ebf0cfba1de3831c7939befb",
+          "is_verified": true
         }
       ]
     },
