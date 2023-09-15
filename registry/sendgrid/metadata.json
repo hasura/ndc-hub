@@ -1,7 +1,7 @@
 {
     "overview":{
         "description":"Connect to SendGrid v3 API and expose it to Hasura Cloud v3 project",
-        "title":"PSendGrid Native Data Connector",
+        "title":"SendGrid Native Data Connector",
         "logo":"logo.png",
         "tags":["email"],
         "latest_version":"v0.2"
