@@ -28,9 +28,9 @@ use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
-use std::{env, process::exit};
 use std::error::Error;
 use std::net;
+use std::{env, process::exit};
 use tower_http::{
     cors::CorsLayer,
     trace::{DefaultMakeSpan, TraceLayer},
