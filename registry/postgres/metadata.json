@@ -1,27 +1,29 @@
 {
-  "overview":{
-      "description":"Connect to a PostgreSQL database and expose them to The Hasura v3 Project",
-      "title":"PostgreSQL Connector",
-      "logo":"logo.png",
-      "tags":["postgresql"],
-      "latest_version":"v0.1.0"
+  "overview": {
+    "description": "Connect to a PostgreSQL database and expose them to Hasura v3 Project",
+    "title": "PostgreSQL Connector",
+    "logo": "postgres-logo.png",
+    "tags": [
+      "postgresql"
+    ],
+    "latest_version": "v0.1.0"
   },
-  "author":{
-      "support_email":"support@hasura.io",
-      "homepage":"https://hasura.io",
-      "name":"Hasura"
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
   },
-  "is_verified":true,
-  "is_hosted_by_hasura":true,
-  "source_code":{
-      "is_open_source":true,
-      "repository":"https://github.com/hasura/ndc-postgres",
-      "version":[
-          {
-              "tag":"v0.1.0",
-              "hash":"",
-              "is_verified":true
-          }
-      ]
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-postgres",
+    "version": [
+      {
+        "tag": "v0.1.0",
+        "hash": "",
+        "is_verified": true
+      }
+    ]
   }
 }

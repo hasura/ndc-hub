@@ -3,7 +3,7 @@
 `ndc-postgres` provides a Hasura Data Connector to the PostgreSQL database,
 which can expose and run GraphQL queries via The Hasura v3 Project.
 
-https://github.com/hasura/ndc-postgres
+[https://github.com/hasura/ndc-postgres](https://github.com/hasura/ndc-postgres)
 
 The connector implements the [NDC Specification](https://hasura.github.io/ndc-spec/overview.html),
 but does not currently support mutations, column relationship arguments in queries, functions or procedures.
