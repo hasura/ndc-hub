@@ -1,0 +1,27 @@
+{
+    "overview":{
+        "description":"The Clickhouse Native Data Connector allows for connecting to a Clickhouse instance giving you an instant GraphQL API on top of your Clickhouse data.",
+        "title":"Clickhouse Native Data Connector",
+        "logo":"logo.png",
+        "tags":["olap"],
+        "latest_version":"v0.1"
+    },
+    "author":{
+        "support_email":"support@hasura.io",
+        "homepage":"https://hasura.io",
+        "name":"Hasura"
+    },
+    "is_verified":true,
+    "is_hosted_by_hasura":false,
+    "source_code":{
+        "is_open_source":true,
+        "repository":"https://github.com/hasura/clickhouse_ndc/",
+        "version":[
+            {
+                "tag": "v0.1",
+                "hash": "TODO",
+                "is_verified": true
+            }
+        ]
+    }
+}
