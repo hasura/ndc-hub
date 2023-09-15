@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use ndc_client::models;
-use std::error::Error;
 use serde::Serialize;
+use std::error::Error;
 use thiserror::Error;
 pub mod example;
 
@@ -214,10 +214,10 @@ pub trait Connector {
     ) -> Result<Self::State, InitializationError>;
 
     /// Update any metrics from the state
-    /// 
+    ///
     /// Note: some metrics can be updated directly, and do not
-    /// need to be updated here. This function can be useful to 
-    /// query metrics which cannot be updated directly, e.g. 
+    /// need to be updated here. This function can be useful to
+    /// query metrics which cannot be updated directly, e.g.
     /// the number of idle connections in a connection pool
     /// can be polled but not updated directly.
     fn fetch_metrics(
