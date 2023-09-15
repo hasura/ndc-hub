@@ -7,7 +7,7 @@ The connector implements the [NDC Specification](https://hasura.github.io/ndc-sp
 but does not currently support mutations, column relationship arguments in queries, functions or procedures.
 
 Visit the
-[Hasura v3 Documentation](https://hasura.io/v3-docs/latest/native-data-connectors/postgresql) 
+[Hasura v3 Documentation](https://hasura.io/docs/3.0/native-data-connectors/postgresql) 
 for more information.
 
 ## Deployment
@@ -16,6 +16,6 @@ The connector is hosted by Hasura and can be used from the [Hasura v3 Console](h
 
 ## Usage
 
-Follow the [Quick Start Guide](https://hasura.io/v3-docs/latest/quickstart/) 
+Follow the [Quick Start Guide](https://hasura.io/docs/3.0/quickstart/) 
 To use the PostgreSQL data connector from the [Hasura v3 Console](https://console.hasura.io).
 
