@@ -52,7 +52,7 @@ impl Connector for Example {
 
     async fn get_capabilities() -> models::CapabilitiesResponse {
         models::CapabilitiesResponse {
-            versions: "^1.0.0".into(),
+            versions: "^0.1.0".into(),
             capabilities: models::Capabilities {
                 explain: None,
                 relationships: None,

@@ -1,7 +1,10 @@
-use std::env;
-use std::error::Error;
-use std::net;
+use crate::{
+    check_health,
+    connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
+    routes,
+};
 
+use async_trait::async_trait;
 use axum::{
     body::Body,
     extract::State,
@@ -17,6 +20,7 @@ use ndc_client::models::{
     CapabilitiesResponse, ErrorResponse, ExplainResponse, MutationRequest, MutationResponse,
     QueryRequest, QueryResponse, SchemaResponse,
 };
+use ndc_test::report;
 use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
 use opentelemetry_api::KeyValue;
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
@@ -24,16 +28,15 @@ use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
+use std::error::Error;
+use std::net;
+use std::{env, process::exit};
 use tower_http::{
     cors::CorsLayer,
     trace::{DefaultMakeSpan, TraceLayer},
 };
 use tracing::Level;
 use tracing_subscriber::{prelude::*, EnvFilter};
-
-use crate::check_health;
-use crate::connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError};
-use crate::routes;
 
 #[derive(Parser)]
 struct CliArgs {
@@ -47,6 +50,8 @@ enum Command {
     Serve(ServeCommand),
     #[command()]
     Configuration(ConfigurationCommand),
+    #[command()]
+    Test(TestCommand),
     #[command()]
     CheckHealth(CheckHealthCommand),
 }
@@ -85,6 +90,14 @@ enum ConfigurationSubcommand {
 struct ServeConfigurationCommand {
     #[arg(long, value_name = "PORT", env = "PORT", default_value = "9100")]
     port: Port,
+}
+
+#[derive(Clone, Parser)]
+struct TestCommand {
+    #[arg(long, value_name = "PORT", env = "PORT")]
+    seed: Option<String>,
+    #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
+    configuration: String,
 }
 
 #[derive(Clone, Parser)]
@@ -138,6 +151,7 @@ where
     match command {
         Command::Serve(serve_command) => serve::<C>(serve_command).await,
         Command::Configuration(configure_command) => configuration::<C>(configure_command).await,
+        Command::Test(test_command) => test::<C>(test_command).await,
         Command::CheckHealth(check_health_command) => check_health(check_health_command).await,
     }
 }
@@ -467,6 +481,76 @@ where
     Ok(Json(ValidateResponse { schema }))
 }
 
+struct ConnectorAdapter<C: Connector> {
+    configuration: C::Configuration,
+    state: C::State,
+}
+
+#[async_trait]
+impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C>
+where
+    C::Configuration: Send + Sync + 'static,
+    C::State: Send + Sync + 'static,
+{
+    async fn get_capabilities(
+        &self,
+    ) -> Result<ndc_client::models::CapabilitiesResponse, ndc_test::Error> {
+        Ok(C::get_capabilities().await)
+    }
+
+    async fn get_schema(&self) -> Result<ndc_client::models::SchemaResponse, ndc_test::Error> {
+        match C::get_schema(&self.configuration).await {
+            Ok(response) => Ok(response),
+            Err(err) => Err(ndc_test::Error::OtherError(err.into())),
+        }
+    }
+
+    async fn query(
+        &self,
+        request: ndc_client::models::QueryRequest,
+    ) -> Result<ndc_client::models::QueryResponse, ndc_test::Error> {
+        match C::query(&self.configuration, &self.state, request).await {
+            Ok(response) => Ok(response),
+            Err(err) => Err(ndc_test::Error::OtherError(err.into())),
+        }
+    }
+}
+
+async fn test<C: Connector + 'static>(command: TestCommand) -> Result<(), Box<dyn Error>>
+where
+    C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Sync + Send + 'static,
+    C::State: Send + Sync + 'static,
+{
+    let test_configuration = ndc_test::TestConfiguration { seed: command.seed };
+
+    let configuration_json = std::fs::read_to_string(command.configuration).unwrap();
+    let raw_configuration =
+        serde_json::de::from_str::<C::RawConfiguration>(configuration_json.as_str()).unwrap();
+    let configuration = C::validate_raw_configuration(&raw_configuration)
+        .await
+        .unwrap();
+
+    let mut metrics = Registry::new();
+    let state = C::try_init_state(&configuration, &mut metrics)
+        .await
+        .unwrap();
+
+    let connector = ConnectorAdapter::<C> {
+        configuration,
+        state,
+    };
+    let results = ndc_test::test_connector(&test_configuration, &connector).await;
+
+    if !results.failures.is_empty() {
+        println!();
+        println!("{}", report(results));
+
+        exit(1)
+    }
+
+    Ok(())
+}
 async fn check_health(
     CheckHealthCommand { host, port }: CheckHealthCommand,
 ) -> Result<(), Box<dyn Error>> {
