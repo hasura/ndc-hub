@@ -220,15 +220,17 @@ where
                 if auth_header == expected_auth_header {
                     return Ok(());
                 }
-                Err((StatusCode::UNAUTHORIZED, 
+                Err((
+                    StatusCode::UNAUTHORIZED,
                     Json(ErrorResponse {
                         message: "Internal error".into(),
                         details: serde_json::Value::Object(serde_json::Map::from_iter([(
                             "cause".into(),
                             serde_json::Value::String("Bearer token does not match.".to_string()),
-                        )]))
-                    }
-                )).into_response())
+                        )])),
+                    }),
+                )
+                    .into_response())
             },
         ));
 
