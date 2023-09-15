@@ -65,6 +65,8 @@ struct ServeCommand {
         env = "SERVICE_TOKEN_SECRET"
     )]
     service_token_secret: Option<String>,
+    #[arg(long, value_name = "OTEL_SERVICE_NAME", env = "OTEL_SERVICE_NAME")]
+    service_name: Option<String>,
 }
 
 #[derive(Clone, Parser)]
@@ -143,6 +145,11 @@ where
 fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
+    let service_name = serve_command
+        .service_name
+        .clone()
+        .unwrap_or(env!("CARGO_PKG_NAME").to_string());
+
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
@@ -158,7 +165,7 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
                 .with_resource(opentelemetry::sdk::Resource::new(vec![
                     KeyValue::new(
                         opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-                        "ndc-hub",
+                        service_name,
                     ),
                     KeyValue::new(
                         opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
