@@ -148,7 +148,7 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
     let service_name = serve_command
         .service_name
         .clone()
-        .unwrap_or("ndc-hub".to_string());
+        .unwrap_or(env!("CARGO_PKG_NAME").to_string());
 
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
