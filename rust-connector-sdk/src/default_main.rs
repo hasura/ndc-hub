@@ -6,11 +6,15 @@ use crate::{
 
 use async_trait::async_trait;
 use axum::{
+    body::Body,
     extract::State,
-    http::StatusCode,
+    http::{HeaderValue, Request, StatusCode},
+    response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
+use tower_http::validate_request::ValidateRequestHeaderLayer;
+
 use clap::{Parser, Subcommand};
 use ndc_client::models::{
     CapabilitiesResponse, ErrorResponse, ExplainResponse, MutationRequest, MutationResponse,
@@ -60,6 +64,14 @@ struct ServeCommand {
     otlp_endpoint: Option<String>, // NOTE: `tracing` crate uses `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` ENV variable, but we want to control the endpoint via CLI interface
     #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
     port: Port,
+    #[arg(
+        long,
+        value_name = "SERVICE_TOKEN_SECRET",
+        env = "SERVICE_TOKEN_SECRET"
+    )]
+    service_token_secret: Option<String>,
+    #[arg(long, value_name = "OTEL_SERVICE_NAME", env = "OTEL_SERVICE_NAME")]
+    service_name: Option<String>,
 }
 
 #[derive(Clone, Parser)]
@@ -147,6 +159,11 @@ where
 fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
+    let service_name = serve_command
+        .service_name
+        .clone()
+        .unwrap_or(env!("CARGO_PKG_NAME").to_string());
+
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
@@ -162,7 +179,7 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
                 .with_resource(opentelemetry::sdk::Resource::new(vec![
                     KeyValue::new(
                         opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-                        "ndc-hub",
+                        service_name,
                     ),
                     KeyValue::new(
                         opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
@@ -202,9 +219,31 @@ where
 
     let server_state = init_server_state::<C>(serve_command.configuration).await;
 
-    let router = create_router::<C>(server_state).layer(
-        TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
-    );
+    let expected_auth_header: Option<HeaderValue> =
+        serve_command
+            .service_token_secret
+            .and_then(|service_token_secret| {
+                let expected_bearer = format!("Bearer {}", service_token_secret);
+                HeaderValue::from_str(&expected_bearer).ok()
+            });
+
+    let router = create_router::<C>(server_state)
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
+        )
+        .layer(ValidateRequestHeaderLayer::custom(
+            move |request: &mut Request<Body>| {
+                // Validate the request
+                let auth_header = request.headers().get("Authorization").cloned();
+
+                // NOTE: The comparison should probably be more permissive to allow for whitespace, etc.
+                if auth_header == expected_auth_header {
+                    return Ok(());
+                }
+                Err((StatusCode::UNAUTHORIZED, "").into_response())
+            },
+        ));
 
     let port = serve_command.port;
     let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
@@ -214,9 +253,24 @@ where
     axum::Server::bind(&address)
         .serve(router.into_make_service())
         .with_graceful_shutdown(async {
-            tokio::signal::ctrl_c()
-                .await
-                .expect("unable to install signal handler");
+            // wait for a SIGINT, i.e. a Ctrl+C from the keyboard
+            let sigint = async {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("unable to install signal handler")
+            };
+            // wait for a SIGTERM, i.e. a normal `kill` command
+            let sigterm = async {
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                    .expect("failed to install signal handler")
+                    .recv()
+                    .await
+            };
+            // block until either of the above happens
+            tokio::select! {
+                _ = sigint => (),
+                _ = sigterm => (),
+            }
 
             opentelemetry::global::shutdown_tracer_provider();
         })
