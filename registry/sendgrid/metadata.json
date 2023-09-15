@@ -4,7 +4,7 @@
         "title":"PSendGrid Native Data Connector",
         "logo":"logo.png",
         "tags":["email"],
-        "latest_version":"v0.1"
+        "latest_version":"v0.2"
     },
     "author":{
         "support_email":"support@hasura.io",
@@ -18,9 +18,14 @@
         "repository":"https://github.com/hasura/ndc-sendgrid/",
         "version":[
             {
+                "tag": "v0.2",
+                "hash": "c0b3f13893e24a41df084985908af7ced0265498",
+                "is_verified": true
+            },
+            {
                 "tag":"v0.1",
                 "hash":"8dc16c427e4e0136ebf0cfba1de3831c7939befb",
-                "is_verified":true
+                "is_verified": true
             }
         ]
     }
