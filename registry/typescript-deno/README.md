@@ -2,7 +2,7 @@
 
 The Typescript (Deno) Connector allows a running connector to be inferred from a Typescript file (optionally with dependencies) and interpreted by [Deno](https://deno.com).
 
-https://github.com/hasura/ndc-typescript-deno/tree/main#ndc-typescript-deno
+[github.com/hasura/ndc-typescript-deno](https://github.com/hasura/ndc-typescript-deno/tree/main#ndc-typescript-deno)
 
 The connector runs in the following manner:
 
@@ -35,6 +35,11 @@ export function make_password_hash(pw: string): string {
 }
 ```
 
+* JSDoc comments and tags are exposed in the schema
+* Async, and normal functions are both supported
+* Functions tagged with `@pure` annotations are exposed as functions
+* Those without `@pure` annotations are exposed as procedures
+
 ## Deployment
 
 You will need:
@@ -54,29 +59,35 @@ typescript file as mounted with the `--volume` flag.
 
 Create the connector:
 
-> hasura3 connector create my-cool-connector:v1 \\
-> --github-repo-url https://github.com/hasura/ndc-typescript-deno/tree/main \\
-> --config-file config.json \\
-> --volume ./functions:/functions \\
-> --env SERVICE_TOKEN_SECRET=MY-SERVICE-TOKEN
+```
+hasura3 connector create my-cool-connector:v1 \
+  --github-repo-url https://github.com/hasura/ndc-typescript-deno/tree/main \
+  --config-file config.json \
+  --volume ./functions:/functions \
+  --env SERVICE_TOKEN_SECRET=MY-SERVICE-TOKEN
+```
 
 Monitor the deployment status by name:
 
-> hasura connector status my-cool-connector:v1
+```
+hasura connector status my-cool-connector:v1
+```
 
 List your connector with its deployed URL:
 
-> hasura connector list
-
 ```
+hasura connector list
 my-cool-connector:v1 https://connector-9XXX7-hyc5v23h6a-ue.a.run.app active
 ```
+
+See [the Typescript Deno SendGrid repository](https://github.com/hasura/ndc-sendgrid-deno)
+for an example of what a project structure that uses a connector could look like.
 
 ## Usage
 
 Include the connector URL in your Hasura V3 project metadata:
 
-```json
+```
 [
   {
       "kind": "dataSource",
@@ -90,5 +101,5 @@ Include the connector URL in your Hasura V3 project metadata:
 
 ## Troubleshooting
 
-Please [https://github.com/hasura/ndc-typescript-deno/issues/new](submit a Github issue)
+Please [submit a Github issue](https://github.com/hasura/ndc-typescript-deno/issues/new)
 if you encounter any problems!
