@@ -84,7 +84,7 @@ my-cool-connector:v1 https://connector-9XXX7-hyc5v23h6a-ue.a.run.app active
 
 Include the connector URL in your Hasura V3 project metadata:
 
-```json
+```
 [
   {
       "kind": "dataSource",
