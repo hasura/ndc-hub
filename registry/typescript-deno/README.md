@@ -80,6 +80,9 @@ hasura connector list
 my-cool-connector:v1 https://connector-9XXX7-hyc5v23h6a-ue.a.run.app active
 ```
 
+See [the Typescript Deno SendGrid repository](https://github.com/hasura/ndc-sendgrid-deno)
+for an example of what a project structure that uses a connector could look like.
+
 ## Usage
 
 Include the connector URL in your Hasura V3 project metadata:
