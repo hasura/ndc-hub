@@ -1,10 +1,10 @@
 {
   "overview": {
     "description": "Connect to a PostgreSQL database and expose them to Hasura v3 Project",
-    "title": "PostgreSQL Connector",
-    "logo": "postgres-logo.png",
+    "title": "PostgreSQL Native Data Connector",
+    "logo": "logo.png",
     "tags": [
-      "postgresql"
+      "database"
     ],
     "latest_version": "v0.1.0"
   },
