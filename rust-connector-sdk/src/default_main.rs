@@ -1,3 +1,5 @@
+mod v2_compat;
+
 use crate::{
     check_health,
     connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
@@ -38,6 +40,8 @@ use tower_http::{
 use tracing::Level;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
+use self::v2_compat::SourceConfig;
+
 #[derive(Parser)]
 struct CliArgs {
     #[command(subcommand)]
@@ -72,6 +76,8 @@ struct ServeCommand {
     service_token_secret: Option<String>,
     #[arg(long, value_name = "OTEL_SERVICE_NAME", env = "OTEL_SERVICE_NAME")]
     service_name: Option<String>,
+    #[arg(long, env = "ENABLE_V2_COMPATIBILITY")]
+    enable_v2_compatibility: bool,
 }
 
 #[derive(Clone, Parser)]
@@ -219,41 +225,17 @@ where
 
     let server_state = init_server_state::<C>(serve_command.configuration).await;
 
-    let expected_auth_header: Option<HeaderValue> =
-        serve_command
-            .service_token_secret
-            .and_then(|service_token_secret| {
-                let expected_bearer = format!("Bearer {}", service_token_secret);
-                HeaderValue::from_str(&expected_bearer).ok()
-            });
+    let router = create_router::<C>(
+        server_state.clone(),
+        serve_command.service_token_secret.clone(),
+    );
 
-    let router = create_router::<C>(server_state)
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
-        )
-        .layer(ValidateRequestHeaderLayer::custom(
-            move |request: &mut Request<Body>| {
-                // Validate the request
-                let auth_header = request.headers().get("Authorization").cloned();
-
-                // NOTE: The comparison should probably be more permissive to allow for whitespace, etc.
-                if auth_header == expected_auth_header {
-                    return Ok(());
-                }
-                Err((
-                    StatusCode::UNAUTHORIZED,
-                    Json(ErrorResponse {
-                        message: "Internal error".into(),
-                        details: serde_json::Value::Object(serde_json::Map::from_iter([(
-                            "cause".into(),
-                            serde_json::Value::String("Bearer token does not match.".to_string()),
-                        )])),
-                    }),
-                )
-                    .into_response())
-            },
-        ));
+    let router = if serve_command.enable_v2_compatibility {
+        let v2_router = create_v2_router(server_state, serve_command.service_token_secret.clone());
+        Router::new().merge(router).nest("/v2", v2_router)
+    } else {
+        router
+    };
 
     let port = serve_command.port;
     let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
@@ -270,6 +252,7 @@ where
                     .expect("unable to install signal handler")
             };
             // wait for a SIGTERM, i.e. a normal `kill` command
+            #[cfg(unix)]
             let sigterm = async {
                 tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
                     .expect("failed to install signal handler")
@@ -277,9 +260,14 @@ where
                     .await
             };
             // block until either of the above happens
+            #[cfg(unix)]
             tokio::select! {
                 _ = sigint => (),
                 _ = sigterm => (),
+            }
+            #[cfg(windows)]
+            tokio::select! {
+                _ = sigint => (),
             }
 
             opentelemetry::global::shutdown_tracer_provider();
@@ -317,13 +305,16 @@ where
     }
 }
 
-pub fn create_router<C: Connector + Clone + 'static>(state: ServerState<C>) -> Router
+pub fn create_router<C: Connector + Clone + 'static>(
+    state: ServerState<C>,
+    service_token_secret: Option<String>,
+) -> Router
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
     C::Configuration: Serialize + Clone + Sync + Send,
     C::State: Sync + Send + Clone,
 {
-    Router::new()
+    let router = Router::new()
         .route("/capabilities", get(get_capabilities::<C>))
         .route("/health", get(get_health::<C>))
         .route("/metrics", get(get_metrics::<C>))
@@ -331,6 +322,104 @@ where
         .route("/query", post(post_query::<C>))
         .route("/explain", post(post_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
+        .with_state(state);
+
+    let expected_auth_header: Option<HeaderValue> =
+        service_token_secret.and_then(|service_token_secret| {
+            let expected_bearer = format!("Bearer {}", service_token_secret);
+            HeaderValue::from_str(&expected_bearer).ok()
+        });
+
+    router
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
+        )
+        .layer(ValidateRequestHeaderLayer::custom(
+            move |request: &mut Request<Body>| {
+                // Validate the request
+                let auth_header = request.headers().get("Authorization").cloned();
+
+                // NOTE: The comparison should probably be more permissive to allow for whitespace, etc.
+                if auth_header == expected_auth_header {
+                    return Ok(());
+                }
+                Err((
+                    StatusCode::UNAUTHORIZED,
+                    Json(ErrorResponse {
+                        message: "Internal error".into(),
+                        details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                            "cause".into(),
+                            serde_json::Value::String("Bearer token does not match.".to_string()),
+                        )])),
+                    }),
+                )
+                    .into_response())
+            },
+        ))
+}
+
+pub fn create_v2_router<C: Connector + Clone + 'static>(
+    state: ServerState<C>,
+    service_token_secret: Option<String>,
+) -> Router
+where
+    C::RawConfiguration: DeserializeOwned + Sync + Send,
+    C::Configuration: Serialize + Clone + Sync + Send,
+    C::State: Sync + Send + Clone,
+{
+    Router::new()
+        .route("/schema", post(v2_compat::post_schema::<C>))
+        .route("/query", post(v2_compat::post_query::<C>))
+        // .route("/mutation", post(v2_compat::post_mutation::<C>))
+        // .route("/raw", post(v2_compat::post_raw::<C>))
+        .route("/explain", post(v2_compat::post_explain::<C>))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
+        )
+        .layer(ValidateRequestHeaderLayer::custom(
+            move |request: &mut Request<Body>| {
+                // if service_token_secret is set, request must include config with secret value
+                if let Some(expected_token_value) = service_token_secret.clone() {
+                    if let Some(config_header) =
+                        request.headers().get("x-hasura-dataconnector-config")
+                    {
+                        if let Ok(config) =
+                            serde_json::from_slice::<SourceConfig>(config_header.as_bytes())
+                        {
+                            if let Some(provided_token_value) = config.service_token_secret {
+                                if provided_token_value == expected_token_value {
+                                    // if token set, config header must be present and include token
+                                    return Ok(());
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // if token not set, always authorize
+                    return Ok(());
+                }
+
+                // in all other cases, block request
+                Err((
+                    StatusCode::UNAUTHORIZED,
+                    Json(ErrorResponse {
+                        message: "Internal error".into(),
+                        details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                            "cause".into(),
+                            serde_json::Value::String(
+                                "Service Token Secret does not match.".to_string(),
+                            ),
+                        )])),
+                    }),
+                )
+                    .into_response())
+            },
+        ))
+        // capabilities and health endpoints are exempt from auth requirements
+        .route("/capabilities", get(v2_compat::get_capabilities::<C>))
+        .route("/health", get(v2_compat::get_health))
         .with_state(state)
 }
 
