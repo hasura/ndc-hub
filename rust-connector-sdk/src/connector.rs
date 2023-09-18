@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use ndc_client::models;
 use serde::Serialize;
-use std::{collections::BTreeMap, error::Error};
+use std::error::Error;
 use thiserror::Error;
 pub mod example;
 
@@ -189,9 +189,15 @@ pub trait Connector {
     /// The type of unserializable state
     type State;
 
-    fn get_read_regions(config: &Self::Configuration) -> Vec<String>;
+    /// Return any read regions defined in the connector's configuration
+    fn get_read_regions(_config: &Self::Configuration) -> Vec<String> {
+        vec![]
+    }
 
-    fn get_write_regions(config: &Self::Configuration) -> Vec<String>;
+    /// Return any write regions defined in the connector's configuration
+    fn get_write_regions(_config: &Self::Configuration) -> Vec<String> {
+        vec![]
+    }
 
     fn make_empty_configuration() -> Self::RawConfiguration;
 
@@ -203,7 +209,6 @@ pub trait Connector {
     /// returning a configuration error or a validated [`Connector::Configuration`].
     async fn validate_raw_configuration(
         configuration: &Self::RawConfiguration,
-        region_routing: &BTreeMap<String, Vec<String>>,
     ) -> Result<Self::Configuration, ValidateError>;
 
     /// Initialize the connector's in-memory state.
