@@ -380,41 +380,35 @@ where
         )
         .layer(ValidateRequestHeaderLayer::custom(
             move |request: &mut Request<Body>| {
-                // if service_token_secret is set, request must include config with secret value
-                if let Some(expected_token_value) = service_token_secret.clone() {
-                    if let Some(config_header) =
-                        request.headers().get("x-hasura-dataconnector-config")
-                    {
-                        if let Ok(config) =
-                            serde_json::from_slice::<SourceConfig>(config_header.as_bytes())
-                        {
-                            if let Some(provided_token_value) = config.service_token_secret {
-                                if provided_token_value == expected_token_value {
-                                    // if token set, config header must be present and include token
-                                    return Ok(());
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // if token not set, always authorize
-                    return Ok(());
-                }
+                let provided_service_token_secret = request
+                    .headers()
+                    .get("x-hasura-dataconnector-config")
+                    .and_then(|config_header| {
+                        serde_json::from_slice::<SourceConfig>(config_header.as_bytes()).ok()
+                    })
+                    .and_then(|config| config.service_token_secret);
 
-                // in all other cases, block request
-                Err((
-                    StatusCode::UNAUTHORIZED,
-                    Json(ErrorResponse {
-                        message: "Internal error".into(),
-                        details: serde_json::Value::Object(serde_json::Map::from_iter([(
-                            "cause".into(),
-                            serde_json::Value::String(
-                                "Service Token Secret does not match.".to_string(),
-                            ),
-                        )])),
-                    }),
-                )
-                    .into_response())
+                if service_token_secret == provided_service_token_secret {
+                    // if token set & config header present & values match
+                    // or token not set & config header not set/does not have value for token key
+                    // allow request
+                    Ok(())
+                } else {
+                    // all other cases, block request
+                    Err((
+                        StatusCode::UNAUTHORIZED,
+                        Json(ErrorResponse {
+                            message: "Internal error".into(),
+                            details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                                "cause".into(),
+                                serde_json::Value::String(
+                                    "Service Token Secret does not match.".to_string(),
+                                ),
+                            )])),
+                        }),
+                    )
+                        .into_response())
+                }
             },
         ))
         // capabilities and health endpoints are exempt from auth requirements
