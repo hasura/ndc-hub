@@ -294,16 +294,12 @@ pub async fn init_server_state<C: Connector + Clone + Default + 'static>(
     config_file: String,
 ) -> ServerState<C>
 where
-    C::RawConfiguration: DeserializeOwned + Sync + Send,
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
     C::State: Sync + Send + Clone,
 {
     let configuration_json = std::fs::read_to_string(config_file).unwrap();
-    let raw_configuration =
-        serde_json::de::from_str::<C::RawConfiguration>(configuration_json.as_str()).unwrap();
-    let configuration = C::validate_raw_configuration(&raw_configuration)
-        .await
-        .unwrap();
+    let configuration =
+        serde_json::de::from_str::<C::Configuration>(configuration_json.as_str()).unwrap();
 
     let mut metrics = Registry::new();
     let state = C::try_init_state(&configuration, &mut metrics)
