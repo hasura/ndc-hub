@@ -33,7 +33,6 @@ impl Connector for Example {
 
     async fn validate_raw_configuration(
         _configuration: &Self::Configuration,
-        _region_routing: &BTreeMap<String, Vec<String>>,
     ) -> Result<Self::Configuration, ValidateError> {
         Ok(())
     }

@@ -28,8 +28,8 @@ use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
+use std::error::Error;
 use std::net;
-use std::{collections::BTreeMap, error::Error};
 use std::{env, process::exit};
 use tower_http::{
     cors::CorsLayer,
@@ -301,7 +301,7 @@ where
     let configuration_json = std::fs::read_to_string(config_file).unwrap();
     let raw_configuration =
         serde_json::de::from_str::<C::RawConfiguration>(configuration_json.as_str()).unwrap();
-    let configuration = C::validate_raw_configuration(&raw_configuration, &BTreeMap::default())
+    let configuration = C::validate_raw_configuration(&raw_configuration)
         .await
         .unwrap();
 
@@ -474,7 +474,7 @@ async fn post_validate<C: Connector>(
 where
     C::RawConfiguration: DeserializeOwned,
 {
-    let configuration = C::validate_raw_configuration(&configuration, &BTreeMap::default())
+    let configuration = C::validate_raw_configuration(&configuration)
         .await
         .map_err(|e| match e {
             crate::connector::ValidateError::ValidateError(ranges) => (
@@ -537,7 +537,7 @@ where
     let configuration_json = std::fs::read_to_string(command.configuration).unwrap();
     let raw_configuration =
         serde_json::de::from_str::<C::RawConfiguration>(configuration_json.as_str()).unwrap();
-    let configuration = C::validate_raw_configuration(&raw_configuration, &BTreeMap::default())
+    let configuration = C::validate_raw_configuration(&raw_configuration)
         .await
         .unwrap();
 
