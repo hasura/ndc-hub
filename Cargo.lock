@@ -601,7 +601,8 @@ dependencies = [
 
 [[package]]
 name = "gdc_rust_types"
-version = "1.0.1"
+version = "1.0.2"
+source = "git+https://github.com/hasura/gdc_rust_types?rev=bc57c40#bc57c406e530ffff2345c6a02f7b784959a600b5"
 dependencies = [
  "indexmap 1.9.3",
  "openapiv3",
