@@ -194,7 +194,7 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
                 ]))
                 .with_sampler(Sampler::ParentBased(Box::new(Sampler::AlwaysOn))),
         )
-        .install_batch(opentelemetry::runtime::Tokio)?;
+        .install_batch(opentelemetry::runtime::TokioCurrentThread)?;
 
     tracing_subscriber::registry()
         .with(
