@@ -1,0 +1,921 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Query Request",
+  "description": "This is the request body of the query POST endpoint",
+  "type": "object",
+  "required": [
+    "arguments",
+    "collection",
+    "collection_relationships",
+    "query"
+  ],
+  "properties": {
+    "arguments": {
+      "description": "Values to be provided to any collection arguments",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Argument"
+      }
+    },
+    "collection": {
+      "description": "The name of a collection",
+      "type": "string"
+    },
+    "collection_relationships": {
+      "description": "Any relationships between collections involved in the query request",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Relationship"
+      }
+    },
+    "query": {
+      "description": "The query syntax tree",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Query"
+        }
+      ]
+    },
+    "variables": {
+      "description": "One set of named variables for each rowset to fetch. Each variable set should be subtituted in turn, and a fresh set of rows returned.",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  },
+  "definitions": {
+    "Aggregate": {
+      "title": "Aggregate",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "column",
+            "distinct",
+            "type"
+          ],
+          "properties": {
+            "column": {
+              "description": "The column to apply the count aggregate function to",
+              "type": "string"
+            },
+            "distinct": {
+              "description": "Whether or not only distinct items should be counted",
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "column_count"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "column",
+            "function",
+            "type"
+          ],
+          "properties": {
+            "column": {
+              "description": "The column to apply the aggregation function to",
+              "type": "string"
+            },
+            "function": {
+              "description": "Single column aggregate function name.",
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "single_column"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "star_count"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Argument": {
+      "title": "Argument",
+      "oneOf": [
+        {
+          "description": "The argument is provided by reference to a variable",
+          "type": "object",
+          "required": [
+            "name",
+            "type"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "variable"
+              ]
+            }
+          }
+        },
+        {
+          "description": "The argument is provided as a literal value",
+          "type": "object",
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "literal"
+              ]
+            },
+            "value": true
+          }
+        }
+      ]
+    },
+    "BinaryArrayComparisonOperator": {
+      "title": "Binary Array Comparison Operator",
+      "type": "string",
+      "enum": [
+        "in"
+      ]
+    },
+    "BinaryComparisonOperator": {
+      "title": "Binary Comparison Operator",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "equal"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "type"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "other"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ComparisonTarget": {
+      "title": "Comparison Target",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "path",
+            "type"
+          ],
+          "properties": {
+            "name": {
+              "description": "The name of the column",
+              "type": "string"
+            },
+            "path": {
+              "description": "Any relationships to traverse to reach this column",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PathElement"
+              }
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "column"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "type"
+          ],
+          "properties": {
+            "name": {
+              "description": "The name of the column",
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "root_collection_column"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ComparisonValue": {
+      "title": "Comparison Value",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "column",
+            "type"
+          ],
+          "properties": {
+            "column": {
+              "$ref": "#/definitions/ComparisonTarget"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "column"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "scalar"
+              ]
+            },
+            "value": true
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "type"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "variable"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ExistsInCollection": {
+      "title": "Exists In Collection",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "arguments",
+            "relationship",
+            "type"
+          ],
+          "properties": {
+            "arguments": {
+              "description": "Values to be provided to any collection arguments",
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/RelationshipArgument"
+              }
+            },
+            "relationship": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "related"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "arguments",
+            "collection",
+            "type"
+          ],
+          "properties": {
+            "arguments": {
+              "description": "Values to be provided to any collection arguments",
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/RelationshipArgument"
+              }
+            },
+            "collection": {
+              "description": "The name of a collection",
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "unrelated"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Expression": {
+      "title": "Expression",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "expressions",
+            "type"
+          ],
+          "properties": {
+            "expressions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "and"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expressions",
+            "type"
+          ],
+          "properties": {
+            "expressions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "or"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expression",
+            "type"
+          ],
+          "properties": {
+            "expression": {
+              "$ref": "#/definitions/Expression"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "not"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "column",
+            "operator",
+            "type"
+          ],
+          "properties": {
+            "column": {
+              "$ref": "#/definitions/ComparisonTarget"
+            },
+            "operator": {
+              "$ref": "#/definitions/UnaryComparisonOperator"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "unary_comparison_operator"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "column",
+            "operator",
+            "type",
+            "value"
+          ],
+          "properties": {
+            "column": {
+              "$ref": "#/definitions/ComparisonTarget"
+            },
+            "operator": {
+              "$ref": "#/definitions/BinaryComparisonOperator"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "binary_comparison_operator"
+              ]
+            },
+            "value": {
+              "$ref": "#/definitions/ComparisonValue"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "column",
+            "operator",
+            "type",
+            "values"
+          ],
+          "properties": {
+            "column": {
+              "$ref": "#/definitions/ComparisonTarget"
+            },
+            "operator": {
+              "$ref": "#/definitions/BinaryArrayComparisonOperator"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "binary_array_comparison_operator"
+              ]
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ComparisonValue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "in_collection",
+            "type",
+            "where"
+          ],
+          "properties": {
+            "in_collection": {
+              "$ref": "#/definitions/ExistsInCollection"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "exists"
+              ]
+            },
+            "where": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        }
+      ]
+    },
+    "Field": {
+      "title": "Field",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "column",
+            "type"
+          ],
+          "properties": {
+            "column": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "column"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "arguments",
+            "query",
+            "relationship",
+            "type"
+          ],
+          "properties": {
+            "arguments": {
+              "description": "Values to be provided to any collection arguments",
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/RelationshipArgument"
+              }
+            },
+            "query": {
+              "$ref": "#/definitions/Query"
+            },
+            "relationship": {
+              "description": "The name of the relationship to follow for the subquery",
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "relationship"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "OrderBy": {
+      "title": "Order By",
+      "type": "object",
+      "required": [
+        "elements"
+      ],
+      "properties": {
+        "elements": {
+          "description": "The elements to order by, in priority order",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderByElement"
+          }
+        }
+      }
+    },
+    "OrderByElement": {
+      "title": "Order By Element",
+      "type": "object",
+      "required": [
+        "order_direction",
+        "target"
+      ],
+      "properties": {
+        "order_direction": {
+          "$ref": "#/definitions/OrderDirection"
+        },
+        "target": {
+          "$ref": "#/definitions/OrderByTarget"
+        }
+      }
+    },
+    "OrderByTarget": {
+      "title": "Order By Target",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "path",
+            "type"
+          ],
+          "properties": {
+            "name": {
+              "description": "The name of the column",
+              "type": "string"
+            },
+            "path": {
+              "description": "Any relationships to traverse to reach this column",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PathElement"
+              }
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "column"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "column",
+            "function",
+            "path",
+            "type"
+          ],
+          "properties": {
+            "column": {
+              "description": "The column to apply the aggregation function to",
+              "type": "string"
+            },
+            "function": {
+              "description": "Single column aggregate function name.",
+              "type": "string"
+            },
+            "path": {
+              "description": "Non-empty collection of relationships to traverse",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PathElement"
+              }
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "single_column_aggregate"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "path",
+            "type"
+          ],
+          "properties": {
+            "path": {
+              "description": "Non-empty collection of relationships to traverse",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PathElement"
+              }
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "star_count_aggregate"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "OrderDirection": {
+      "title": "Order Direction",
+      "type": "string",
+      "enum": [
+        "asc",
+        "desc"
+      ]
+    },
+    "PathElement": {
+      "title": "Path Element",
+      "type": "object",
+      "required": [
+        "arguments",
+        "predicate",
+        "relationship"
+      ],
+      "properties": {
+        "arguments": {
+          "description": "Values to be provided to any collection arguments",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/RelationshipArgument"
+          }
+        },
+        "predicate": {
+          "description": "A predicate expression to apply to the target collection",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Expression"
+            }
+          ]
+        },
+        "relationship": {
+          "description": "The name of the relationship to follow",
+          "type": "string"
+        }
+      }
+    },
+    "Query": {
+      "title": "Query",
+      "type": "object",
+      "properties": {
+        "aggregates": {
+          "description": "Aggregate fields of the query",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/definitions/Aggregate"
+          }
+        },
+        "fields": {
+          "description": "Fields of the query",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/definitions/Field"
+          }
+        },
+        "limit": {
+          "description": "Optionally limit to N results",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "offset": {
+          "description": "Optionally offset from the Nth result",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "order_by": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OrderBy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "where": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Expression"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Relationship": {
+      "title": "Relationship",
+      "type": "object",
+      "required": [
+        "arguments",
+        "column_mapping",
+        "relationship_type",
+        "source_collection_or_type",
+        "target_collection"
+      ],
+      "properties": {
+        "arguments": {
+          "description": "Values to be provided to any collection arguments",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/RelationshipArgument"
+          }
+        },
+        "column_mapping": {
+          "description": "A mapping between columns on the source collection to columns on the target collection",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "relationship_type": {
+          "$ref": "#/definitions/RelationshipType"
+        },
+        "source_collection_or_type": {
+          "description": "The name of the collection or object type which is the source of this relationship",
+          "type": "string"
+        },
+        "target_collection": {
+          "description": "The name of a collection",
+          "type": "string"
+        }
+      }
+    },
+    "RelationshipArgument": {
+      "title": "Relationship Argument",
+      "oneOf": [
+        {
+          "description": "The argument is provided by reference to a variable",
+          "type": "object",
+          "required": [
+            "name",
+            "type"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "variable"
+              ]
+            }
+          }
+        },
+        {
+          "description": "The argument is provided as a literal value",
+          "type": "object",
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "literal"
+              ]
+            },
+            "value": true
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "type"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "column"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "RelationshipType": {
+      "title": "Relationship Type",
+      "type": "string",
+      "enum": [
+        "object",
+        "array"
+      ]
+    },
+    "UnaryComparisonOperator": {
+      "title": "Unary Comparison Operator",
+      "type": "string",
+      "enum": [
+        "is_null"
+      ]
+    }
+  }
+}

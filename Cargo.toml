@@ -1,8 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-  "rust-connector-sdk",
-]
+members = ["rust-connector-sdk", "api_schemas"]
 
 [profile.release]
 debug = true
