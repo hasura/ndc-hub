@@ -60,7 +60,7 @@ Create the connector:
 
 ```
 hasura3 connector create my-cool-connector:v1 \
-  --github-repo-url https://github.com/hasura/ndc-typescript-deno/tree/main \
+  --github-repo-url https://github.com/hasura/ndc-typescript-deno/tree/v0.8 \
   --config-file config.json \
   --volume ./my-functions:/functions \
   --env SERVICE_TOKEN_SECRET=MY-SERVICE-TOKEN
