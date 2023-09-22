@@ -4,7 +4,7 @@
       "title":"Typescript (Deno) Connector",
       "logo":"logo.png",
       "tags":[],
-      "latest_version":"v0.3"
+      "latest_version":"v0.8"
   },
   "author":{
       "support_email":"support@hasura.io",
@@ -17,6 +17,11 @@
       "is_open_source":true,
       "repository":"https://github.com/hasura/ndc-typescript-deno/",
       "version":[
+          {
+              "tag": "v0.8",
+              "hash":"0913b41f4cef74fa18e7fa16ec456d32c6fc3a74",
+              "is_verified":true
+          },
           {
               "tag": "v0.3",
               "hash":"23022c931bc5132932d9b187a80a737d7aac0e79",
