@@ -494,6 +494,7 @@ where
         .route("/", get(get_empty::<C>).post(post_update::<C>))
         .route("/schema", get(get_config_schema::<C>))
         .route("/validate", post(post_validate::<C>))
+        .route("/health", get(|| async {}))
         .layer(cors);
 
     axum::Server::bind(&address)
