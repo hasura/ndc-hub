@@ -15,6 +15,7 @@ path = "bin/main.rs"
 async-trait = "^0.1.68"
 axum = "^0.6.18"
 axum-macros = "^0.3.7"
+axum-tracing-opentelemetry = { version = "0.10.0", features = [] }
 clap = { version = "^4.3.9", features = ["derive", "env"] }
 ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.6" }
 ndc-test = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.6" }

@@ -5,7 +5,6 @@ use crate::{
     connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
     routes,
 };
-
 use async_trait::async_trait;
 use axum::{
     body::Body,
@@ -15,6 +14,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trace_layer};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 
 use clap::{Parser, Subcommand};
@@ -322,7 +322,11 @@ where
         .route("/query", post(post_query::<C>))
         .route("/explain", post(post_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
-        .with_state(state);
+        .with_state(state)
+        // include trace context as header in responses to handlers above this line
+        .layer(response_with_trace_layer())
+        // set up `TraceLayer` from tower-http
+        .layer(opentelemetry_tracing_layer());
 
     let expected_auth_header: Option<HeaderValue> =
         service_token_secret.and_then(|service_token_secret| {
@@ -331,10 +335,7 @@ where
         });
 
     router
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
-        )
+        .layer(TraceLayer::new_for_http())
         .layer(ValidateRequestHeaderLayer::custom(
             move |request: &mut Request<Body>| {
                 // Validate the request
