@@ -16,11 +16,11 @@ It assumes that dependencies are specified in accordance with [Deno](https://den
 
 ## Typescript Functions Format
 
-Your functions should be organised into a directory with one file acting as the entrypoint.
-
-An example could be as follows - `functions/main.ts`:
+Your functions should be organised into a directory with `index.ts` file acting as the entrypoint.
 
 ```
+// ./functions/index.ts
+
 import { Hash, encode } from "https://deno.land/x/checksum@1.2.0/mod.ts";
 
 /**
@@ -37,6 +37,7 @@ export function make_password_hash(pw: string): string {
 
 * JSDoc comments and tags are exposed in the schema
 * Async, and normal functions are both supported
+* Only exported functions are exposed
 * Functions tagged with `@pure` annotations are exposed as functions
 * Those without `@pure` annotations are exposed as procedures
 
@@ -49,21 +50,19 @@ You will need:
 * Secret service token
 * A configuration file
 
-The configuration file format needs at a minimum
-a `typescript_source` referenced which matches the main
-typescript file as mounted with the `--volume` flag.
+Your functions directory should be added as a volume to `/functions`
 
 ```
-{"typescript_source": "/functions/main.ts"}
+--volume ./my-functions:/functions
 ```
 
 Create the connector:
 
 ```
 hasura3 connector create my-cool-connector:v1 \
-  --github-repo-url https://github.com/hasura/ndc-typescript-deno/tree/main \
+  --github-repo-url https://github.com/hasura/ndc-typescript-deno/tree/v0.8 \
   --config-file config.json \
-  --volume ./functions:/functions \
+  --volume ./my-functions:/functions \
   --env SERVICE_TOKEN_SECRET=MY-SERVICE-TOKEN
 ```
 
@@ -85,19 +84,32 @@ for an example of what a project structure that uses a connector could look like
 
 ## Usage
 
-Include the connector URL in your Hasura V3 project metadata:
+Include the connector URL in your Hasura V3 project metadata (hml format).
+Hasura cloud projects must also set a matching bearer token:
 
+```yaml
+kind: DataSource
+name: sendgrid
+dataConnectorUrl:
+  url: 'https://connector-9XXX7-hyc5v23h6a-ue.a.run.app'
+auth:
+  type: Bearer
+  token: "SUPER_SECRET_TOKEN_XXX123"
 ```
-[
-  {
-      "kind": "dataSource",
-      "name": "md5hasher",
-      "dataConnectorUrl": "https://connector-9XXX7-hyc5v23h6a-ue.a.run.app",
-      "schema": {}
-  }
-  ...
-]
+
+While you can specify the token inline as above, it is recommended to use the Hasura secrets functionality for this purpose:
+
+```yaml
+kind: DataSource
+name: sendgrid
+dataConnectorUrl:
+  url: 'https://connector-9XXX7-hyc5v23h6a-ue.a.run.app'
+auth:
+  type: Bearer
+  token:
+    valueFromSecret: CONNECTOR_TOKEN
 ```
+
 
 ## Troubleshooting
 
