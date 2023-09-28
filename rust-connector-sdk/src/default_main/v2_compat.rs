@@ -157,7 +157,7 @@ fn get_openapi_config_schema_response() -> ConfigSchemaResponse {
                 "type": "string"
             }
         },
-        "required": ["service_token_secret"]
+        "required": []
     });
 
     ConfigSchemaResponse {
