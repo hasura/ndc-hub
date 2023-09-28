@@ -2,7 +2,7 @@
   "name": "ts-connector-sdk",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate-types": "ts-node generate-types.ts"
@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@json-schema-tools/meta-schema": "^1.7.0",
     "@types/node": "^20.6.0",
     "commander": "^11.0.0",
     "fastify": "^4.23.2",

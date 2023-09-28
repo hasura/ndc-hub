@@ -5,12 +5,13 @@ import { SchemaResponse } from "../schemas/SchemaResponse";
 import { ExplainResponse } from "../schemas/ExplainResponse";
 import { MutationRequest } from "../schemas/MutationRequest";
 import { MutationResponse } from "../schemas/MutationResponse";
+import { JSONSchemaObject } from "@json-schema-tools/meta-schema";
 
 export interface Connector<Configuration, State> {
   /**
    * Return jsonschema for the configuration for this connector
    */
-  get_configuration_schema(): unknown;
+  get_configuration_schema(): JSONSchemaObject;
   /**
    * Return any read regions defined in the connector's configuration
    * @param configuration
@@ -66,6 +67,8 @@ export interface Connector<Configuration, State> {
    *
    * For example, this function should check that the connector
    * is able to reach its data source over the network.
+   *
+   * Should throw if the check fails, else resolve
    * @param configuration
    * @param state
    */
@@ -76,18 +79,22 @@ export interface Connector<Configuration, State> {
    *
    * This function implements the [capabilities endpoint](https://hasura.github.io/ndc-spec/specification/capabilities.html)
    * from the NDC specification.
+   *
+   * This function should be syncronous
    * @param configuration
    */
-  get_capabilities(configuration: Configuration): Promise<CapabilitiesResponse>;
+  get_capabilities(configuration: Configuration): CapabilitiesResponse;
 
   /**
    * Get the connector's schema.
    *
    * This function implements the [schema endpoint](https://hasura.github.io/ndc-spec/specification/schema/index.html)
    * from the NDC specification.
+   *
+   * This function should resolve from the configuration alone, and is thus syncronous
    * @param configuration
    */
-  get_schema(configuration: Configuration): Promise<SchemaResponse>;
+  get_schema(configuration: Configuration): SchemaResponse;
 
   /**
    * Explain a query by creating an execution plan

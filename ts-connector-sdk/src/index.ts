@@ -14,29 +14,41 @@ export function start<Configuration, State>(
   program.parseAsync(process.argv).catch(console.error);
 }
 
-function serve_command(connector) {
+function serve_command<Configuration, State>(
+  connector: Connector<Configuration, State>
+) {
   return new Command("serve")
     .addOption(
-      new Option("--configuration")
+      new Option("--configuration <path>")
         .env("CONFIGURATION_FILE")
         .makeOptionMandatory(true)
     )
     .addOption(
-      new Option("--port").env("PORT").default(8100).argParser(parseIntOption)
+      new Option("--port <port>")
+        .env("PORT")
+        .default(8100)
+        .argParser(parseIntOption)
     )
-    .addOption(new Option("--service-token-secret").env("SERVICE_TOKEN_SECRET"))
-    .addOption(new Option("--otlp_endpoint").env("OTLP_ENDPOINT"))
-    .addOption(new Option("--service-name").env("OTEL_SERVICE_NAME"))
+    .addOption(
+      new Option("--service-token-secret <secret>").env("SERVICE_TOKEN_SECRET")
+    )
+    .addOption(new Option("--otlp_endpoint <endpoint>").env("OTLP_ENDPOINT"))
+    .addOption(new Option("--service-name <name>").env("OTEL_SERVICE_NAME"))
     .action(async (options) => {
       await start_server(connector, options);
     });
 }
 
-function configuration_command(connector) {
+function configuration_command<Configuration, State>(
+  connector: Connector<Configuration, State>
+) {
   return new Command("configuration").addCommand(
     new Command("serve")
       .addOption(
-        new Option("--port").env("PORT").default(9100).argParser(parseIntOption)
+        new Option("--port <port>")
+          .env("PORT")
+          .default(9100)
+          .argParser(parseIntOption)
       )
       .action(async (options) => {
         await start_configuration_server(connector, options);
