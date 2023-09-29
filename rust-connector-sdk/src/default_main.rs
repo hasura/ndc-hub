@@ -358,9 +358,6 @@ where
         ))
 }
 
-/// A [`MakeSpan`] that creates tracing spans using [OpenTelemetry's conventional field names][otel].
-///
-/// [otel]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md
 #[derive(Clone, Copy, Debug)]
 pub struct PropagateParentTraces;
 
@@ -389,10 +386,7 @@ where
         // .route("/mutation", post(v2_compat::post_mutation::<C>))
         // .route("/raw", post(v2_compat::post_raw::<C>))
         .route("/explain", post(v2_compat::post_explain::<C>))
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
-        )
+        .layer(TraceLayer::new_for_http().make_span_with(PropagateParentTraces))
         .layer(ValidateRequestHeaderLayer::custom(
             move |request: &mut Request<Body>| {
                 let provided_service_token_secret = request
