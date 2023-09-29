@@ -14,8 +14,10 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trace_layer};
+use opentelemetry_http::HeaderExtractor;
+use tower_http::trace::MakeSpan;
 use tower_http::validate_request::ValidateRequestHeaderLayer;
+use tracing::Span;
 
 use clap::{Parser, Subcommand};
 use ndc_client::models::{
@@ -196,7 +198,7 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
         )
         .install_batch(opentelemetry::runtime::Tokio)?;
 
-    let subscriber = tracing_subscriber::registry()
+    tracing_subscriber::registry()
         .with(
             tracing_opentelemetry::layer()
                 .with_exception_field_propagation(true)
@@ -207,9 +209,8 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
             tracing_subscriber::fmt::layer()
                 .json()
                 .with_timer(tracing_subscriber::fmt::time::time()),
-        );
-
-    tracing::subscriber::set_global_default(subscriber)?;
+        )
+        .init();
 
     Ok(())
 }
@@ -323,11 +324,7 @@ where
         .route("/query", post(post_query::<C>))
         .route("/explain", post(post_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
-        .with_state(state)
-        // include trace context as header in responses to handlers above this line
-        .layer(response_with_trace_layer())
-        // set up `TraceLayer` from tower-http
-        .layer(opentelemetry_tracing_layer());
+        .with_state(state);
 
     let expected_auth_header: Option<HeaderValue> =
         service_token_secret.and_then(|service_token_secret| {
@@ -336,7 +333,7 @@ where
         });
 
     router
-        .layer(TraceLayer::new_for_http())
+        .layer(TraceLayer::new_for_http().make_span_with(PropagateParentTraces))
         .layer(ValidateRequestHeaderLayer::custom(
             move |request: &mut Request<Body>| {
                 // Validate the request
@@ -361,6 +358,22 @@ where
         ))
 }
 
+/// A [`MakeSpan`] that creates tracing spans using [OpenTelemetry's conventional field names][otel].
+///
+/// [otel]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md
+#[derive(Clone, Copy, Debug)]
+pub struct PropagateParentTraces;
+
+impl<B> MakeSpan<B> for PropagateParentTraces {
+    fn make_span(&mut self, req: &Request<B>) -> Span {
+        let parent_cx = global::get_text_map_propagator(|propagator| {
+            propagator.extract(&HeaderExtractor(req.headers()))
+        });
+        let _cx_guard = parent_cx.attach();
+
+        tracing::info_span!("Request")
+    }
+}
 pub fn create_v2_router<C: Connector + Clone + 'static>(
     state: ServerState<C>,
     service_token_secret: Option<String>,
