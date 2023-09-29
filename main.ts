@@ -19,5 +19,6 @@ console.log('hello world');
  * CMD parsing library
  * Subprocess library
  * File-reading library
+ * Have local dev supported by `deno --watch`
  * 
  */
