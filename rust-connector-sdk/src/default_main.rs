@@ -35,10 +35,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::error::Error;
 use std::net;
 use std::{env, process::exit};
-use tower_http::{
-    cors::CorsLayer,
-    trace::{TraceLayer},
-};
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 use tracing_subscriber::{prelude::*, EnvFilter};
 
