@@ -196,7 +196,7 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
         )
         .install_batch(opentelemetry::runtime::Tokio)?;
 
-    tracing_subscriber::registry()
+    let subscriber = tracing_subscriber::registry()
         .with(
             tracing_opentelemetry::layer()
                 .with_exception_field_propagation(true)
@@ -207,8 +207,9 @@ fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
             tracing_subscriber::fmt::layer()
                 .json()
                 .with_timer(tracing_subscriber::fmt::time::time()),
-        )
-        .init();
+        );
+
+    tracing::subscriber::set_global_default(subscriber)?;
 
     Ok(())
 }
