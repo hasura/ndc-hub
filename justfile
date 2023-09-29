@@ -21,6 +21,3 @@ lint *FLAGS:
 
 lint-apply *FLAGS:
   cargo clippy --fix {{FLAGS}}
-
-
-
