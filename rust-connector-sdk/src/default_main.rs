@@ -37,9 +37,9 @@ use std::net;
 use std::{env, process::exit};
 use tower_http::{
     cors::CorsLayer,
-    trace::{DefaultMakeSpan, TraceLayer},
+    trace::{TraceLayer},
 };
-use tracing::Level;
+
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 use self::v2_compat::SourceConfig;
