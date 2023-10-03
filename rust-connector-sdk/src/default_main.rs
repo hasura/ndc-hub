@@ -23,22 +23,17 @@ use ndc_client::models::{
     QueryRequest, QueryResponse, SchemaResponse,
 };
 use ndc_test::report;
-use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
-use opentelemetry_api::KeyValue;
-use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
-use opentelemetry_sdk::trace::Sampler;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
 use std::error::Error;
 use std::net;
-use std::{env, process::exit};
+use std::process::exit;
 use tower_http::{
     cors::CorsLayer,
     trace::{DefaultMakeSpan, TraceLayer},
 };
 use tracing::Level;
-use tracing_subscriber::{prelude::*, EnvFilter};
 
 use self::v2_compat::SourceConfig;
 
@@ -162,57 +157,6 @@ where
     }
 }
 
-fn init_tracing(serve_command: &ServeCommand) -> Result<(), Box<dyn Error>> {
-    global::set_text_map_propagator(TraceContextPropagator::new());
-
-    let service_name = serve_command
-        .service_name
-        .clone()
-        .unwrap_or(env!("CARGO_PKG_NAME").to_string());
-
-    let tracer = opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter().tonic().with_endpoint(
-                serve_command
-                    .otlp_endpoint
-                    .clone()
-                    .unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT.into()),
-            ),
-        )
-        .with_trace_config(
-            opentelemetry::sdk::trace::config()
-                .with_resource(opentelemetry::sdk::Resource::new(vec![
-                    KeyValue::new(
-                        opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-                        service_name,
-                    ),
-                    KeyValue::new(
-                        opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
-                        env!("CARGO_PKG_VERSION"),
-                    ),
-                ]))
-                .with_sampler(Sampler::ParentBased(Box::new(Sampler::AlwaysOn))),
-        )
-        .install_batch(opentelemetry::runtime::Tokio)?;
-
-    tracing_subscriber::registry()
-        .with(
-            tracing_opentelemetry::layer()
-                .with_exception_field_propagation(true)
-                .with_tracer(tracer),
-        )
-        .with(EnvFilter::builder().parse("info,otel::tracing=trace,otel=debug")?)
-        .with(
-            tracing_subscriber::fmt::layer()
-                .json()
-                .with_timer(tracing_subscriber::fmt::time::time()),
-        )
-        .init();
-
-    Ok(())
-}
-
 async fn serve<C: Connector + Clone + Default + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error>>
@@ -221,7 +165,8 @@ where
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
     C::State: Sync + Send + Clone,
 {
-    init_tracing(&serve_command).expect("Unable to initialize tracing");
+    super::tracing::init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
+        .expect("Unable to initialize tracing");
 
     let server_state = init_server_state::<C>(serve_command.configuration).await;
 
