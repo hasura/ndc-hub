@@ -89,7 +89,7 @@ pub fn make_span(request: &Request<Body>) -> Span {
     });
     span.set_parent(parent_context);
 
-    return span;
+    span
 }
 
 // Rough implementation of extracting deployment ID from URI. Regex might be better?
@@ -97,7 +97,7 @@ fn extract_deployment_id(uri: &Uri) -> &str {
     let path = uri.path();
     let mut parts = path.split('/').filter(|x| !x.is_empty());
     let _ = parts.next().unwrap_or_default();
-    parts.next().unwrap_or_else(|| "unknown")
+    parts.next().unwrap_or("unknown")
 }
 
 // Custom function for adding information to request-level span that is only available at response time.
