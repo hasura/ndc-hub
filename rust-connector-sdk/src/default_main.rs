@@ -4,6 +4,7 @@ use crate::{
     check_health,
     connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
     routes,
+    tracing::{init_tracing, make_span, on_response},
 };
 
 use async_trait::async_trait;
@@ -29,11 +30,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::error::Error;
 use std::net;
 use std::process::exit;
-use tower_http::{
-    cors::CorsLayer,
-    trace::{DefaultMakeSpan, TraceLayer},
-};
-use tracing::Level;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 use self::v2_compat::SourceConfig;
 
@@ -165,7 +162,7 @@ where
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
     C::State: Sync + Send + Clone,
 {
-    super::tracing::init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
+    init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
         .expect("Unable to initialize tracing");
 
     let server_state = init_server_state::<C>(serve_command.configuration).await;
@@ -278,7 +275,8 @@ where
     router
         .layer(
             TraceLayer::new_for_http()
-                .make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
+                .make_span_with(make_span)
+                .on_response(on_response),
         )
         .layer(ValidateRequestHeaderLayer::custom(
             move |request: &mut Request<Body>| {
@@ -321,7 +319,8 @@ where
         .route("/explain", post(v2_compat::post_explain::<C>))
         .layer(
             TraceLayer::new_for_http()
-                .make_span_with(DefaultMakeSpan::default().level(Level::INFO)),
+                .make_span_with(make_span)
+                .on_response(on_response),
         )
         .layer(ValidateRequestHeaderLayer::custom(
             move |request: &mut Request<Body>| {
