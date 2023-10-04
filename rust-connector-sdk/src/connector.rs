@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use ndc_client::models;
 use serde::Serialize;
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 use thiserror::Error;
 pub mod example;
 
@@ -189,14 +189,12 @@ pub trait Connector {
     /// The type of unserializable state
     type State;
 
-    /// Return any read regions defined in the connector's configuration
-    fn get_read_regions(_config: &Self::Configuration) -> Vec<String> {
-        vec![]
-    }
-
-    /// Return any write regions defined in the connector's configuration
-    fn get_write_regions(_config: &Self::Configuration) -> Vec<String> {
-        vec![]
+    /// Creates the region configuration map
+    fn make_region_configuration_map(
+        _raw_config: &Self::RawConfiguration,
+    ) -> HashMap<String, RegionConfiguration<Self>> {
+        // Defaults to an empty map
+        HashMap::new()
     }
 
     fn make_empty_configuration() -> Self::RawConfiguration;
@@ -287,4 +285,15 @@ pub trait Connector {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<models::QueryResponse, QueryError>;
+}
+
+pub enum ConnectorMode {
+    ReadOnly,
+    ReadWrite,
+    WriteOnly,
+}
+
+pub struct RegionConfiguration<C: Connector + ?Sized> {
+    pub config: <C as Connector>::Configuration,
+    pub mode: ConnectorMode,
 }
