@@ -287,12 +287,15 @@ pub trait Connector {
     ) -> Result<models::QueryResponse, QueryError>;
 }
 
+#[derive(Serialize)]
 pub enum ConnectorMode {
     ReadOnly,
     ReadWrite,
     WriteOnly,
 }
 
+#[derive(Serialize)]
+#[serde(bound = "<C as Connector>::Configuration: Serialize")]
 pub struct RegionConfiguration<C: Connector + ?Sized> {
     pub config: <C as Connector>::Configuration,
     pub mode: ConnectorMode,
