@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use ndc_client::models;
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{collections::HashMap, error::Error};
 use thiserror::Error;
 pub mod example;
@@ -287,15 +287,17 @@ pub trait Connector {
     ) -> Result<models::QueryResponse, QueryError>;
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub enum ConnectorMode {
     ReadOnly,
     ReadWrite,
     WriteOnly,
 }
 
-#[derive(Serialize)]
-#[serde(bound = "<C as Connector>::Configuration: Serialize")]
+#[derive(Serialize, Deserialize)]
+#[serde(
+    bound = "<C as Connector>::Configuration: Serialize, <C as Connector>::Configuration: DeserializeOwned"
+)]
 pub struct RegionConfiguration<C: Connector + ?Sized> {
     pub config: <C as Connector>::Configuration,
     pub mode: ConnectorMode,
