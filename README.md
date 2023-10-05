@@ -1,8 +1,9 @@
 # Hasura Native Data Connector Hub: ndc-hub
 
 This repository provides:
-1. A registry of connectors and 
-2. Resources to help build connectors to connect new & custom data sources to Hasura. 
+
+1. A registry of connectors and
+2. Resources to help build connectors to connect new & custom data sources to Hasura.
 
 This allows Hasura users to instantly get a powerful Hasura GraphQL API (pagination, filtering, sorting, relationships) with granular RLS style authorization out of the box on any data-source (DBs, APIs).
 
@@ -12,8 +13,9 @@ This allows Hasura users to instantly get a powerful Hasura GraphQL API (paginat
 ## Registry
 
 There are 2 connectors you can start trying out today, and we'll gradually add more to this list:
-1. [hasura/clickhouse](https://github.com/hasura/clickhouse_gdc_v2)
-2. [hasura/weaviate](https://github.com/hasura/weaviate_gdc)
+
+1. [hasura/ndc-clickhouse](https://github.com/hasura/ndc-clickhouse)
+2. [hasura/ndc-qdrant](https://github.com/hasura/ndc-qdrant)
 
 ## SDK & Guides
 
@@ -59,15 +61,14 @@ The serve command emits OTLP trace information. This can be used to see details 
 
 To enable tracing you must:
 
-* Use the NDC-Hub option `--otlp-endpoint` e.g. `http://localhost:4317`
-* Or, set the NDC-Hub ENV Variable `OTLP_ENDPOINT`
-* Or, set the `tracing` ENV Variable `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`
+- Use the NDC-Hub option `--otlp-endpoint` e.g. `http://localhost:4317`
+- Or, set the NDC-Hub ENV Variable `OTLP_ENDPOINT`
+- Or, set the `tracing` ENV Variable `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`
 
 For additional service information you can:
 
-* Set `OTEL_SERVICE_NAME` e.g. `ndc_hub_example`
-* Set `OTEL_RESOURCE_ATTRIBUTES` e.g. `key=value, k = v , a= x, a=z`
-
+- Set `OTEL_SERVICE_NAME` e.g. `ndc_hub_example`
+- Set `OTEL_RESOURCE_ATTRIBUTES` e.g. `key=value, k = v , a= x, a=z`
 
 To view trace information during local development you can run a Jager server via Docker:
 
