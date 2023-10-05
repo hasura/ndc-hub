@@ -287,7 +287,7 @@ pub trait Connector {
     ) -> Result<models::QueryResponse, QueryError>;
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
 pub enum ConnectorMode {
     ReadOnly,
     ReadWrite,
