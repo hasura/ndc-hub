@@ -190,11 +190,11 @@ pub trait Connector {
     type State;
 
     /// Creates the region configuration map
-    fn make_region_configuration_map(
+    async fn make_region_configuration_map(
         _raw_config: &Self::RawConfiguration,
-    ) -> HashMap<String, RegionConfiguration<Self>> {
+    ) -> Result<HashMap<String, RegionConfiguration<Self>>, ValidateError> {
         // Defaults to an empty map
-        HashMap::new()
+        Ok(HashMap::new())
     }
 
     fn make_empty_configuration() -> Self::RawConfiguration;
@@ -295,10 +295,8 @@ pub enum ConnectorMode {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(
-    bound = "<C as Connector>::Configuration: Serialize, <C as Connector>::Configuration: DeserializeOwned"
-)]
+#[serde(bound = "C::Configuration: Serialize, C::Configuration: DeserializeOwned")]
 pub struct RegionConfiguration<C: Connector + ?Sized> {
-    pub config: <C as Connector>::Configuration,
+    pub config: C::Configuration,
     pub mode: ConnectorMode,
 }
