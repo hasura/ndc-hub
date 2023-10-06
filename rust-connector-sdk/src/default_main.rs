@@ -88,6 +88,10 @@ enum ConfigurationSubcommand {
 struct ServeConfigurationCommand {
     #[arg(long, value_name = "PORT", env = "PORT", default_value = "9100")]
     port: Port,
+    #[arg(long, value_name = "OTEL_SERVICE_NAME", env = "OTEL_SERVICE_NAME")]
+    service_name: Option<String>,
+    #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
+    otlp_endpoint: Option<String>, // NOTE: `tracing` crate uses `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` ENV variable, but we want to control the endpoint via CLI interface
 }
 
 #[derive(Clone, Parser)]
@@ -427,6 +431,9 @@ where
 {
     let port = serve_command.port;
     let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
+
+    init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
+        .expect("Unable to initialize tracing");
 
     println!("Starting server on {}", address);
 
