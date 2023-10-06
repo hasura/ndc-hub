@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use ndc_client::models;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{collections::HashMap, error::Error};
+use serde::Serialize;
+use std::error::Error;
 use thiserror::Error;
 pub mod example;
 
@@ -189,14 +189,6 @@ pub trait Connector {
     /// The type of unserializable state
     type State;
 
-    /// Creates the region configuration map
-    async fn make_region_configuration_map(
-        _raw_config: &Self::RawConfiguration,
-    ) -> Result<HashMap<String, RegionConfiguration<Self>>, ValidateError> {
-        // Defaults to an empty map
-        Ok(HashMap::new())
-    }
-
     fn make_empty_configuration() -> Self::RawConfiguration;
 
     async fn update_configuration(
@@ -285,18 +277,4 @@ pub trait Connector {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<models::QueryResponse, QueryError>;
-}
-
-#[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
-pub enum ConnectorMode {
-    ReadOnly,
-    ReadWrite,
-    WriteOnly,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(bound = "C::Configuration: Serialize, C::Configuration: DeserializeOwned")]
-pub struct RegionConfiguration<C: Connector + ?Sized> {
-    pub config: C::Configuration,
-    pub mode: ConnectorMode,
 }
