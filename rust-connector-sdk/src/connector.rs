@@ -189,16 +189,6 @@ pub trait Connector {
     /// The type of unserializable state
     type State;
 
-    /// Return any read regions defined in the connector's configuration
-    fn get_read_regions(_config: &Self::Configuration) -> Vec<String> {
-        vec![]
-    }
-
-    /// Return any write regions defined in the connector's configuration
-    fn get_write_regions(_config: &Self::Configuration) -> Vec<String> {
-        vec![]
-    }
-
     fn make_empty_configuration() -> Self::RawConfiguration;
 
     async fn update_configuration(

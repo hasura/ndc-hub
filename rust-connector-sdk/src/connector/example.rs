@@ -17,14 +17,6 @@ impl Connector for Example {
 
     fn make_empty_configuration() -> Self::RawConfiguration {}
 
-    fn get_read_regions(_config: &Self::Configuration) -> Vec<String> {
-        Vec::new()
-    }
-
-    fn get_write_regions(_config: &Self::Configuration) -> Vec<String> {
-        Vec::new()
-    }
-
     async fn update_configuration(
         _config: &Self::RawConfiguration,
     ) -> Result<Self::RawConfiguration, UpdateConfigurationError> {
