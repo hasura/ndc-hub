@@ -174,11 +174,6 @@ where
     let router = create_router::<C>(
         server_state.clone(),
         serve_command.service_token_secret.clone(),
-    )
-    .layer(
-        TraceLayer::new_for_http()
-            .make_span_with(make_span)
-            .on_response(on_response),
     );
 
     let router = if serve_command.enable_v2_compatibility {
@@ -451,6 +446,11 @@ where
         .route("/schema", get(get_config_schema::<C>))
         .route("/validate", post(post_validate::<C>))
         .route("/health", get(|| async {}))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(make_span)
+                .on_response(on_response),
+        )
         .layer(cors);
 
     axum::Server::bind(&address)
