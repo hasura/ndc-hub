@@ -12,11 +12,12 @@ This allows Hasura users to instantly get a powerful Hasura GraphQL API (paginat
 
 ## Registry
 
-There are 3 connectors you can start trying out today, and we'll gradually add more to this list:
+There are 4 connectors you can start trying out today, and we'll gradually add more to this list:
 
 1. [hasura/ndc-clickhouse](https://github.com/hasura/ndc-clickhouse)
 2. [hasura/ndc-qdrant](https://github.com/hasura/ndc-qdrant)
 3. [hasura/ndc-sendgrid](https://github.com/hasura/ndc-sendgrid/)
+4. [hasura/ndc-typescript-deno](https://github.com/hasura/ndc-typescript-deno)
 
 ## SDK & Guides
 
