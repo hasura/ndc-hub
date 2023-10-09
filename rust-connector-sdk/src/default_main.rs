@@ -16,6 +16,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use base64::{engine::general_purpose, Engine};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 
 use clap::{Parser, Subcommand};
@@ -413,7 +414,7 @@ async fn configuration<C: Connector + 'static>(
 ) -> Result<(), Box<dyn Error>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Clone + Sync + Send,
-    C::Configuration: Sync + Send,
+    C::Configuration: Sync + Send + Serialize,
 {
     match command.command {
         ConfigurationSubcommand::Serve(serve_command) => {
@@ -427,7 +428,7 @@ async fn serve_configuration<C: Connector + 'static>(
 ) -> Result<(), Box<dyn Error>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
-    C::Configuration: Sync + Send,
+    C::Configuration: Sync + Send + Serialize,
 {
     let port = serve_command.port;
     let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
@@ -499,6 +500,7 @@ where
 #[derive(Debug, Clone, Serialize)]
 struct ValidateResponse {
     schema: SchemaResponse,
+    resolved_configuration: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -506,6 +508,7 @@ struct ValidateResponse {
 enum ValidateErrors {
     InvalidConfiguration { ranges: Vec<InvalidRange> },
     UnableToBuildSchema,
+    Base64EncodingError(String),
 }
 
 async fn post_validate<C: Connector>(
@@ -513,6 +516,7 @@ async fn post_validate<C: Connector>(
 ) -> Result<Json<ValidateResponse>, (StatusCode, Json<ValidateErrors>)>
 where
     C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Serialize,
 {
     let configuration = C::validate_raw_configuration(&configuration)
         .await
@@ -528,7 +532,17 @@ where
             Json(ValidateErrors::UnableToBuildSchema),
         ),
     })?;
-    Ok(Json(ValidateResponse { schema }))
+    let resolved_config_bytes = serde_json::to_vec(&configuration).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ValidateErrors::Base64EncodingError(e.to_string())),
+        )
+    })?;
+    let resolved_configuration = general_purpose::STANDARD.encode(resolved_config_bytes);
+    Ok(Json(ValidateResponse {
+        schema,
+        resolved_configuration,
+    }))
 }
 
 struct ConnectorAdapter<C: Connector> {
