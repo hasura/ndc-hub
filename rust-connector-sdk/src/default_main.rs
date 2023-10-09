@@ -144,7 +144,7 @@ pub struct ServerState<C: Connector> {
 /// - Logs are written to stdout
 pub async fn default_main<C: Connector + Clone + Default + 'static>() -> Result<(), Box<dyn Error>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send + Clone,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
     C::State: Sync + Send + Clone,
 {
@@ -412,7 +412,7 @@ async fn configuration<C: Connector + 'static>(
     command: ConfigurationCommand,
 ) -> Result<(), Box<dyn Error>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Clone + Sync + Send,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
     C::Configuration: Sync + Send,
 {
     match command.command {
