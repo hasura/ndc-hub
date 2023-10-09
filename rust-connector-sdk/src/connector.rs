@@ -192,13 +192,13 @@ pub trait Connector {
     fn make_empty_configuration() -> Self::RawConfiguration;
 
     async fn update_configuration(
-        config: &Self::RawConfiguration,
+        config: Self::RawConfiguration,
     ) -> Result<Self::RawConfiguration, UpdateConfigurationError>;
 
     /// Validate the raw configuration provided by the user,
     /// returning a configuration error or a validated [`Connector::Configuration`].
     async fn validate_raw_configuration(
-        configuration: &Self::RawConfiguration,
+        configuration: Self::RawConfiguration,
     ) -> Result<Self::Configuration, ValidateError>;
 
     /// Initialize the connector's in-memory state.

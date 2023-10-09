@@ -235,7 +235,7 @@ where
     let configuration_json = std::fs::read_to_string(config_file).unwrap();
     let raw_configuration =
         serde_json::de::from_str::<C::RawConfiguration>(configuration_json.as_str()).unwrap();
-    let configuration = C::validate_raw_configuration(&raw_configuration)
+    let configuration = C::validate_raw_configuration(raw_configuration)
         .await
         .unwrap();
 
@@ -478,7 +478,7 @@ async fn post_update<C: Connector>(
 where
     C::RawConfiguration: Serialize + DeserializeOwned,
 {
-    let updated = C::update_configuration(&configuration)
+    let updated = C::update_configuration(configuration)
         .await
         .map_err(|err| match err {
             UpdateConfigurationError::Other(err) => {
@@ -514,14 +514,15 @@ async fn post_validate<C: Connector>(
 where
     C::RawConfiguration: DeserializeOwned,
 {
-    let configuration = C::validate_raw_configuration(&configuration)
-        .await
-        .map_err(|e| match e {
-            crate::connector::ValidateError::ValidateError(ranges) => (
-                StatusCode::BAD_REQUEST,
-                Json(ValidateErrors::InvalidConfiguration { ranges }),
-            ),
-        })?;
+    let configuration =
+        C::validate_raw_configuration(configuration)
+            .await
+            .map_err(|e| match e {
+                crate::connector::ValidateError::ValidateError(ranges) => (
+                    StatusCode::BAD_REQUEST,
+                    Json(ValidateErrors::InvalidConfiguration { ranges }),
+                ),
+            })?;
     let schema = C::get_schema(&configuration).await.map_err(|e| match e {
         SchemaError::Other(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -577,7 +578,7 @@ where
     let configuration_json = std::fs::read_to_string(command.configuration).unwrap();
     let raw_configuration =
         serde_json::de::from_str::<C::RawConfiguration>(configuration_json.as_str()).unwrap();
-    let configuration = C::validate_raw_configuration(&raw_configuration)
+    let configuration = C::validate_raw_configuration(raw_configuration)
         .await
         .unwrap();
 

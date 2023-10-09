@@ -18,13 +18,13 @@ impl Connector for Example {
     fn make_empty_configuration() -> Self::RawConfiguration {}
 
     async fn update_configuration(
-        _config: &Self::RawConfiguration,
+        _config: Self::RawConfiguration,
     ) -> Result<Self::RawConfiguration, UpdateConfigurationError> {
         Ok(())
     }
 
     async fn validate_raw_configuration(
-        _configuration: &Self::Configuration,
+        _configuration: Self::Configuration,
     ) -> Result<Self::Configuration, ValidateError> {
         Ok(())
     }
