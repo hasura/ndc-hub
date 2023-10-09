@@ -114,7 +114,7 @@ struct CheckHealthCommand {
 
 type Port = u16;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ServerState<C: Connector> {
     configuration: C::Configuration,
     state: C::State,
@@ -144,11 +144,11 @@ pub struct ServerState<C: Connector> {
 /// - It reads configuration as JSON from a file specified on the command line,
 /// - It reports traces to an OTLP collector specified on the command line,
 /// - Logs are written to stdout
-pub async fn default_main<C: Connector + Clone + Default + 'static>() -> Result<(), Box<dyn Error>>
+pub async fn default_main<C: Connector + Default + 'static>() -> Result<(), Box<dyn Error>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send + Clone,
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
+    C::Configuration: Serialize + DeserializeOwned + Sync + Send,
+    C::State: Sync + Send,
 {
     let CliArgs { command } = CliArgs::parse();
 
@@ -160,26 +160,29 @@ where
     }
 }
 
-async fn serve<C: Connector + Clone + Default + 'static>(
+async fn serve<C: Connector + Default + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error>>
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Serialize + DeserializeOwned + Sync + Send,
+    C::State: Sync + Send,
 {
     init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
         .expect("Unable to initialize tracing");
 
-    let server_state = init_server_state::<C>(serve_command.configuration).await;
+    let server_state = Arc::new(init_server_state::<C>(serve_command.configuration).await);
 
     let router = create_router::<C>(
-        server_state.clone(),
+        Arc::clone(&server_state),
         serve_command.service_token_secret.clone(),
     );
 
     let router = if serve_command.enable_v2_compatibility {
-        let v2_router = create_v2_router(server_state, serve_command.service_token_secret.clone());
+        let v2_router = create_v2_router(
+            Arc::clone(&server_state),
+            serve_command.service_token_secret.clone(),
+        );
         Router::new().merge(router).nest("/v2", v2_router)
     } else {
         router
@@ -226,13 +229,13 @@ where
 }
 
 /// Initialize the server state from the configuration file.
-pub async fn init_server_state<C: Connector + Clone + Default + 'static>(
+pub async fn init_server_state<C: Connector + Default + 'static>(
     config_file: String,
 ) -> ServerState<C>
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Serialize + DeserializeOwned + Sync + Send,
+    C::State: Sync + Send,
 {
     let configuration_json = std::fs::read_to_string(config_file).unwrap();
     let raw_configuration =
@@ -253,14 +256,14 @@ where
     }
 }
 
-pub fn create_router<C: Connector + Clone + 'static>(
-    state: ServerState<C>,
+pub fn create_router<C: Connector + 'static>(
+    state: Arc<ServerState<C>>,
     service_token_secret: Option<String>,
 ) -> Router
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + Clone + Sync + Send,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Serialize + Sync + Send,
+    C::State: Sync + Send,
 {
     let router = Router::new()
         .route("/capabilities", get(get_capabilities::<C>))
@@ -270,7 +273,7 @@ where
         .route("/query", post(post_query::<C>))
         .route("/explain", post(post_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
-        .with_state(Arc::new(state));
+        .with_state(state);
 
     let expected_auth_header: Option<HeaderValue> =
         service_token_secret.and_then(|service_token_secret| {
@@ -308,14 +311,14 @@ where
         ))
 }
 
-pub fn create_v2_router<C: Connector + Clone + 'static>(
-    state: ServerState<C>,
+pub fn create_v2_router<C: Connector + 'static>(
+    state: Arc<ServerState<C>>,
     service_token_secret: Option<String>,
 ) -> Router
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + Clone + Sync + Send,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Serialize + Sync + Send,
+    C::State: Sync + Send,
 {
     Router::new()
         .route("/schema", post(v2_compat::post_schema::<C>))
@@ -364,7 +367,7 @@ where
         // capabilities and health endpoints are exempt from auth requirements
         .route("/capabilities", get(v2_compat::get_capabilities::<C>))
         .route("/health", get(v2_compat::get_health))
-        .with_state(Arc::new(state))
+        .with_state(state)
 }
 
 async fn get_metrics<C: Connector>(
@@ -414,7 +417,7 @@ async fn configuration<C: Connector + 'static>(
     command: ConfigurationCommand,
 ) -> Result<(), Box<dyn Error>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Clone + Sync + Send,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
     C::Configuration: Sync + Send,
 {
     match command.command {
