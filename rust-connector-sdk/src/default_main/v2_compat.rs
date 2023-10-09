@@ -1,3 +1,6 @@
+use std::collections::BTreeMap;
+use std::sync::Arc;
+
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use gdc_rust_types::{
     Aggregate, BinaryArrayComparisonOperator, BinaryComparisonOperator, Capabilities,
@@ -14,7 +17,6 @@ use indexmap::IndexMap;
 use ndc_client::models;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::collections::BTreeMap;
 
 use crate::{
     connector::{Connector, ExplainError, QueryError},
@@ -27,7 +29,7 @@ pub async fn get_health() -> impl IntoResponse {
 }
 
 pub async fn get_capabilities<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
 ) -> Result<Json<CapabilitiesResponse>, (StatusCode, Json<ErrorResponse>)> {
     let v3_capabilities = C::get_capabilities().await;
     let v3_schema = C::get_schema(&state.configuration).await.map_err(|err| {
@@ -168,7 +170,7 @@ fn get_openapi_config_schema_response() -> ConfigSchemaResponse {
 }
 
 pub async fn post_schema<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
     request: Option<Json<SchemaRequest>>,
 ) -> Result<Json<SchemaResponse>, (StatusCode, Json<ErrorResponse>)> {
     let v3_schema = C::get_schema(&state.configuration).await.map_err(|err| {
@@ -384,7 +386,7 @@ fn get_field_type(column_type: &models::Type, schema: &models::SchemaResponse) -
 }
 
 pub async fn post_query<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
     Json(request): Json<QueryRequest>,
 ) -> Result<Json<QueryResponse>, (StatusCode, Json<ErrorResponse>)> {
     let request = map_query_request(request).map_err(|err| (StatusCode::BAD_REQUEST, Json(err)))?;
@@ -413,7 +415,7 @@ pub async fn post_query<C: Connector>(
 }
 
 pub async fn post_explain<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
     Json(request): Json<QueryRequest>,
 ) -> Result<Json<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
     let v2_ir_json = serde_json::to_string(&request).map_err(|err| {

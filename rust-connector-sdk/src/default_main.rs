@@ -1,5 +1,10 @@
 mod v2_compat;
 
+use std::error::Error;
+use std::net;
+use std::process::exit;
+use std::sync::Arc;
+
 use crate::{
     check_health,
     connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
@@ -27,9 +32,6 @@ use ndc_test::report;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
-use std::error::Error;
-use std::net;
-use std::process::exit;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 use self::v2_compat::SourceConfig;
@@ -268,7 +270,7 @@ where
         .route("/query", post(post_query::<C>))
         .route("/explain", post(post_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
-        .with_state(state);
+        .with_state(Arc::new(state));
 
     let expected_auth_header: Option<HeaderValue> =
         service_token_secret.and_then(|service_token_secret| {
@@ -362,13 +364,13 @@ where
         // capabilities and health endpoints are exempt from auth requirements
         .route("/capabilities", get(v2_compat::get_capabilities::<C>))
         .route("/health", get(v2_compat::get_health))
-        .with_state(state)
+        .with_state(Arc::new(state))
 }
 
 async fn get_metrics<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
 ) -> Result<String, (StatusCode, Json<ErrorResponse>)> {
-    routes::get_metrics::<C>(&state.configuration, &state.state, state.metrics)
+    routes::get_metrics::<C>(&state.configuration, &state.state, state.metrics.clone())
 }
 
 async fn get_capabilities<C: Connector>() -> Json<CapabilitiesResponse> {
@@ -376,33 +378,33 @@ async fn get_capabilities<C: Connector>() -> Json<CapabilitiesResponse> {
 }
 
 async fn get_health<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
 ) -> Result<(), (StatusCode, Json<ErrorResponse>)> {
     routes::get_health::<C>(&state.configuration, &state.state).await
 }
 
 async fn get_schema<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
 ) -> Result<Json<SchemaResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::get_schema::<C>(&state.configuration).await
 }
 
 async fn post_explain<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
     request: Json<QueryRequest>,
 ) -> Result<Json<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_explain::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_mutation<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
     request: Json<MutationRequest>,
 ) -> Result<Json<MutationResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_mutation::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_query<C: Connector>(
-    State(state): State<ServerState<C>>,
+    State(state): State<Arc<ServerState<C>>>,
     request: Json<QueryRequest>,
 ) -> Result<Json<QueryResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_query::<C>(&state.configuration, &state.state, request).await
