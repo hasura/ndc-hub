@@ -51,7 +51,7 @@ impl Connector for Example {
     }
 
     async fn get_capabilities() -> JsonResponse<models::CapabilitiesResponse> {
-        JsonResponse::Value(models::CapabilitiesResponse {
+        models::CapabilitiesResponse {
             versions: "^0.1.0".into(),
             capabilities: models::Capabilities {
                 explain: None,
@@ -63,7 +63,8 @@ impl Connector for Example {
                     relation_comparisons: None,
                 }),
             },
-        })
+        }
+        .into()
     }
 
     async fn get_schema(
@@ -75,13 +76,14 @@ impl Connector for Example {
         .instrument(info_span!("tracing example"))
         .await;
 
-        Ok(JsonResponse::Value(models::SchemaResponse {
+        Ok(models::SchemaResponse {
             collections: vec![],
             functions: vec![],
             procedures: vec![],
             object_types: BTreeMap::new(),
             scalar_types: BTreeMap::new(),
-        }))
+        }
+        .into())
     }
 
     async fn explain(

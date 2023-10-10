@@ -16,6 +16,12 @@ pub enum JsonResponse<A> {
     Serialized(Bytes),
 }
 
+impl<A> From<A> for JsonResponse<A> {
+    fn from(value: A) -> Self {
+        Self::Value(value)
+    }
+}
+
 impl<A: (for<'de> serde::Deserialize<'de>)> JsonResponse<A> {
     /// Unwraps the value, deserializing if necessary.
     ///
@@ -25,8 +31,8 @@ impl<A: (for<'de> serde::Deserialize<'de>)> JsonResponse<A> {
         self,
     ) -> Result<A, E> {
         match self {
-            JsonResponse::Value(value) => Ok(value),
-            JsonResponse::Serialized(bytes) => {
+            Self::Value(value) => Ok(value),
+            Self::Serialized(bytes) => {
                 serde_json::de::from_slice(&bytes).map_err(|err| E::from(Box::new(err)))
             }
         }
@@ -36,8 +42,8 @@ impl<A: (for<'de> serde::Deserialize<'de>)> JsonResponse<A> {
 impl<A: serde::Serialize> IntoResponse for JsonResponse<A> {
     fn into_response(self) -> axum::response::Response {
         match self {
-            JsonResponse::Value(value) => axum::Json(value).into_response(),
-            JsonResponse::Serialized(bytes) => (
+            Self::Value(value) => axum::Json(value).into_response(),
+            Self::Serialized(bytes) => (
                 [(
                     header::CONTENT_TYPE,
                     HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
