@@ -18,7 +18,7 @@ use tracing_subscriber::util::SubscriberInitExt;
 pub fn init_tracing(
     service_name: &Option<String>,
     otlp_endpoint: &Option<String>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
     let service_name = service_name

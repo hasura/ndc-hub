@@ -143,7 +143,8 @@ pub struct ServerState<C: Connector> {
 /// - It reads configuration as JSON from a file specified on the command line,
 /// - It reports traces to an OTLP collector specified on the command line,
 /// - Logs are written to stdout
-pub async fn default_main<C: Connector + Clone + Default + 'static>() -> Result<(), Box<dyn Error>>
+pub async fn default_main<C: Connector + Clone + Default + 'static>(
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
@@ -161,7 +162,7 @@ where
 
 async fn serve<C: Connector + Clone + Default + 'static>(
     serve_command: ServeCommand,
-) -> Result<(), Box<dyn Error>>
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
@@ -411,7 +412,7 @@ async fn post_query<C: Connector>(
 
 async fn configuration<C: Connector + 'static>(
     command: ConfigurationCommand,
-) -> Result<(), Box<dyn Error>>
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
     C::Configuration: Sync + Send + Serialize,
@@ -425,7 +426,7 @@ where
 
 async fn serve_configuration<C: Connector + 'static>(
     serve_command: ServeConfigurationCommand,
-) -> Result<(), Box<dyn Error>>
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
     C::Configuration: Sync + Send + Serialize,
@@ -581,7 +582,9 @@ where
     }
 }
 
-async fn test<C: Connector + 'static>(command: TestCommand) -> Result<(), Box<dyn Error>>
+async fn test<C: Connector + 'static>(
+    command: TestCommand,
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: DeserializeOwned,
     C::Configuration: Sync + Send + 'static,
@@ -618,7 +621,7 @@ where
 }
 async fn check_health(
     CheckHealthCommand { host, port }: CheckHealthCommand,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     match check_health::check_health(host, port).await {
         Ok(()) => {
             println!("Health check succeeded.");
