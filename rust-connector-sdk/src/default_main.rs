@@ -509,7 +509,7 @@ struct ValidateResponse {
 enum ValidateErrors {
     InvalidConfiguration { ranges: Vec<InvalidRange> },
     UnableToBuildSchema,
-    Base64EncodingError(String),
+    JsonEncodingError(String),
 }
 
 async fn post_validate<C: Connector>(
@@ -537,7 +537,7 @@ where
     let resolved_config_bytes = serde_json::to_vec(&configuration).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ValidateErrors::Base64EncodingError(e.to_string())),
+            Json(ValidateErrors::JsonEncodingError(e.to_string())),
         )
     })?;
     let resolved_configuration = general_purpose::STANDARD.encode(resolved_config_bytes);
