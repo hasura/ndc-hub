@@ -72,7 +72,7 @@ pub enum HealthError {
 #[derive(Debug, Error)]
 pub enum SchemaError {
     #[error("error retrieving the schema: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when executing a query.
@@ -110,7 +110,7 @@ pub enum ExplainError {
     #[error("unsupported operation: {0}")]
     UnsupportedOperation(String),
     #[error("error explaining query: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when executing a mutation.
