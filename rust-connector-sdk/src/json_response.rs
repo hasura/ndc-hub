@@ -7,7 +7,7 @@ use http::{header, HeaderValue};
 /// The value may be of a type that implements `serde::Serialize`, or it may be
 /// a contiguous sequence of bytes, which are _assumed_ to be valid JSON.
 #[derive(Debug, Clone)]
-pub enum JsonResponse<A: serde::Serialize + (for<'de> serde::Deserialize<'de>)> {
+pub enum JsonResponse<A> {
     /// A value that can be serialized to JSON.
     Value(A),
     /// A serialized JSON bytestring that is assumed to represent a value of
@@ -16,7 +16,7 @@ pub enum JsonResponse<A: serde::Serialize + (for<'de> serde::Deserialize<'de>)> 
     Serialized(Bytes),
 }
 
-impl<A: serde::Serialize + (for<'de> serde::Deserialize<'de>)> JsonResponse<A> {
+impl<A: (for<'de> serde::Deserialize<'de>)> JsonResponse<A> {
     /// Unwraps the value, deserializing if necessary.
     ///
     /// This is only intended for testing and compatibility. If it lives on a
@@ -33,7 +33,7 @@ impl<A: serde::Serialize + (for<'de> serde::Deserialize<'de>)> JsonResponse<A> {
     }
 }
 
-impl<A: serde::Serialize + (for<'de> serde::Deserialize<'de>)> IntoResponse for JsonResponse<A> {
+impl<A: serde::Serialize> IntoResponse for JsonResponse<A> {
     fn into_response(self) -> axum::response::Response {
         match self {
             JsonResponse::Value(value) => axum::Json(value).into_response(),
