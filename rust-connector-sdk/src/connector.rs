@@ -189,26 +189,16 @@ pub trait Connector {
     /// The type of unserializable state
     type State;
 
-    /// Return any read regions defined in the connector's configuration
-    fn get_read_regions(_config: &Self::Configuration) -> Vec<String> {
-        vec![]
-    }
-
-    /// Return any write regions defined in the connector's configuration
-    fn get_write_regions(_config: &Self::Configuration) -> Vec<String> {
-        vec![]
-    }
-
     fn make_empty_configuration() -> Self::RawConfiguration;
 
     async fn update_configuration(
-        config: &Self::RawConfiguration,
+        config: Self::RawConfiguration,
     ) -> Result<Self::RawConfiguration, UpdateConfigurationError>;
 
     /// Validate the raw configuration provided by the user,
     /// returning a configuration error or a validated [`Connector::Configuration`].
     async fn validate_raw_configuration(
-        configuration: &Self::RawConfiguration,
+        configuration: Self::RawConfiguration,
     ) -> Result<Self::Configuration, ValidateError>;
 
     /// Initialize the connector's in-memory state.

@@ -1,6 +1,5 @@
 use std::process::ExitCode;
 
-use ndc_postgres::configuration::;
 use ndc_sdk::connector::example::Example;
 use ndc_sdk::default_main::default_main;
 

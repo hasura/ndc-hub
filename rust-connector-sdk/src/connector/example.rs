@@ -17,22 +17,14 @@ impl Connector for Example {
 
     fn make_empty_configuration() -> Self::RawConfiguration {}
 
-    fn get_read_regions(_config: &Self::Configuration) -> Vec<String> {
-        Vec::new()
-    }
-
-    fn get_write_regions(_config: &Self::Configuration) -> Vec<String> {
-        Vec::new()
-    }
-
     async fn update_configuration(
-        _config: &Self::RawConfiguration,
+        _config: Self::RawConfiguration,
     ) -> Result<Self::RawConfiguration, UpdateConfigurationError> {
         Ok(())
     }
 
     async fn validate_raw_configuration(
-        _configuration: &Self::Configuration,
+        _configuration: Self::Configuration,
     ) -> Result<Self::Configuration, ValidateError> {
         Ok(())
     }
