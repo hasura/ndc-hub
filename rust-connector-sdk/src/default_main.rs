@@ -16,6 +16,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use base64::{engine::general_purpose, Engine};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 
 use clap::{Parser, Subcommand};
@@ -142,7 +143,8 @@ pub struct ServerState<C: Connector> {
 /// - It reads configuration as JSON from a file specified on the command line,
 /// - It reports traces to an OTLP collector specified on the command line,
 /// - Logs are written to stdout
-pub async fn default_main<C: Connector + Clone + Default + 'static>() -> Result<(), Box<dyn Error>>
+pub async fn default_main<C: Connector + Clone + Default + 'static>(
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
@@ -160,7 +162,7 @@ where
 
 async fn serve<C: Connector + Clone + Default + 'static>(
     serve_command: ServeCommand,
-) -> Result<(), Box<dyn Error>>
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
     C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
@@ -410,10 +412,10 @@ async fn post_query<C: Connector>(
 
 async fn configuration<C: Connector + 'static>(
     command: ConfigurationCommand,
-) -> Result<(), Box<dyn Error>>
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
-    C::Configuration: Sync + Send,
+    C::Configuration: Sync + Send + Serialize,
 {
     match command.command {
         ConfigurationSubcommand::Serve(serve_command) => {
@@ -424,10 +426,10 @@ where
 
 async fn serve_configuration<C: Connector + 'static>(
     serve_command: ServeConfigurationCommand,
-) -> Result<(), Box<dyn Error>>
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
-    C::Configuration: Sync + Send,
+    C::Configuration: Sync + Send + Serialize,
 {
     let port = serve_command.port;
     let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
@@ -499,6 +501,7 @@ where
 #[derive(Debug, Clone, Serialize)]
 struct ValidateResponse {
     schema: SchemaResponse,
+    resolved_configuration: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -506,6 +509,7 @@ struct ValidateResponse {
 enum ValidateErrors {
     InvalidConfiguration { ranges: Vec<InvalidRange> },
     UnableToBuildSchema,
+    JsonEncodingError(String),
 }
 
 async fn post_validate<C: Connector>(
@@ -513,6 +517,7 @@ async fn post_validate<C: Connector>(
 ) -> Result<Json<ValidateResponse>, (StatusCode, Json<ValidateErrors>)>
 where
     C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Serialize,
 {
     let configuration =
         C::validate_raw_configuration(configuration)
@@ -529,7 +534,17 @@ where
             Json(ValidateErrors::UnableToBuildSchema),
         ),
     })?;
-    Ok(Json(ValidateResponse { schema }))
+    let resolved_config_bytes = serde_json::to_vec(&configuration).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ValidateErrors::JsonEncodingError(e.to_string())),
+        )
+    })?;
+    let resolved_configuration = general_purpose::STANDARD.encode(resolved_config_bytes);
+    Ok(Json(ValidateResponse {
+        schema,
+        resolved_configuration,
+    }))
 }
 
 struct ConnectorAdapter<C: Connector> {
@@ -567,7 +582,9 @@ where
     }
 }
 
-async fn test<C: Connector + 'static>(command: TestCommand) -> Result<(), Box<dyn Error>>
+async fn test<C: Connector + 'static>(
+    command: TestCommand,
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: DeserializeOwned,
     C::Configuration: Sync + Send + 'static,
@@ -604,7 +621,7 @@ where
 }
 async fn check_health(
     CheckHealthCommand { host, port }: CheckHealthCommand,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     match check_health::check_health(host, port).await {
         Ok(()) => {
             println!("Health check succeeded.");

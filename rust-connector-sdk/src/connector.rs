@@ -35,7 +35,7 @@ pub enum KeyOrIndex {
 #[derive(Debug, Error)]
 pub enum UpdateConfigurationError {
     #[error("error validating configuration: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when trying to initialize connector
@@ -45,7 +45,7 @@ pub enum UpdateConfigurationError {
 #[derive(Debug, Error)]
 pub enum InitializationError {
     #[error("error initializing connector state: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when trying to update metrics.
@@ -54,7 +54,7 @@ pub enum InitializationError {
 #[derive(Debug, Error)]
 pub enum FetchMetricsError {
     #[error("error fetching metrics: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when checking connector health.
@@ -63,7 +63,7 @@ pub enum FetchMetricsError {
 #[derive(Debug, Error)]
 pub enum HealthError {
     #[error("error checking health status: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when retrieving the connector schema.
@@ -72,7 +72,7 @@ pub enum HealthError {
 #[derive(Debug, Error)]
 pub enum SchemaError {
     #[error("error retrieving the schema: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when executing a query.
@@ -91,7 +91,7 @@ pub enum QueryError {
     #[error("unsupported operation: {0}")]
     UnsupportedOperation(String),
     #[error("error executing query: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when explaining a query.
@@ -110,7 +110,7 @@ pub enum ExplainError {
     #[error("unsupported operation: {0}")]
     UnsupportedOperation(String),
     #[error("error explaining query: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when executing a mutation.
@@ -137,7 +137,7 @@ pub enum MutationError {
     #[error("mutation violates constraint: {0}")]
     ConstraintNotMet(String),
     #[error("error executing mutation: {0}")]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 /// Connectors using this library should implement this trait.
