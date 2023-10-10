@@ -50,8 +50,8 @@ impl Connector for Example {
         Ok(())
     }
 
-    async fn get_capabilities() -> models::CapabilitiesResponse {
-        models::CapabilitiesResponse {
+    async fn get_capabilities() -> JsonResponse<models::CapabilitiesResponse> {
+        JsonResponse::Value(models::CapabilitiesResponse {
             versions: "^0.1.0".into(),
             capabilities: models::Capabilities {
                 explain: None,
@@ -63,32 +63,32 @@ impl Connector for Example {
                     relation_comparisons: None,
                 }),
             },
-        }
+        })
     }
 
     async fn get_schema(
         _configuration: &Self::Configuration,
-    ) -> Result<models::SchemaResponse, SchemaError> {
+    ) -> Result<JsonResponse<models::SchemaResponse>, SchemaError> {
         async {
             info_span!("inside tracing example");
         }
         .instrument(info_span!("tracing example"))
         .await;
 
-        Ok(models::SchemaResponse {
+        Ok(JsonResponse::Value(models::SchemaResponse {
             collections: vec![],
             functions: vec![],
             procedures: vec![],
             object_types: BTreeMap::new(),
             scalar_types: BTreeMap::new(),
-        })
+        }))
     }
 
     async fn explain(
         _configuration: &Self::Configuration,
         _state: &Self::State,
         _request: models::QueryRequest,
-    ) -> Result<models::ExplainResponse, ExplainError> {
+    ) -> Result<JsonResponse<models::ExplainResponse>, ExplainError> {
         todo!()
     }
 
@@ -96,7 +96,7 @@ impl Connector for Example {
         _configuration: &Self::Configuration,
         _state: &Self::State,
         _request: models::MutationRequest,
-    ) -> Result<models::MutationResponse, MutationError> {
+    ) -> Result<JsonResponse<models::MutationResponse>, MutationError> {
         todo!()
     }
 
@@ -104,7 +104,7 @@ impl Connector for Example {
         _configuration: &Self::Configuration,
         _state: &Self::State,
         _request: models::QueryRequest,
-    ) -> Result<models::QueryResponse, QueryError> {
+    ) -> Result<JsonResponse<models::QueryResponse>, QueryError> {
         todo!()
     }
 }

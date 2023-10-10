@@ -16,10 +16,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::BTreeMap;
 
-use crate::{
-    connector::{Connector, ExplainError, QueryError},
-    default_main::ServerState,
-};
+use crate::connector::{Connector, ExplainError, QueryError};
+use crate::default_main::ServerState;
+use crate::json_response::JsonResponse;
 
 pub async fn get_health() -> impl IntoResponse {
     // todo: if source_name and config provided, check if that specific source is healthy
@@ -29,17 +28,31 @@ pub async fn get_health() -> impl IntoResponse {
 pub async fn get_capabilities<C: Connector>(
     State(state): State<ServerState<C>>,
 ) -> Result<Json<CapabilitiesResponse>, (StatusCode, Json<ErrorResponse>)> {
-    let v3_capabilities = C::get_capabilities().await;
-    let v3_schema = C::get_schema(&state.configuration).await.map_err(|err| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
-                details: None,
-                message: err.to_string(),
-                r#type: None,
-            }),
-        )
-    })?;
+    let v3_capabilities = C::get_capabilities().await.into_value().map_err(
+        |err: Box<dyn std::error::Error + Send + Sync>| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    details: None,
+                    message: err.to_string(),
+                    r#type: None,
+                }),
+            )
+        },
+    )?;
+    let v3_schema = C::get_schema(&state.configuration)
+        .await
+        .and_then(JsonResponse::into_value)
+        .map_err(|err| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    details: None,
+                    message: err.to_string(),
+                    r#type: None,
+                }),
+            )
+        })?;
 
     let scalar_types = IndexMap::from_iter(v3_schema.scalar_types.into_iter().map(
         |(name, scalar_type)| {
@@ -171,16 +184,19 @@ pub async fn post_schema<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Option<Json<SchemaRequest>>,
 ) -> Result<Json<SchemaResponse>, (StatusCode, Json<ErrorResponse>)> {
-    let v3_schema = C::get_schema(&state.configuration).await.map_err(|err| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
-                details: None,
-                message: err.to_string(),
-                r#type: None,
-            }),
-        )
-    })?;
+    let v3_schema = C::get_schema(&state.configuration)
+        .await
+        .and_then(JsonResponse::into_value)
+        .map_err(|err| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    details: None,
+                    message: err.to_string(),
+                    r#type: None,
+                }),
+            )
+        })?;
     let schema = map_schema(v3_schema).map_err(|err| (StatusCode::BAD_REQUEST, Json(err)))?;
 
     let schema = if let Some(request) = request {
@@ -390,6 +406,7 @@ pub async fn post_query<C: Connector>(
     let request = map_query_request(request).map_err(|err| (StatusCode::BAD_REQUEST, Json(err)))?;
     let response = C::query(&state.configuration, &state.state, request)
         .await
+        .and_then(JsonResponse::into_value)
         .map_err(|err| match err {
             QueryError::InvalidRequest(message) | QueryError::UnsupportedOperation(message) => (
                 StatusCode::BAD_REQUEST,
@@ -408,8 +425,7 @@ pub async fn post_query<C: Connector>(
                 }),
             ),
         })?;
-    let response = map_query_response(response);
-    Ok(Json(response))
+    Ok(Json(map_query_response(response)))
 }
 
 pub async fn post_explain<C: Connector>(
@@ -440,6 +456,7 @@ pub async fn post_explain<C: Connector>(
     })?;
     let response = C::explain(&state.configuration, &state.state, request.clone())
         .await
+        .and_then(JsonResponse::into_value)
         .map_err(|err| match err {
             ExplainError::InvalidRequest(message) | ExplainError::UnsupportedOperation(message) => {
                 (
