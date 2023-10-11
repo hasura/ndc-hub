@@ -145,7 +145,8 @@ kind: DataConnector
 version: v1
 definition:
   name: sendgrid
-  url: 'https://connector-9XXX7-hyc5v23h6a-ue.a.run.app'
+  url:
+    singleUrl: 'https://connector-9XXX7-hyc5v23h6a-ue.a.run.app'
   headers:
     Authorization:
       value: "Bearer SUPER_SECRET_TOKEN_XXX123"
@@ -158,7 +159,8 @@ kind: DataConnector
 version: v1
 definition:
   name: sendgrid
-  url: 'https://connector-9XXX7-hyc5v23h6a-ue.a.run.app'
+  url:
+    singleUrl: 'https://connector-9XXX7-hyc5v23h6a-ue.a.run.app'
   headers:
     Authorization:
       valueFromSecret: BEARER_TOKEN_SECRET
