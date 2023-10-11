@@ -3,6 +3,7 @@ mod v2_compat;
 use crate::{
     check_health,
     connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
+    json_response::JsonResponse,
     routes,
     tracing::{init_tracing, make_span, on_response},
 };
@@ -373,7 +374,7 @@ async fn get_metrics<C: Connector>(
     routes::get_metrics::<C>(&state.configuration, &state.state, state.metrics)
 }
 
-async fn get_capabilities<C: Connector>() -> Json<CapabilitiesResponse> {
+async fn get_capabilities<C: Connector>() -> JsonResponse<CapabilitiesResponse> {
     routes::get_capabilities::<C>().await
 }
 
@@ -385,28 +386,28 @@ async fn get_health<C: Connector>(
 
 async fn get_schema<C: Connector>(
     State(state): State<ServerState<C>>,
-) -> Result<Json<SchemaResponse>, (StatusCode, Json<ErrorResponse>)> {
+) -> Result<JsonResponse<SchemaResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::get_schema::<C>(&state.configuration).await
 }
 
 async fn post_explain<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<QueryRequest>,
-) -> Result<Json<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
+) -> Result<JsonResponse<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_explain::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_mutation<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<MutationRequest>,
-) -> Result<Json<MutationResponse>, (StatusCode, Json<ErrorResponse>)> {
+) -> Result<JsonResponse<MutationResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_mutation::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_query<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<QueryRequest>,
-) -> Result<Json<QueryResponse>, (StatusCode, Json<ErrorResponse>)> {
+) -> Result<JsonResponse<QueryResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_query::<C>(&state.configuration, &state.state, request).await
 }
 
@@ -528,12 +529,15 @@ where
                     Json(ValidateErrors::InvalidConfiguration { ranges }),
                 ),
             })?;
-    let schema = C::get_schema(&configuration).await.map_err(|e| match e {
-        SchemaError::Other(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ValidateErrors::UnableToBuildSchema),
-        ),
-    })?;
+    let schema = C::get_schema(&configuration)
+        .await
+        .and_then(JsonResponse::into_value)
+        .map_err(|e| match e {
+            SchemaError::Other(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ValidateErrors::UnableToBuildSchema),
+            ),
+        })?;
     let resolved_config_bytes = serde_json::to_vec(&configuration).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -561,12 +565,17 @@ where
     async fn get_capabilities(
         &self,
     ) -> Result<ndc_client::models::CapabilitiesResponse, ndc_test::Error> {
-        Ok(C::get_capabilities().await)
+        C::get_capabilities()
+            .await
+            .into_value::<Box<dyn std::error::Error + Send + Sync>>()
+            .map_err(|err| ndc_test::Error::OtherError(err))
     }
 
     async fn get_schema(&self) -> Result<ndc_client::models::SchemaResponse, ndc_test::Error> {
         match C::get_schema(&self.configuration).await {
-            Ok(response) => Ok(response),
+            Ok(response) => response
+                .into_value::<Box<dyn std::error::Error + Send + Sync>>()
+                .map_err(|err| ndc_test::Error::OtherError(err)),
             Err(err) => Err(ndc_test::Error::OtherError(err.into())),
         }
     }
@@ -575,7 +584,10 @@ where
         &self,
         request: ndc_client::models::QueryRequest,
     ) -> Result<ndc_client::models::QueryResponse, ndc_test::Error> {
-        match C::query(&self.configuration, &self.state, request).await {
+        match C::query(&self.configuration, &self.state, request)
+            .await
+            .and_then(JsonResponse::into_value)
+        {
             Ok(response) => Ok(response),
             Err(err) => Err(ndc_test::Error::OtherError(err.into())),
         }

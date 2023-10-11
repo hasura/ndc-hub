@@ -3,6 +3,9 @@ use ndc_client::models;
 use serde::Serialize;
 use std::error::Error;
 use thiserror::Error;
+
+use crate::json_response::JsonResponse;
+
 pub mod example;
 
 /// Errors which occur when trying to validate connector
@@ -35,7 +38,7 @@ pub enum KeyOrIndex {
 #[derive(Debug, Error)]
 pub enum UpdateConfigurationError {
     #[error("error validating configuration: {0}")]
-    Other(Box<dyn Error + Send + Sync>),
+    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when trying to initialize connector
@@ -45,7 +48,7 @@ pub enum UpdateConfigurationError {
 #[derive(Debug, Error)]
 pub enum InitializationError {
     #[error("error initializing connector state: {0}")]
-    Other(Box<dyn Error + Send + Sync>),
+    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when trying to update metrics.
@@ -54,7 +57,7 @@ pub enum InitializationError {
 #[derive(Debug, Error)]
 pub enum FetchMetricsError {
     #[error("error fetching metrics: {0}")]
-    Other(Box<dyn Error + Send + Sync>),
+    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when checking connector health.
@@ -63,7 +66,7 @@ pub enum FetchMetricsError {
 #[derive(Debug, Error)]
 pub enum HealthError {
     #[error("error checking health status: {0}")]
-    Other(Box<dyn Error + Send + Sync>),
+    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when retrieving the connector schema.
@@ -72,7 +75,7 @@ pub enum HealthError {
 #[derive(Debug, Error)]
 pub enum SchemaError {
     #[error("error retrieving the schema: {0}")]
-    Other(Box<dyn Error + Send + Sync>),
+    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when executing a query.
@@ -91,7 +94,7 @@ pub enum QueryError {
     #[error("unsupported operation: {0}")]
     UnsupportedOperation(String),
     #[error("error executing query: {0}")]
-    Other(Box<dyn Error + Send + Sync>),
+    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when explaining a query.
@@ -110,7 +113,7 @@ pub enum ExplainError {
     #[error("unsupported operation: {0}")]
     UnsupportedOperation(String),
     #[error("error explaining query: {0}")]
-    Other(Box<dyn Error + Send + Sync>),
+    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when executing a mutation.
@@ -137,7 +140,7 @@ pub enum MutationError {
     #[error("mutation violates constraint: {0}")]
     ConstraintNotMet(String),
     #[error("error executing mutation: {0}")]
-    Other(Box<dyn Error + Send + Sync>),
+    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Connectors using this library should implement this trait.
@@ -238,7 +241,7 @@ pub trait Connector {
     ///
     /// This function implements the [capabilities endpoint](https://hasura.github.io/ndc-spec/specification/capabilities.html)
     /// from the NDC specification.
-    async fn get_capabilities() -> models::CapabilitiesResponse;
+    async fn get_capabilities() -> JsonResponse<models::CapabilitiesResponse>;
 
     /// Get the connector's schema.
     ///
@@ -246,7 +249,7 @@ pub trait Connector {
     /// from the NDC specification.
     async fn get_schema(
         configuration: &Self::Configuration,
-    ) -> Result<models::SchemaResponse, SchemaError>;
+    ) -> Result<JsonResponse<models::SchemaResponse>, SchemaError>;
 
     /// Explain a query by creating an execution plan
     ///
@@ -256,7 +259,7 @@ pub trait Connector {
         configuration: &Self::Configuration,
         state: &Self::State,
         request: models::QueryRequest,
-    ) -> Result<models::ExplainResponse, ExplainError>;
+    ) -> Result<JsonResponse<models::ExplainResponse>, ExplainError>;
 
     /// Execute a mutation
     ///
@@ -266,7 +269,7 @@ pub trait Connector {
         configuration: &Self::Configuration,
         state: &Self::State,
         request: models::MutationRequest,
-    ) -> Result<models::MutationResponse, MutationError>;
+    ) -> Result<JsonResponse<models::MutationResponse>, MutationError>;
 
     /// Execute a query
     ///
@@ -276,5 +279,5 @@ pub trait Connector {
         configuration: &Self::Configuration,
         state: &Self::State,
         request: models::QueryRequest,
-    ) -> Result<models::QueryResponse, QueryError>;
+    ) -> Result<JsonResponse<models::QueryResponse>, QueryError>;
 }
