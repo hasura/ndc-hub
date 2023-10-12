@@ -77,7 +77,7 @@ export function hello(): string {
 function foo() {
 }
 
-> deno run --allow-sys --allow-run --allow-net --allow-read --allow-write --allow-env --watch --check https://deno.land/x/hasura_typescript_connector@0.9/mod.ts serve --configuration ./config.json
+> deno run -A --watch --check https://deno.land/x/hasura_typescript_connector@0.9/mod.ts serve --configuration ./config.json
 Watcher Process started.
 Check https://deno.land/x/hasura_typescript_connector@0.9/mod.ts
 Running Connector.start
