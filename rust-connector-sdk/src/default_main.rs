@@ -29,9 +29,9 @@ use ndc_test::report;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
-use std::error::Error;
 use std::net;
 use std::process::exit;
+use std::{error::Error, path::PathBuf};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 use self::v2_compat::SourceConfig;
@@ -50,6 +50,8 @@ enum Command {
     Configuration(ConfigurationCommand),
     #[command()]
     Test(TestCommand),
+    #[command()]
+    Replay(ReplayCommand),
     #[command()]
     CheckHealth(CheckHealthCommand),
 }
@@ -98,10 +100,20 @@ struct ServeConfigurationCommand {
 
 #[derive(Clone, Parser)]
 struct TestCommand {
-    #[arg(long, value_name = "PORT", env = "PORT")]
+    #[arg(long, value_name = "SEED", env = "SEED")]
     seed: Option<String>,
     #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
     configuration: String,
+    #[arg(long, value_name = "DIRECTORY", env = "SNAPSHOTS_DIR")]
+    snapshots_dir: Option<PathBuf>,
+}
+
+#[derive(Clone, Parser)]
+struct ReplayCommand {
+    #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
+    configuration: String,
+    #[arg(long, value_name = "DIRECTORY", env = "SNAPSHOTS_DIR")]
+    snapshots_dir: PathBuf,
 }
 
 #[derive(Clone, Parser)]
@@ -157,6 +169,7 @@ where
         Command::Serve(serve_command) => serve::<C>(serve_command).await,
         Command::Configuration(configure_command) => configuration::<C>(configure_command).await,
         Command::Test(test_command) => test::<C>(test_command).await,
+        Command::Replay(replay_command) => replay::<C>(replay_command).await,
         Command::CheckHealth(check_health_command) => check_health(check_health_command).await,
     }
 }
@@ -592,6 +605,19 @@ where
             Err(err) => Err(ndc_test::Error::OtherError(err.into())),
         }
     }
+
+    async fn mutation(
+        &self,
+        request: ndc_client::models::MutationRequest,
+    ) -> Result<ndc_client::models::MutationResponse, ndc_test::Error> {
+        match C::mutation(&self.configuration, &self.state, request)
+            .await
+            .and_then(JsonResponse::into_value)
+        {
+            Ok(response) => Ok(response),
+            Err(err) => Err(ndc_test::Error::OtherError(err.into())),
+        }
+    }
 }
 
 async fn test<C: Connector + 'static>(
@@ -602,24 +628,12 @@ where
     C::Configuration: Sync + Send + 'static,
     C::State: Send + Sync + 'static,
 {
-    let test_configuration = ndc_test::TestConfiguration { seed: command.seed };
-
-    let configuration_json = std::fs::read_to_string(command.configuration).unwrap();
-    let raw_configuration =
-        serde_json::de::from_str::<C::RawConfiguration>(configuration_json.as_str()).unwrap();
-    let configuration = C::validate_raw_configuration(raw_configuration)
-        .await
-        .unwrap();
-
-    let mut metrics = Registry::new();
-    let state = C::try_init_state(&configuration, &mut metrics)
-        .await
-        .unwrap();
-
-    let connector = ConnectorAdapter::<C> {
-        configuration,
-        state,
+    let test_configuration = ndc_test::TestConfiguration {
+        seed: command.seed,
+        snapshots_dir: command.snapshots_dir,
     };
+
+    let connector = make_connector_adapter::<C>(command.configuration).await;
     let results = ndc_test::test_connector(&test_configuration, &connector).await;
 
     if !results.failures.is_empty() {
@@ -631,6 +645,52 @@ where
 
     Ok(())
 }
+
+async fn replay<C: Connector + 'static>(
+    command: ReplayCommand,
+) -> Result<(), Box<dyn Error + Send + Sync>>
+where
+    C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Sync + Send + 'static,
+    C::State: Send + Sync + 'static,
+{
+    let connector = make_connector_adapter::<C>(command.configuration).await;
+    let results = ndc_test::test_snapshots_in_directory(&connector, command.snapshots_dir).await;
+
+    if !results.failures.is_empty() {
+        println!();
+        println!("{}", report(results));
+
+        exit(1)
+    }
+
+    Ok(())
+}
+
+async fn make_connector_adapter<C: Connector + 'static>(
+    configuration_path: String,
+) -> ConnectorAdapter<C>
+where
+    C::RawConfiguration: DeserializeOwned,
+{
+    let configuration_json = std::fs::read_to_string(configuration_path).unwrap();
+    let raw_configuration =
+        serde_json::de::from_str::<C::RawConfiguration>(configuration_json.as_str()).unwrap();
+    let configuration = C::validate_raw_configuration(raw_configuration)
+        .await
+        .unwrap();
+
+    let mut metrics = Registry::new();
+    let state = C::try_init_state(&configuration, &mut metrics)
+        .await
+        .unwrap();
+
+    ConnectorAdapter::<C> {
+        configuration,
+        state,
+    }
+}
+
 async fn check_health(
     CheckHealthCommand { host, port }: CheckHealthCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
