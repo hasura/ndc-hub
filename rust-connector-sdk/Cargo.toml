@@ -58,3 +58,4 @@ mime = "0.3.17"
 
 [dev-dependencies]
 axum-test-helper = "0.3.0"
+goldenfile = "^1.5.2"
