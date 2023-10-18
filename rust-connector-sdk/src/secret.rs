@@ -17,6 +17,7 @@ pub enum SecretValueImpl {
 ///
 /// This marker type indicates that a value should be configured
 /// from secrets drawn from a secret store.
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SecretValue(pub SecretValueImpl);
 
 impl JsonSchema for SecretValue {
