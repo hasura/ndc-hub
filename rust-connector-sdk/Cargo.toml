@@ -16,8 +16,8 @@ async-trait = "^0.1.68"
 axum = "^0.6.18"
 axum-macros = "^0.3.7"
 clap = { version = "^4.3.9", features = ["derive", "env"] }
-ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.7" }
-ndc-test = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.7" }
+ndc-client = { git = "http://github.com/hasura/ndc-spec.git", rev = "2c2def8" }
+ndc-test = { git = "http://github.com/hasura/ndc-spec.git", rev = "2c2def8" }
 http = "^0.2"
 opentelemetry = { version = "^0.20", features = [
   "rt-tokio",
