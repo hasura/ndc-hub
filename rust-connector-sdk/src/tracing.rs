@@ -7,10 +7,10 @@ use std::error::Error;
 use tracing_subscriber::EnvFilter;
 
 use axum::body::{Body, BoxBody};
-use http::{Request, Response, Uri};
+use http::{Request, Response};
 use opentelemetry_http::HeaderExtractor;
 use std::time::Duration;
-use tracing::{Level, Span};
+use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -70,13 +70,11 @@ pub fn init_tracing(
 // tracing crate requires all fields to be defined at creation time, so any fields that will be set
 // later should be defined as Empty
 pub fn make_span(request: &Request<Body>) -> Span {
-    let span = tracing::span!(
-        Level::INFO,
+    let span = tracing::info_span!(
         "request",
         method = %request.method(),
         uri = %request.uri(),
         version = ?request.version(),
-        deployment_id = extract_deployment_id(request.uri()),
         status = tracing::field::Empty,
         latency = tracing::field::Empty,
     );
@@ -90,14 +88,6 @@ pub fn make_span(request: &Request<Body>) -> Span {
     span.set_parent(parent_context);
 
     span
-}
-
-// Rough implementation of extracting deployment ID from URI. Regex might be better?
-fn extract_deployment_id(uri: &Uri) -> &str {
-    let path = uri.path();
-    let mut parts = path.split('/').filter(|x| !x.is_empty());
-    let _ = parts.next().unwrap_or_default();
-    parts.next().unwrap_or("unknown")
 }
 
 // Custom function for adding information to request-level span that is only available at response time.
