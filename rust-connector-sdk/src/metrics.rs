@@ -30,9 +30,24 @@ pub struct StatusCodeMetrics {
 impl Metrics {
     /// Set up counters and gauges used to produce Prometheus metrics
     pub fn initialize(
-        connector_name: &str,
+        connector_name: String,
         metrics_registry: &mut prometheus::Registry,
     ) -> Result<Self, prometheus::Error> {
+        // Transform the connector name so it is a valid prometheus metric name
+        // <https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels>
+        let connector_name: String = connector_name
+            .chars()
+            .filter_map(|c| {
+                if c == '-' {
+                    Some('_')
+                } else if c.is_ascii_alphanumeric() {
+                    Some(c)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
         let total_200 = add_int_counter_metric(
             metrics_registry,
             format!("{}_status_code_200_total_count", connector_name).as_str(),
