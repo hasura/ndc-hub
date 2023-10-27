@@ -50,67 +50,67 @@ impl Metrics {
 
         let total_200 = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_200_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_200_total_count", connector_name).as_str(),
             "Total number of 200 status codes returned.",
         )?;
 
         let total_400 = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_400_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_400_total_count", connector_name).as_str(),
             "Total number of 400 status codes returned.",
         )?;
 
         let total_403 = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_403_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_403_total_count", connector_name).as_str(),
             "Total number of 403 status codes returned.",
         )?;
 
         let total_409 = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_409_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_409_total_count", connector_name).as_str(),
             "Total number of 409 status codes returned.",
         )?;
 
         let total_500 = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_500_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_500_total_count", connector_name).as_str(),
             "Total number of 500 status codes returned.",
         )?;
 
         let total_501 = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_501_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_501_total_count", connector_name).as_str(),
             "Total number of 501 status codes returned.",
         )?;
 
         let total_1xx = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_1xx_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_1xx_total_count", connector_name).as_str(),
             "Total number of 1xx status codes returned.",
         )?;
 
         let total_2xx = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_2xx_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_2xx_total_count", connector_name).as_str(),
             "Total number of 2xx status codes returned.",
         )?;
 
         let total_3xx = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_3xx_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_3xx_total_count", connector_name).as_str(),
             "Total number of 3xx status codes returned.",
         )?;
 
         let total_4xx = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_4xx_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_4xx_total_count", connector_name).as_str(),
             "Total number of 4xx status codes returned.",
         )?;
 
         let total_5xx = add_int_counter_metric(
             metrics_registry,
-            format!("{}_status_code_5xx_total_count", connector_name).as_str(),
+            format!("hasura_{}_status_code_5xx_total_count", connector_name).as_str(),
             "Total number of 5xx status codes returned.",
         )?;
 
