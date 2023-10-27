@@ -257,7 +257,8 @@ where
         .unwrap();
 
     let mut metrics_registry = Registry::new();
-    let metrics = metrics::Metrics::initialize(&mut metrics_registry).unwrap(); // todo: remove unwrap
+    let metrics =
+        metrics::Metrics::initialize(&C::connector_name(), &mut metrics_registry).unwrap();
     let state = C::try_init_state(&configuration, &mut metrics_registry)
         .await
         .unwrap();
