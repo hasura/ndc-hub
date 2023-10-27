@@ -12,49 +12,36 @@ name = "ndc_hub_example"
 path = "bin/main.rs"
 
 [dependencies]
-async-trait = "^0.1.68"
-axum = "^0.6.18"
-axum-macros = "^0.3.7"
-clap = { version = "^4.3.9", features = ["derive", "env"] }
-ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.8" }
-ndc-test = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.8" }
+gdc_rust_types = { git = "https://github.com/hasura/gdc_rust_types.git", rev = "bc57c40" }
+ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.9" }
+ndc-test = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.9" }
+
+async-trait = "^0.1.74"
+axum = "^0.6.20"
+base64 = "0.21.5"
+bytes = "1.5.0"
+clap = { version = "^4.4.7", features = ["derive", "env"] }
 http = "^0.2"
-opentelemetry = { version = "^0.20", features = [
-  "rt-tokio",
-  "trace",
-], default-features = false }
-opentelemetry_api = "^0.20.0"
+indexmap = "^1"
+mime = "0.3.17"
+opentelemetry = { version = "^0.20", features = ["rt-tokio", "trace"], default-features = false }
 opentelemetry-http = "0.9.0"
 opentelemetry-otlp = { version = "^0.13.0", features = ["reqwest-client"] }
-opentelemetry_sdk = "^0.20.0"
 opentelemetry-semantic-conventions = "^0.12.0"
+opentelemetry_api = "^0.20.0"
+opentelemetry_sdk = "^0.20.0"
 prometheus = "^0.13.3"
-reqwest = "^0.11.20"
-schemars = { version = "^0.8.12", features = ["smol_str"] }
-serde = { version = "^1.0.164", features = ["derive"] }
-serde_json = { version = "^1.0.97", features = ["raw_value"] }
+reqwest = "^0.11.22"
+schemars = { version = "^0.8.15", features = ["smol_str"] }
+serde = { version = "^1.0.190", features = ["derive"] }
+serde_json = { version = "^1.0.107", features = ["raw_value"] }
 thiserror = "^1.0"
-tokio = { version = "^1.28.2", features = ["fs", "signal"] }
-tower-http = { version = "^0.4.1", features = [
-  "cors",
-  "trace",
-  "validate-request",
-] }
-base64 = "0.21.4"
-tracing = "^0.1.37"
-tracing-opentelemetry = "^0.20.0"
-tracing-subscriber = { version = "^0.3", default-features = false, features = [
-  "ansi",
-  "env-filter",
-  "fmt",
-  "json",
-] }
+tokio = { version = "^1.33.0", features = ["fs", "signal"] }
+tower-http = { version = "^0.4.4", features = ["cors", "trace", "validate-request"] }
+tracing = "^0.1.40"
+tracing-opentelemetry = "^0.21.0"
+tracing-subscriber = { version = "^0.3", default-features = false, features = ["ansi", "env-filter", "fmt", "json"] }
 url = "2.4.1"
-uuid = "^1.3.4"
-gdc_rust_types = { git = "https://github.com/hasura/gdc_rust_types", rev = "bc57c40" }
-indexmap = "^1"
-bytes = "1.5.0"
-mime = "0.3.17"
 
 [dev-dependencies]
 axum-test-helper = "0.3.0"
