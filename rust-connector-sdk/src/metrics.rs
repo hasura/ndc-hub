@@ -20,6 +20,11 @@ pub struct StatusCodeMetrics {
     total_409: prometheus::IntCounter,
     total_500: prometheus::IntCounter,
     total_501: prometheus::IntCounter,
+    total_1xx: prometheus::IntCounter,
+    total_2xx: prometheus::IntCounter,
+    total_3xx: prometheus::IntCounter,
+    total_4xx: prometheus::IntCounter,
+    total_5xx: prometheus::IntCounter,
 }
 
 impl Metrics {
@@ -29,38 +34,68 @@ impl Metrics {
     ) -> Result<Self, prometheus::Error> {
         let total_200 = add_int_counter_metric(
             metrics_registry,
-            "status_code_200_total_count",
+            "hasura_status_code_200_total_count",
             "Total number of 200 status codes returned.",
         )?;
 
         let total_400 = add_int_counter_metric(
             metrics_registry,
-            "status_code_400_total_count",
+            "hasura_status_code_400_total_count",
             "Total number of 400 status codes returned.",
         )?;
 
         let total_403 = add_int_counter_metric(
             metrics_registry,
-            "status_code_403_total_count",
+            "hasura_status_code_403_total_count",
             "Total number of 403 status codes returned.",
         )?;
 
         let total_409 = add_int_counter_metric(
             metrics_registry,
-            "status_code_409_total_count",
+            "hasura_status_code_409_total_count",
             "Total number of 409 status codes returned.",
         )?;
 
         let total_500 = add_int_counter_metric(
             metrics_registry,
-            "status_code_500_total_count",
+            "hasura_status_code_500_total_count",
             "Total number of 500 status codes returned.",
         )?;
 
         let total_501 = add_int_counter_metric(
             metrics_registry,
-            "status_code_501_total_count",
+            "hasura_status_code_501_total_count",
             "Total number of 501 status codes returned.",
+        )?;
+
+        let total_1xx = add_int_counter_metric(
+            metrics_registry,
+            "hasura_status_code_1xx_total_count",
+            "Total number of 1xx status codes returned.",
+        )?;
+
+        let total_2xx = add_int_counter_metric(
+            metrics_registry,
+            "hasura_status_code_2xx_total_count",
+            "Total number of 2xx status codes returned.",
+        )?;
+
+        let total_3xx = add_int_counter_metric(
+            metrics_registry,
+            "hasura_status_code_3xx_total_count",
+            "Total number of 3xx status codes returned.",
+        )?;
+
+        let total_4xx = add_int_counter_metric(
+            metrics_registry,
+            "hasura_status_code_4xx_total_count",
+            "Total number of 4xx status codes returned.",
+        )?;
+
+        let total_5xx = add_int_counter_metric(
+            metrics_registry,
+            "hasura_status_code_5xx_total_count",
+            "Total number of 5xx status codes returned.",
         )?;
 
         let status_codes = StatusCodeMetrics {
@@ -70,6 +105,11 @@ impl Metrics {
             total_409,
             total_500,
             total_501,
+            total_1xx,
+            total_2xx,
+            total_3xx,
+            total_4xx,
+            total_5xx,
         };
 
         Ok(Self { status_codes })
@@ -92,7 +132,11 @@ impl Metrics {
         }
     }
 
+    /// record a status code metric into individual and/or group buckets.
     fn record_status_code(&self, status_code: StatusCode) {
+        // We record the status codes used by ndc-spec:
+        // <https://hasura.github.io/ndc-spec/specification/error-handling.html>
+        // and group all others into buckets.
         match status_code {
             StatusCode::OK => self.record_200(),
             StatusCode::BAD_REQUEST => self.record_400(),
@@ -100,27 +144,61 @@ impl Metrics {
             StatusCode::CONFLICT => self.record_409(),
             StatusCode::INTERNAL_SERVER_ERROR => self.record_500(),
             StatusCode::NOT_IMPLEMENTED => self.record_501(),
-            _ => (),
+            status => {
+                let code = status.as_u16();
+                if code < 200 {
+                    self.record_1xx();
+                } else if code < 300 {
+                    self.record_2xx();
+                } else if code < 400 {
+                    self.record_3xx();
+                } else if code < 500 {
+                    self.record_4xx();
+                } else {
+                    self.record_5xx();
+                }
+            }
         }
     }
 
     fn record_200(&self) {
-        self.status_codes.total_200.inc()
+        self.status_codes.total_200.inc();
+        self.record_2xx();
     }
     fn record_400(&self) {
-        self.status_codes.total_400.inc()
+        self.status_codes.total_400.inc();
+        self.record_4xx();
     }
     fn record_403(&self) {
-        self.status_codes.total_403.inc()
+        self.status_codes.total_403.inc();
+        self.record_4xx();
     }
     fn record_409(&self) {
-        self.status_codes.total_409.inc()
+        self.status_codes.total_409.inc();
+        self.record_4xx();
     }
     fn record_500(&self) {
-        self.status_codes.total_500.inc()
+        self.status_codes.total_500.inc();
+        self.record_5xx();
     }
     fn record_501(&self) {
-        self.status_codes.total_501.inc()
+        self.status_codes.total_501.inc();
+        self.record_5xx();
+    }
+    fn record_1xx(&self) {
+        self.status_codes.total_1xx.inc();
+    }
+    fn record_2xx(&self) {
+        self.status_codes.total_2xx.inc();
+    }
+    fn record_3xx(&self) {
+        self.status_codes.total_3xx.inc();
+    }
+    fn record_4xx(&self) {
+        self.status_codes.total_4xx.inc();
+    }
+    fn record_5xx(&self) {
+        self.status_codes.total_5xx.inc();
     }
 }
 
