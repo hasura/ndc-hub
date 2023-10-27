@@ -82,7 +82,7 @@ docker run --name jaeger -e COLLECTOR_OTLP_ENABLED=true -p 16686:16686 -p 4317:4
 
 ## Other docs
 
-For more docs on the NDC Hub, see [here](./docs/).
+For more docs on the NDC Hub, see [here](./docs/index.md).
 
 ## License
 
