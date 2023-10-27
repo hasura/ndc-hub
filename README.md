@@ -1,5 +1,7 @@
 # Hasura Native Data Connector Hub: ndc-hub
 
+[![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
+
 This repository provides:
 
 1. A registry of connectors and
@@ -77,3 +79,12 @@ To view trace information during local development you can run a Jager server vi
 ```
 docker run --name jaeger -e COLLECTOR_OTLP_ENABLED=true -p 16686:16686 -p 4317:4317 -p 4318:4318 jaegertracing/all-in-one:1.45
 ```
+
+## Other docs
+
+For more docs on the NDC Hub, see [here/](./docs/).
+
+## License
+
+The Hasura Native Data Connector Hub is available under the 
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
