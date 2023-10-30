@@ -192,6 +192,8 @@ pub trait Connector {
     /// The type of unserializable state
     type State;
 
+    fn connector_name() -> String;
+
     fn make_empty_configuration() -> Self::RawConfiguration;
 
     async fn update_configuration(
