@@ -15,10 +15,6 @@ impl Connector for Example {
     type Configuration = ();
     type State = ();
 
-    fn connector_name() -> String {
-        "ndc-example".to_string()
-    }
-
     fn make_empty_configuration() -> Self::RawConfiguration {}
 
     async fn update_configuration(

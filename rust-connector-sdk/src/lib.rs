@@ -2,7 +2,6 @@ pub mod check_health;
 pub mod connector;
 pub mod default_main;
 pub mod json_response;
-pub mod metrics;
 pub mod routes;
 pub mod secret;
 pub mod tracing;

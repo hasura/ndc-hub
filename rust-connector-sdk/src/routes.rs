@@ -10,7 +10,7 @@ use crate::{
 pub fn get_metrics<C: Connector>(
     configuration: &C::Configuration,
     state: &C::State,
-    metrics_registry: Registry,
+    metrics: Registry,
 ) -> Result<String, (StatusCode, Json<models::ErrorResponse>)> {
     let encoder = TextEncoder::new();
 
@@ -25,7 +25,7 @@ pub fn get_metrics<C: Connector>(
         )
     })?;
 
-    let metric_families = metrics_registry.gather();
+    let metric_families = metrics.gather();
 
     encoder.encode_to_string(&metric_families).map_err(|_| {
         (
