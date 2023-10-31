@@ -4,7 +4,7 @@ use crate::{
     check_health,
     connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
     json_response::JsonResponse,
-    metrics, routes,
+    routes,
     tracing::{init_tracing, make_span, on_response},
 };
 
@@ -130,8 +130,7 @@ type Port = u16;
 pub struct ServerState<C: Connector> {
     configuration: C::Configuration,
     state: C::State,
-    metrics_registry: Registry,
-    metrics: metrics::Metrics,
+    metrics: Registry,
 }
 
 /// A default main function for a connector.
@@ -256,16 +255,14 @@ where
         .await
         .unwrap();
 
-    let mut metrics_registry = Registry::new();
-    let metrics = metrics::Metrics::initialize(C::connector_name(), &mut metrics_registry).unwrap();
-    let state = C::try_init_state(&configuration, &mut metrics_registry)
+    let mut metrics = Registry::new();
+    let state = C::try_init_state(&configuration, &mut metrics)
         .await
         .unwrap();
 
     ServerState::<C> {
         configuration,
         state,
-        metrics_registry,
         metrics,
     }
 }
@@ -387,7 +384,7 @@ where
 async fn get_metrics<C: Connector>(
     State(state): State<ServerState<C>>,
 ) -> Result<String, (StatusCode, Json<ErrorResponse>)> {
-    routes::get_metrics::<C>(&state.configuration, &state.state, state.metrics_registry)
+    routes::get_metrics::<C>(&state.configuration, &state.state, state.metrics)
 }
 
 async fn get_capabilities<C: Connector>() -> JsonResponse<CapabilitiesResponse> {
@@ -403,36 +400,28 @@ async fn get_health<C: Connector>(
 async fn get_schema<C: Connector>(
     State(state): State<ServerState<C>>,
 ) -> Result<JsonResponse<SchemaResponse>, (StatusCode, Json<ErrorResponse>)> {
-    state
-        .metrics
-        .record_status(routes::get_schema::<C>(&state.configuration).await)
+    routes::get_schema::<C>(&state.configuration).await
 }
 
 async fn post_explain<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<QueryRequest>,
 ) -> Result<JsonResponse<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
-    state
-        .metrics
-        .record_status(routes::post_explain::<C>(&state.configuration, &state.state, request).await)
+    routes::post_explain::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_mutation<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<MutationRequest>,
 ) -> Result<JsonResponse<MutationResponse>, (StatusCode, Json<ErrorResponse>)> {
-    state.metrics.record_status(
-        routes::post_mutation::<C>(&state.configuration, &state.state, request).await,
-    )
+    routes::post_mutation::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_query<C: Connector>(
     State(state): State<ServerState<C>>,
     request: Json<QueryRequest>,
 ) -> Result<JsonResponse<QueryResponse>, (StatusCode, Json<ErrorResponse>)> {
-    state
-        .metrics
-        .record_status(routes::post_query::<C>(&state.configuration, &state.state, request).await)
+    routes::post_query::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn configuration<C: Connector + 'static>(
