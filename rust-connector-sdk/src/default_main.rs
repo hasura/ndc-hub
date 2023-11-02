@@ -2,7 +2,7 @@ mod v2_compat;
 
 use std::error::Error;
 use std::net;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::exit;
 
 use async_trait::async_trait;
@@ -15,8 +15,6 @@ use axum::{
     Json, Router,
 };
 use base64::{engine::general_purpose, Engine};
-use tower_http::validate_request::ValidateRequestHeaderLayer;
-
 use clap::{Parser, Subcommand};
 use ndc_client::models::{
     CapabilitiesResponse, ErrorResponse, ExplainResponse, MutationRequest, MutationResponse,
@@ -26,7 +24,9 @@ use ndc_test::report;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower_http::{
+    cors::CorsLayer, trace::TraceLayer, validate_request::ValidateRequestHeaderLayer,
+};
 
 use crate::check_health;
 use crate::connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError};
@@ -57,7 +57,7 @@ enum Command {
 #[derive(Clone, Parser)]
 struct ServeCommand {
     #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
-    configuration: String,
+    configuration: PathBuf,
     #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
     otlp_endpoint: Option<String>, // NOTE: `tracing` crate uses `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` ENV variable, but we want to control the endpoint via CLI interface
     #[arg(long, value_name = "PORT", env = "PORT", default_value = "8100")]
@@ -101,7 +101,7 @@ struct TestCommand {
     #[arg(long, value_name = "SEED", env = "SEED")]
     seed: Option<String>,
     #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
-    configuration: String,
+    configuration: PathBuf,
     #[arg(long, value_name = "DIRECTORY", env = "SNAPSHOTS_DIR")]
     snapshots_dir: Option<PathBuf>,
 }
@@ -109,7 +109,7 @@ struct TestCommand {
 #[derive(Clone, Parser)]
 struct ReplayCommand {
     #[arg(long, value_name = "CONFIGURATION_FILE", env = "CONFIGURATION_FILE")]
-    configuration: String,
+    configuration: PathBuf,
     #[arg(long, value_name = "DIRECTORY", env = "SNAPSHOTS_DIR")]
     snapshots_dir: PathBuf,
 }
@@ -239,7 +239,7 @@ where
 
 /// Initialize the server state from the configuration file.
 pub async fn init_server_state<C: Connector + Clone + Default + 'static>(
-    config_file: String,
+    config_file: impl AsRef<Path>,
 ) -> ServerState<C>
 where
     C::RawConfiguration: DeserializeOwned + Sync + Send,
@@ -667,7 +667,7 @@ where
 }
 
 async fn make_connector_adapter<C: Connector + 'static>(
-    configuration_path: String,
+    configuration_path: impl AsRef<Path>,
 ) -> ConnectorAdapter<C>
 where
     C::RawConfiguration: DeserializeOwned,
