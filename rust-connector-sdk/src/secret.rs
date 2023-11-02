@@ -1,4 +1,4 @@
-use schemars::{self, schema::Schema, JsonSchema};
+use schemars::{schema::Schema, JsonSchema};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
@@ -53,7 +53,7 @@ mod tests {
     pub fn test_json_schema() {
         let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
 
-        let mut mint = Mint::new(&test_dir);
+        let mut mint = Mint::new(test_dir);
 
         let expected_path = PathBuf::from_iter(["json_schema", "secret_value.jsonschema"]);
 

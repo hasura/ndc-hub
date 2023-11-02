@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use gdc_rust_types::{
     Aggregate, BinaryArrayComparisonOperator, BinaryComparisonOperator, Capabilities,
@@ -14,7 +16,6 @@ use indexmap::IndexMap;
 use ndc_client::models;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::collections::BTreeMap;
 
 use crate::connector::{Connector, ExplainError, QueryError};
 use crate::default_main::ServerState;
