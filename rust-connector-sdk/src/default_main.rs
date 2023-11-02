@@ -3,10 +3,12 @@ mod v2_compat;
 use crate::{
     check_health,
     connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
+    json_rejection::JsonRejection,
     json_response::JsonResponse,
     routes,
     tracing::{init_tracing, make_span, on_response},
 };
+use axum_extra::extract::WithRejection;
 
 use async_trait::async_trait;
 use axum::{
@@ -405,21 +407,21 @@ async fn get_schema<C: Connector>(
 
 async fn post_explain<C: Connector>(
     State(state): State<ServerState<C>>,
-    request: Json<QueryRequest>,
+    WithRejection(Json(request), _): WithRejection<Json<QueryRequest>, JsonRejection>,
 ) -> Result<JsonResponse<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_explain::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_mutation<C: Connector>(
     State(state): State<ServerState<C>>,
-    request: Json<MutationRequest>,
+    WithRejection(Json(request), _): WithRejection<Json<MutationRequest>, JsonRejection>,
 ) -> Result<JsonResponse<MutationResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_mutation::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_query<C: Connector>(
     State(state): State<ServerState<C>>,
-    request: Json<QueryRequest>,
+    WithRejection(Json(request), _): WithRejection<Json<QueryRequest>, JsonRejection>,
 ) -> Result<JsonResponse<QueryResponse>, (StatusCode, Json<ErrorResponse>)> {
     routes::post_query::<C>(&state.configuration, &state.state, request).await
 }
@@ -489,7 +491,7 @@ where
 }
 
 async fn post_update<C: Connector>(
-    Json(configuration): Json<C::RawConfiguration>,
+    WithRejection(Json(configuration), _): WithRejection<Json<C::RawConfiguration>, JsonRejection>,
 ) -> Result<Json<C::RawConfiguration>, (StatusCode, String)>
 where
     C::RawConfiguration: Serialize + DeserializeOwned,
@@ -527,7 +529,7 @@ enum ValidateErrors {
 }
 
 async fn post_validate<C: Connector>(
-    Json(configuration): Json<C::RawConfiguration>,
+    WithRejection(Json(configuration), _): WithRejection<Json<C::RawConfiguration>, JsonRejection>,
 ) -> Result<Json<ValidateResponse>, (StatusCode, Json<ValidateErrors>)>
 where
     C::RawConfiguration: DeserializeOwned,
