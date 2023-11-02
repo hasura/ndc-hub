@@ -1,7 +1,8 @@
+use std::error::Error;
+
 use async_trait::async_trait;
 use ndc_client::models;
 use serde::Serialize;
-use std::error::Error;
 use thiserror::Error;
 
 use crate::json_response::JsonResponse;
