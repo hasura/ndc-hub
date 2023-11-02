@@ -79,7 +79,7 @@ pub async fn get_schema<C: Connector>(
 pub async fn post_explain<C: Connector>(
     configuration: &C::Configuration,
     state: &C::State,
-    Json(request): Json<models::QueryRequest>,
+    request: models::QueryRequest,
 ) -> Result<JsonResponse<models::ExplainResponse>, (StatusCode, Json<models::ErrorResponse>)> {
     C::explain(configuration, state, request)
         .await
@@ -120,7 +120,7 @@ pub async fn post_explain<C: Connector>(
 pub async fn post_mutation<C: Connector>(
     configuration: &C::Configuration,
     state: &C::State,
-    Json(request): Json<models::MutationRequest>,
+    request: models::MutationRequest,
 ) -> Result<JsonResponse<models::MutationResponse>, (StatusCode, Json<models::ErrorResponse>)> {
     C::mutation(configuration, state, request)
         .await
@@ -181,7 +181,7 @@ pub async fn post_mutation<C: Connector>(
 pub async fn post_query<C: Connector>(
     configuration: &C::Configuration,
     state: &C::State,
-    Json(request): Json<models::QueryRequest>,
+    request: models::QueryRequest,
 ) -> Result<JsonResponse<models::QueryResponse>, (StatusCode, Json<models::ErrorResponse>)> {
     C::query(configuration, state, request)
         .await
