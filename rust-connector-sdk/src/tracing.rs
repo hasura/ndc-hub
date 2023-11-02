@@ -1,19 +1,17 @@
-use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
-use opentelemetry_api::KeyValue;
-use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
-use opentelemetry_sdk::trace::Sampler;
 use std::env;
 use std::error::Error;
-use tracing_subscriber::EnvFilter;
+use std::time::Duration;
 
 use axum::body::{Body, BoxBody};
 use http::{Request, Response};
+use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
+use opentelemetry_api::KeyValue;
 use opentelemetry_http::HeaderExtractor;
-use std::time::Duration;
+use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
+use opentelemetry_sdk::trace::Sampler;
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 pub fn init_tracing(
     service_name: &Option<String>,

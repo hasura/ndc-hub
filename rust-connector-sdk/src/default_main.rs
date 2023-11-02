@@ -1,12 +1,9 @@
 mod v2_compat;
 
-use crate::{
-    check_health,
-    connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError},
-    json_response::JsonResponse,
-    routes,
-    tracing::{init_tracing, make_span, on_response},
-};
+use std::error::Error;
+use std::net;
+use std::path::PathBuf;
+use std::process::exit;
 
 use async_trait::async_trait;
 use axum::{
@@ -29,12 +26,13 @@ use ndc_test::report;
 use prometheus::Registry;
 use schemars::{schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Serialize};
-use std::net;
-use std::process::exit;
-use std::{error::Error, path::PathBuf};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
-use self::v2_compat::SourceConfig;
+use crate::check_health;
+use crate::connector::{Connector, InvalidRange, SchemaError, UpdateConfigurationError};
+use crate::json_response::JsonResponse;
+use crate::routes;
+use crate::tracing::{init_tracing, make_span, on_response};
 
 #[derive(Parser)]
 struct CliArgs {
@@ -348,7 +346,8 @@ where
                     .headers()
                     .get("x-hasura-dataconnector-config")
                     .and_then(|config_header| {
-                        serde_json::from_slice::<SourceConfig>(config_header.as_bytes()).ok()
+                        serde_json::from_slice::<v2_compat::SourceConfig>(config_header.as_bytes())
+                            .ok()
                     })
                     .and_then(|config| config.service_token_secret);
 
