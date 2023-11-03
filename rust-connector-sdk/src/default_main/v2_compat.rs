@@ -115,7 +115,7 @@ pub async fn get_capabilities<C: Connector>(
             }),
             data_schema: None,
             datasets: None,
-            explain: v3_capabilities.capabilities.explain.to_owned(),
+            explain: v3_capabilities.capabilities.explain.to_owned().map(|v| serde_json::to_value(v).ok()).flatten(),
             interpolated_queries: None,
             licensing: None,
             metrics: None,
@@ -127,7 +127,7 @@ pub async fn get_capabilities<C: Connector>(
                     atomicity_support_level: None,
                     delete: None,
                     insert: None,
-                    returning: capabilities.returning.to_owned(),
+                    returning: capabilities.returning.to_owned().map(|v| serde_json::to_value(v).ok()).flatten(),
                     update: None,
                 }),
             queries: v3_capabilities
@@ -135,10 +135,10 @@ pub async fn get_capabilities<C: Connector>(
                 .query
                 .as_ref()
                 .map(|capabilities| QueryCapabilities {
-                    foreach: capabilities.foreach.to_owned(),
+                    foreach: capabilities.foreach.to_owned().map(|v| serde_json::to_value(v).ok()).flatten(),
                 }),
             raw: None,
-            relationships: v3_capabilities.capabilities.relationships.to_owned(),
+            relationships: v3_capabilities.capabilities.relationships.to_owned().map(|v| serde_json::to_value(v).ok()).flatten(),
             scalar_types: Some(scalar_types),
             subscriptions: None,
             user_defined_functions: None,
