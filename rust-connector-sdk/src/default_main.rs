@@ -286,6 +286,21 @@ where
         .route("/query", post(post_query::<C>))
         .route("/explain", post(post_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(make_span)
+                .on_response(on_response)
+                .on_failure(|err, _dur, _span: &tracing::Span| {
+                    tracing::error!(
+                        meta.signal_type = "log",
+                        event.domain = "ndc",
+                        event.name = "Request failure",
+                        name = "Request failure",
+                        body = %err,
+                        error = true,
+                    )
+                }),
+        )
         .with_state(state);
 
     let expected_auth_header: Option<HeaderValue> =
@@ -309,13 +324,24 @@ where
                 if auth_header == expected_auth_header {
                     return Ok(());
                 }
+
+                let message = "Bearer token does not match.".to_string();
+
+                tracing::error!(
+                    meta.signal_type = "log",
+                    event.domain = "ndc",
+                    event.name = "Authorization error",
+                    name = "Authorization error",
+                    body = message,
+                    error = true,
+                );
                 Err((
                     StatusCode::UNAUTHORIZED,
                     Json(ErrorResponse {
                         message: "Internal error".into(),
                         details: serde_json::Value::Object(serde_json::Map::from_iter([(
                             "cause".into(),
-                            serde_json::Value::String("Bearer token does not match.".to_string()),
+                            serde_json::Value::String(message),
                         )])),
                     }),
                 )
@@ -362,15 +388,23 @@ where
                     Ok(())
                 } else {
                     // all other cases, block request
+                    let message = "Service Token Secret does not match.".to_string();
+
+                    tracing::error!(
+                        meta.signal_type = "log",
+                        event.domain = "ndc",
+                        event.name = "Authorization error",
+                        name = "Authorization error",
+                        body = message,
+                        error = true,
+                    );
                     Err((
                         StatusCode::UNAUTHORIZED,
                         Json(ErrorResponse {
                             message: "Internal error".into(),
                             details: serde_json::Value::Object(serde_json::Map::from_iter([(
                                 "cause".into(),
-                                serde_json::Value::String(
-                                    "Service Token Secret does not match.".to_string(),
-                                ),
+                                serde_json::Value::String(message),
                             )])),
                         }),
                     )
@@ -381,6 +415,21 @@ where
         // capabilities and health endpoints are exempt from auth requirements
         .route("/capabilities", get(v2_compat::get_capabilities::<C>))
         .route("/health", get(v2_compat::get_health))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(make_span)
+                .on_response(on_response)
+                .on_failure(|err, _dur, _span: &_| {
+                    tracing::error!(
+                        meta.signal_type = "log",
+                        event.domain = "ndc",
+                        event.name = "Request failure",
+                        name = "Request failure",
+                        body = %err,
+                        error = true,
+                    );
+                }),
+        )
         .with_state(state)
 }
 
@@ -468,7 +517,17 @@ where
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(make_span)
-                .on_response(on_response),
+                .on_response(on_response)
+                .on_failure(|err, _dur, _span: &_| {
+                    tracing::error!(
+                        meta.signal_type = "log",
+                        event.domain = "ndc",
+                        event.name = "Request failure",
+                        name = "Request failure",
+                        body = %err,
+                        error = true,
+                    );
+                }),
         )
         .layer(cors);
 
