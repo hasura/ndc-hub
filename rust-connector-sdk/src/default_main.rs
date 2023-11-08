@@ -608,15 +608,33 @@ where
         .await
         .and_then(JsonResponse::into_value)
         .map_err(|e| match e {
-            SchemaError::Other(_) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ValidateErrors::UnableToBuildSchema),
-            ),
+            SchemaError::Other(err) => {
+                tracing::error!(
+                    meta.signal_type = "log",
+                    event.domain = "ndc",
+                    event.name = "Unable to build schema",
+                    name = "Unable to build schema",
+                    body = %err,
+                    error = true,
+                );
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ValidateErrors::UnableToBuildSchema),
+                )
+            }
         })?;
-    let resolved_config_bytes = serde_json::to_vec(&configuration).map_err(|e| {
+    let resolved_config_bytes = serde_json::to_vec(&configuration).map_err(|err| {
+        tracing::error!(
+            meta.signal_type = "log",
+            event.domain = "ndc",
+            event.name = "Unable to serialize validated configuration",
+            name = "Unable to serialize validated configuration",
+            body = %err,
+            error = true,
+        );
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ValidateErrors::JsonEncodingError(e.to_string())),
+            Json(ValidateErrors::JsonEncodingError(err.to_string())),
         )
     })?;
     let resolved_configuration = general_purpose::STANDARD.encode(resolved_config_bytes);
