@@ -115,30 +115,94 @@ pub async fn get_capabilities<C: Connector>(
             }),
             data_schema: None,
             datasets: None,
-            explain: v3_capabilities.capabilities.explain.to_owned().map(|v| serde_json::to_value(v).ok()).flatten(),
+            explain: match v3_capabilities.capabilities.explain.to_owned() {
+                Some(v) => {
+                    let value = serde_json::to_value(v).map_err(|err| {
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Json(ErrorResponse {
+                                details: None,
+                                message: err.to_string(),
+                                r#type: None,
+                            }),
+                        )
+                    })?;
+                    Some(value)
+                }
+                None => None,
+            },
             interpolated_queries: None,
             licensing: None,
             metrics: None,
-            mutations: v3_capabilities
-                .capabilities
-                .mutations
-                .as_ref()
-                .map(|capabilities| MutationCapabilities {
-                    atomicity_support_level: None,
-                    delete: None,
-                    insert: None,
-                    returning: capabilities.returning.to_owned().map(|v| serde_json::to_value(v).ok()).flatten(),
-                    update: None,
-                }),
-            queries: v3_capabilities
-                .capabilities
-                .query
-                .as_ref()
-                .map(|capabilities| QueryCapabilities {
-                    foreach: capabilities.foreach.to_owned().map(|v| serde_json::to_value(v).ok()).flatten(),
-                }),
+            mutations: match v3_capabilities.capabilities.mutations.as_ref() {
+                Some(mutations) => {
+                    let returning_capabilities = match mutations.returning.to_owned() {
+                        Some(v) => {
+                            let value = serde_json::to_value(v).map_err(|err| {
+                                (
+                                    StatusCode::INTERNAL_SERVER_ERROR,
+                                    Json(ErrorResponse {
+                                        details: None,
+                                        message: err.to_string(),
+                                        r#type: None,
+                                    }),
+                                )
+                            })?;
+                            Some(value)
+                        }
+                        None => None,
+                    };
+                    Some(MutationCapabilities {
+                        atomicity_support_level: None,
+                        delete: None,
+                        insert: None,
+                        returning: returning_capabilities,
+                        update: None,
+                    })
+                }
+                None => None,
+            },
+            queries: match v3_capabilities.capabilities.query.as_ref() {
+                Some(query) => {
+                    let foreach_capabilities = match query.foreach.to_owned() {
+                        Some(v) => {
+                            let value = serde_json::to_value(v).map_err(|err| {
+                                (
+                                    StatusCode::INTERNAL_SERVER_ERROR,
+                                    Json(ErrorResponse {
+                                        details: None,
+                                        message: err.to_string(),
+                                        r#type: None,
+                                    }),
+                                )
+                            })?;
+                            Some(value)
+                        }
+                        None => None,
+                    };
+                    Some(QueryCapabilities {
+                        foreach: foreach_capabilities,
+                    })
+                }
+                None => None,
+            },
             raw: None,
-            relationships: v3_capabilities.capabilities.relationships.to_owned().map(|v| serde_json::to_value(v).ok()).flatten(),
+            relationships: match v3_capabilities.capabilities.relationships.to_owned() {
+                Some(v) => {
+                    let value = serde_json::to_value(v).map_err(|err| {
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Json(ErrorResponse {
+                                details: None,
+                                message: err.to_string(),
+                                r#type: None,
+                            }),
+                        )
+                    })?;
+                    Some(value)
+                }
+                None => None,
+            },
             scalar_types: Some(scalar_types),
             subscriptions: None,
             user_defined_functions: None,
@@ -568,7 +632,6 @@ fn map_query_request(request: QueryRequest) -> Result<models::QueryRequest, Erro
                                     RelationshipType::Object => models::RelationshipType::Object,
                                     RelationshipType::Array => models::RelationshipType::Array,
                                 },
-                                source_collection_or_type: get_name(&source_table.source_table)?,
                                 target_collection,
                                 arguments,
                             },
