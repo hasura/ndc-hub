@@ -12,9 +12,9 @@ name = "ndc_hub_example"
 path = "bin/main.rs"
 
 [dependencies]
-gdc_rust_types = { git = "https://github.com/hasura/gdc_rust_types.git", rev = "bc57c40" }
-ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.9" }
-ndc-test = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.9" }
+gdc_rust_types = { git = "https://github.com/hasura/gdc_rust_types.git", rev = "3273434" }
+ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.10" }
+ndc-test = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.10" }
 
 async-trait = "^0.1.74"
 axum = "^0.6.20"
@@ -23,9 +23,9 @@ base64 = "0.21.5"
 bytes = "1.5.0"
 clap = { version = "^4.4.7", features = ["derive", "env"] }
 http = "^0.2"
-indexmap = "^1"
+indexmap = "2"
 mime = "0.3.17"
-opentelemetry = { version = "^0.20", features = ["rt-tokio", "trace"], default-features = false }
+opentelemetry = { version = "^0.20", default-features = false, features = ["rt-tokio", "trace"] }
 opentelemetry-http = "0.9.0"
 opentelemetry-otlp = { version = "^0.13.0", features = ["reqwest-client"] }
 opentelemetry-semantic-conventions = "^0.12.0"
@@ -33,17 +33,17 @@ opentelemetry_api = "^0.20.0"
 opentelemetry_sdk = "^0.20.0"
 prometheus = "^0.13.3"
 reqwest = "^0.11.22"
-schemars = { version = "^0.8.15", features = ["smol_str"] }
-serde = { version = "^1.0.190", features = ["derive"] }
-serde_json = { version = "^1.0.107", features = ["raw_value"] }
+schemars = { version = "^0.8.16", features = ["smol_str"] }
+serde = { version = "^1.0.192", features = ["derive"] }
+serde_json = { version = "^1.0.108", features = ["raw_value"] }
 thiserror = "^1.0"
-tokio = { version = "^1.33.0", features = ["fs", "signal"] }
+tokio = { version = "^1.34.0", features = ["fs", "signal"] }
 tower-http = { version = "^0.4.4", features = ["cors", "trace", "validate-request"] }
 tracing = "^0.1.40"
-tracing-opentelemetry = "^0.21.0"
+tracing-opentelemetry = "^0.20.0"
 tracing-subscriber = { version = "^0.3", default-features = false, features = ["ansi", "env-filter", "fmt", "json"] }
 url = "2.4.1"
 
 [dev-dependencies]
 axum-test-helper = "0.3.0"
-goldenfile = "^1.5.2"
+goldenfile = "^1.6.0"
