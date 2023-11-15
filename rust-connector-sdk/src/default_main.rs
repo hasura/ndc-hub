@@ -633,8 +633,8 @@ where
                 tracing::error!(
                     meta.signal_type = "log",
                     event.domain = "ndc",
-                    event.name = "Unable to build schema",
-                    name = "Unable to build schema",
+                    event.name = "Unable to build capabilities",
+                    name = "Unable to build capabilities",
                     body = %e,
                     error = true,
                 );
