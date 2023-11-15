@@ -6,11 +6,10 @@ use gdc_rust_types::{
     CapabilitiesResponse, ColumnInfo, ColumnSelector, ColumnType, ComparisonCapabilities,
     ComparisonColumn, ComparisonValue, ConfigSchemaResponse, DetailLevel, ErrorResponse,
     ErrorResponseType, ExistsInTable, ExplainResponse, Expression, Field, ForEachRow, FunctionInfo,
-    MutationCapabilities, ObjectTypeDefinition, OrderBy, OrderByElement, OrderByRelation,
-    OrderByTarget, OrderDirection, Query, QueryCapabilities, QueryRequest, QueryResponse,
-    Relationship, RelationshipType, ResponseFieldValue, ResponseRow, ScalarTypeCapabilities,
-    SchemaRequest, SchemaResponse, SubqueryComparisonCapabilities, TableInfo, TableRelationships,
-    Target, UnaryComparisonOperator, UpdateColumnOperatorDefinition,
+    ObjectTypeDefinition, OrderBy, OrderByElement, OrderByRelation, OrderByTarget, OrderDirection,
+    Query, QueryRequest, QueryResponse, Relationship, RelationshipType, ResponseFieldValue,
+    ResponseRow, ScalarTypeCapabilities, SchemaRequest, SchemaResponse,
+    SubqueryComparisonCapabilities, TableInfo, TableRelationships, Target, UnaryComparisonOperator,
 };
 use indexmap::IndexMap;
 use ndc_client::models;
@@ -82,20 +81,7 @@ pub async fn get_capabilities<C: Connector>(
                             },
                         ),
                     )),
-                    update_column_operators: Some(IndexMap::from_iter(
-                        scalar_type.update_operators.into_iter().filter_map(
-                            |(operator_name, update_operator)| match update_operator.argument_type {
-                                models::Type::Named { name } => Some((
-                                    operator_name,
-                                    UpdateColumnOperatorDefinition {
-                                        argument_type: name,
-                                    },
-                                )),
-                                models::Type::Nullable { .. } => None,
-                                models::Type::Array { .. } => None,
-                            },
-                        ),
-                    )),
+                    update_column_operators: None,
                     graphql_type: None,
                 },
             )
@@ -115,30 +101,14 @@ pub async fn get_capabilities<C: Connector>(
             }),
             data_schema: None,
             datasets: None,
-            explain: v3_capabilities.capabilities.explain.to_owned(),
+            explain: None,
             interpolated_queries: None,
             licensing: None,
             metrics: None,
-            mutations: v3_capabilities
-                .capabilities
-                .mutations
-                .as_ref()
-                .map(|capabilities| MutationCapabilities {
-                    atomicity_support_level: None,
-                    delete: None,
-                    insert: None,
-                    returning: capabilities.returning.to_owned(),
-                    update: None,
-                }),
-            queries: v3_capabilities
-                .capabilities
-                .query
-                .as_ref()
-                .map(|capabilities| QueryCapabilities {
-                    foreach: capabilities.foreach.to_owned(),
-                }),
+            mutations: None,
+            queries: None,
             raw: None,
-            relationships: v3_capabilities.capabilities.relationships.to_owned(),
+            relationships: None,
             scalar_types: Some(scalar_types),
             subscriptions: None,
             user_defined_functions: None,
@@ -315,14 +285,8 @@ fn map_schema(schema: models::SchemaResponse) -> Result<SchemaResponse, ErrorRes
                         r#type: get_field_type(&field_info.r#type, &schema),
                         nullable: matches!(field_info.r#type, models::Type::Nullable { .. }),
                         description: field_info.description.to_owned(),
-                        insertable: collection
-                            .insertable_columns
-                            .as_ref()
-                            .map(|insertable_columns| insertable_columns.contains(field_name)),
-                        updatable: collection
-                            .updatable_columns
-                            .as_ref()
-                            .map(|updatable_columns| updatable_columns.contains(field_name)),
+                        insertable: None,
+                        updatable: None,
                         value_generated: None,
                     })
                 })
@@ -330,15 +294,9 @@ fn map_schema(schema: models::SchemaResponse) -> Result<SchemaResponse, ErrorRes
             Ok(TableInfo {
                 name: vec![collection.name.to_owned()],
                 description: collection.description.to_owned(),
-                insertable: collection
-                    .insertable_columns
-                    .as_ref()
-                    .map(|insertable_columns| !insertable_columns.is_empty()),
-                updatable: collection
-                    .updatable_columns
-                    .as_ref()
-                    .map(|updatable_columns| !updatable_columns.is_empty()),
-                deletable: Some(collection.deletable),
+                insertable: None,
+                updatable: None,
+                deletable: None,
                 primary_key: None,
                 foreign_keys: None,
                 r#type: None,
@@ -568,7 +526,6 @@ fn map_query_request(request: QueryRequest) -> Result<models::QueryRequest, Erro
                                     RelationshipType::Object => models::RelationshipType::Object,
                                     RelationshipType::Array => models::RelationshipType::Array,
                                 },
-                                source_collection_or_type: get_name(&source_table.source_table)?,
                                 target_collection,
                                 arguments,
                             },

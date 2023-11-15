@@ -56,7 +56,6 @@ impl Connector for Example {
             capabilities: models::Capabilities {
                 explain: None,
                 relationships: None,
-                mutations: None,
                 query: Some(models::QueryCapabilities {
                     foreach: None,
                     order_by_aggregate: None,

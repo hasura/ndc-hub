@@ -29,6 +29,7 @@
           pkgs.cargo
           pkgs.cargo-edit
           pkgs.cargo-machete
+          pkgs.cargo-nextest
           pkgs.clippy
           pkgs.rust-analyzer
           pkgs.rustPlatform.rustcSrc
@@ -38,6 +39,7 @@
 
         buildInputs = pkgs.lib.optionals pkgs.stdenv.isDarwin [
           pkgs.darwin.apple_sdk.frameworks.Security
+          pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
           pkgs.libiconv
         ]
 
