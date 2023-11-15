@@ -56,11 +56,10 @@ impl Connector for Example {
             capabilities: models::Capabilities {
                 explain: None,
                 relationships: None,
-                query: Some(models::QueryCapabilities {
-                    foreach: None,
-                    order_by_aggregate: None,
-                    relation_comparisons: None,
-                }),
+                query: models::QueryCapabilities {
+                    variables: None,
+                    aggregates: None,
+                },
             },
         }
         .into()
