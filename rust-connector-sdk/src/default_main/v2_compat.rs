@@ -94,7 +94,7 @@ pub async fn get_capabilities<C: Connector>(
                 subquery: Some(SubqueryComparisonCapabilities {
                     supports_relations: v3_capabilities
                         .capabilities
-                        .query
+                        .relationships
                         .as_ref()
                         .map(|capabilities| capabilities.relation_comparisons.is_some()),
                 }),

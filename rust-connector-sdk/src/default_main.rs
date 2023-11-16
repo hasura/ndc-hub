@@ -577,6 +577,7 @@ where
 #[derive(Debug, Clone, Serialize)]
 struct ValidateResponse {
     schema: SchemaResponse,
+    capabilities: CapabilitiesResponse,
     resolved_configuration: String,
 }
 
@@ -585,6 +586,7 @@ struct ValidateResponse {
 enum ValidateErrors {
     InvalidConfiguration { ranges: Vec<InvalidRange> },
     UnableToBuildSchema,
+    UnableToBuildCapabilities,
     JsonEncodingError(String),
 }
 
@@ -623,6 +625,24 @@ where
                 )
             }
         })?;
+    let capabilities =
+        C::get_capabilities()
+            .await
+            .into_value()
+            .map_err(|e: Box<dyn Error + Send + Sync>| {
+                tracing::error!(
+                    meta.signal_type = "log",
+                    event.domain = "ndc",
+                    event.name = "Unable to build capabilities",
+                    name = "Unable to build capabilities",
+                    body = %e,
+                    error = true,
+                );
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ValidateErrors::UnableToBuildCapabilities),
+                )
+            })?;
     let resolved_config_bytes = serde_json::to_vec(&configuration).map_err(|err| {
         tracing::error!(
             meta.signal_type = "log",
@@ -640,6 +660,7 @@ where
     let resolved_configuration = general_purpose::STANDARD.encode(resolved_config_bytes);
     Ok(Json(ValidateResponse {
         schema,
+        capabilities,
         resolved_configuration,
     }))
 }
