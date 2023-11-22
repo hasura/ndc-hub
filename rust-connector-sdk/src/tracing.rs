@@ -68,6 +68,8 @@ pub fn init_tracing(
 // tracing crate requires all fields to be defined at creation time, so any fields that will be set
 // later should be defined as Empty
 pub fn make_span(request: &Request<Body>) -> Span {
+    use opentelemetry::trace::TraceContextExt;
+
     let span = tracing::info_span!(
         "request",
         method = %request.method(),
@@ -83,7 +85,13 @@ pub fn make_span(request: &Request<Body>) -> Span {
     let parent_context = global::get_text_map_propagator(|propagator| {
         propagator.extract(&HeaderExtractor(request.headers()))
     });
-    span.set_parent(parent_context);
+    // if there is no parent span ID, we get something nonsensical, so we need to validate it
+    // (yes, this is hilarious)
+    let parent_context_span = parent_context.span();
+    let parent_context_span_context = parent_context_span.span_context();
+    if parent_context_span_context.is_valid() {
+        span.set_parent(parent_context);
+    }
 
     span
 }
