@@ -85,7 +85,7 @@ pub fn make_span(request: &Request<Body>) -> Span {
     let parent_context = global::get_text_map_propagator(|propagator| {
         propagator.extract(&HeaderExtractor(request.headers()))
     });
-    // if there is no parent span ID, we something nonsensical, so we need to validate it
+    // if there is no parent span ID, we get something nonsensical, so we need to validate it
     // (yes, this is hilarious)
     let parent_context_span = parent_context.span();
     let parent_context_span_context = parent_context_span.span_context();
