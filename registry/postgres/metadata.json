@@ -16,6 +16,14 @@
   "is_verified": true,
   "is_hosted_by_hasura": true,
   "source_code": {
-    "is_open_source": false
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-postgres",
+    "version": [
+      {
+        "tag": "v0.1.0",
+        "hash": "ef5b87e18b9f6e39a69dfaf94f03a1f392a659df",
+        "is_verified": true
+      }
+    ]
   }
 }
