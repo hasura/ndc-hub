@@ -48,6 +48,8 @@ For the best user-experience you should develop your functions in the following 
 * Have [Deno](https://deno.com) installed
 * Have [VSCode](https://code.visualstudio.com) installed
 * Have the [Deno VSCode extension](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno) installed
+* Have the Hasura V3 CLI Installed
+* Have the Hasura VSCode extension
 
 An example session:
 
@@ -57,15 +59,10 @@ An example session:
 ├── config.json
 ├── functions
     ├── index.ts
-    └── schema.json
 
 > cat config.json 
 {
-  "functions": "./functions/index.ts",
-  "vendor": "./vendor",
-  "preVendor": true,
-  "schemaMode": "INFER",
-  "schemaLocation": "./functions/schema.json"
+  "functions": "./functions/index.ts"
 }
 
 > cat functions/index.ts 
@@ -77,21 +74,18 @@ export function hello(): string {
 function foo() {
 }
 
-> deno run -A --watch --check https://deno.land/x/hasura_typescript_connector@0.9/mod.ts serve --configuration ./config.json
+> deno run -A --watch --check https://deno.land/x/hasura_typescript_connector@0.20/mod.ts serve --configuration ./config.json
 Watcher Process started.
-Check https://deno.land/x/hasura_typescript_connector@0.9/mod.ts
-Running Connector.start
-Check file:///Users/me/hasura/ndc-typescript-deno/scratch/deno_land_test/functions/index.ts
+Check file:///Users/me/projects/example/functions/index.ts
 Inferring schema with map location ./vendor
-Vendoring dependencies: /Users/me/bin/binaries/deno vendor --output /Users/me/hasura/ndc-typescript-deno/scratch/deno_land_test/vendor --force /Users/me/hasura/ndc-typescript-deno/scratch/deno_land_test/functions/index.ts
+Vendoring dependencies: /Users/me/bin/binaries/deno vendor --output /Users/me/projects/example/vendor --force /Users/me/projects/example/functions/index.ts
 Skipping non-exported function: foo
-Writing schema to ./functions/schema.json
 {"level":30,"time":1697018006809,"pid":89762,"hostname":"spaceship.local","msg":"Server listening at http://0.0.0.0:8100"}
 ```
 
-Once your connector is running locally you can use the `hasura3 tunnel` commands to make it available to your cloud projects for testing.
+Alternatively, if you have the `hasura3` CLI installed you can use the `hasura3 watch` command to watch and serve your functions and tunnel them automatically into a hasura project and console.
 
-If you are happy with its behaviour you can deploy your connector vis `hasura3 connector` commands.
+If you are happy with your definitions you can deploy your connector via the `hasura3 connector` commands.
 
 
 ## Deployment
@@ -113,7 +107,7 @@ Create the connector:
 
 ```
 hasura3 connector create my-cool-connector:v1 \
-  --github-repo-url https://github.com/hasura/ndc-typescript-deno/tree/v0.9 \
+  --github-repo-url https://github.com/hasura/ndc-typescript-deno/tree/v0.20 \
   --config-file config.json \
   --volume ./functions:/functions \
   --env SERVICE_TOKEN_SECRET=MY-SERVICE-TOKEN
@@ -142,25 +136,13 @@ Hasura cloud projects must also set a matching bearer token:
 
 ```yaml
 kind: DataConnector
-version: v1
+version: v2
 definition:
-  name: sendgrid
+  name: petdatabase
   url:
     singleUrl: 'https://connector-9XXX7-hyc5v23h6a-ue.a.run.app'
-  headers:
-    Authorization:
-      value: "Bearer SUPER_SECRET_TOKEN_XXX123"
-```
 
-While you can specify the token inline as above, it is recommended to use the Hasura secrets functionality for this purpose:
-
-```yaml
-kind: DataConnector
-version: v1
-definition:
-  name: sendgrid
-  url:
-    singleUrl: 'https://connector-9XXX7-hyc5v23h6a-ue.a.run.app'
+  # And optionally if you have configured a service secret:
   headers:
     Authorization:
       valueFromSecret: BEARER_TOKEN_SECRET
