@@ -89,6 +89,11 @@ pub enum QueryError {
     /// an error with the client.
     #[error("invalid request: {0}")]
     InvalidRequest(String),
+    /// The request was well formed but was unable to be
+    /// followed due to semantic errors. This indicates
+    /// an error with the client.
+    #[error("unprocessable content: {0}")]
+    UnprocessableContent(String),
     /// The request relies on an unsupported feature or
     /// capability. This may indicate an error with the client,
     /// or just an unimplemented feature.
@@ -108,6 +113,11 @@ pub enum ExplainError {
     /// an error with the client.
     #[error("invalid request: {0}")]
     InvalidRequest(String),
+    /// The request was well formed but was unable to be
+    /// followed due to semantic errors. This indicates
+    /// an error with the client.
+    #[error("unprocessable content: {0}")]
+    UnprocessableContent(String),
     /// The request relies on an unsupported feature or
     /// capability. This may indicate an error with the client,
     /// or just an unimplemented feature.
@@ -127,6 +137,11 @@ pub enum MutationError {
     /// an error with the client.
     #[error("invalid request: {0}")]
     InvalidRequest(String),
+    /// The request was well formed but was unable to be
+    /// followed due to semantic errors. This indicates
+    /// an error with the client.
+    #[error("unprocessable content: {0}")]
+    UnprocessableContent(String),
     /// The request relies on an unsupported feature or
     /// capability. This may indicate an error with the client,
     /// or just an unimplemented feature.

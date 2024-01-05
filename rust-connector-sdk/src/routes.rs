@@ -104,6 +104,16 @@ pub async fn post_explain<C: Connector>(
                     )])),
                 }),
             ),
+            crate::connector::ExplainError::UnprocessableContent(detail) => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(models::ErrorResponse {
+                    message: "Unprocessable content".into(),
+                    details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                        "detail".into(),
+                        serde_json::Value::String(detail),
+                    )])),
+                }),
+            ),
             crate::connector::ExplainError::UnsupportedOperation(detail) => (
                 StatusCode::NOT_IMPLEMENTED,
                 Json(models::ErrorResponse {
@@ -139,6 +149,16 @@ pub async fn post_mutation<C: Connector>(
                 StatusCode::BAD_REQUEST,
                 Json(models::ErrorResponse {
                     message: "Invalid request".into(),
+                    details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                        "detail".into(),
+                        serde_json::Value::String(detail),
+                    )])),
+                }),
+            ),
+            crate::connector::MutationError::UnprocessableContent(detail) => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(models::ErrorResponse {
+                    message: "Unprocessable content".into(),
                     details: serde_json::Value::Object(serde_json::Map::from_iter([(
                         "detail".into(),
                         serde_json::Value::String(detail),
@@ -200,6 +220,16 @@ pub async fn post_query<C: Connector>(
                 StatusCode::BAD_REQUEST,
                 Json(models::ErrorResponse {
                     message: "Invalid request".into(),
+                    details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                        "detail".into(),
+                        serde_json::Value::String(detail),
+                    )])),
+                }),
+            ),
+            crate::connector::QueryError::UnprocessableContent(detail) => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(models::ErrorResponse {
+                    message: "Unprocessable content".into(),
                     details: serde_json::Value::Object(serde_json::Map::from_iter([(
                         "detail".into(),
                         serde_json::Value::String(detail),

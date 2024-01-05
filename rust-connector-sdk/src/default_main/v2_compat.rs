@@ -367,7 +367,9 @@ pub async fn post_query<C: Connector>(
         .await
         .and_then(JsonResponse::into_value)
         .map_err(|err| match err {
-            QueryError::InvalidRequest(message) | QueryError::UnsupportedOperation(message) => (
+            QueryError::InvalidRequest(message)
+            | QueryError::UnsupportedOperation(message)
+            | QueryError::UnprocessableContent(message) => (
                 StatusCode::BAD_REQUEST,
                 Json(ErrorResponse {
                     details: None,
@@ -417,16 +419,16 @@ pub async fn post_explain<C: Connector>(
         .await
         .and_then(JsonResponse::into_value)
         .map_err(|err| match err {
-            ExplainError::InvalidRequest(message) | ExplainError::UnsupportedOperation(message) => {
-                (
-                    StatusCode::BAD_REQUEST,
-                    Json(ErrorResponse {
-                        details: None,
-                        message,
-                        r#type: None,
-                    }),
-                )
-            }
+            ExplainError::InvalidRequest(message)
+            | ExplainError::UnsupportedOperation(message)
+            | ExplainError::UnprocessableContent(message) => (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    details: None,
+                    message,
+                    r#type: None,
+                }),
+            ),
             ExplainError::Other(err) => (
                 StatusCode::BAD_REQUEST,
                 Json(ErrorResponse {
