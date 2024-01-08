@@ -57,6 +57,12 @@ curl http://localhost:8100/schema
 
 (the default port 8100 can be changed using `--port`)
 
+### TypeScript SDK
+
+We also provide a TypeScript SDK to aid development of [Hasura Native Data Connectors](https://hasura.github.io/ndc-spec/). 
+
+Check out the TypeScript SDK [repo here](https://github.com/hasura/ndc-sdk-typescript). 
+
 ## Tracing
 
 The serve command emits OTLP trace information. This can be used to see details of requests across services.
