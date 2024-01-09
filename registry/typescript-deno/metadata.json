@@ -1,5 +1,6 @@
 {
   "overview":{
+      "namespace":"hasura",
       "description":"Connect to user-supplied typescript functions and expose them to Hasura Cloud v3 project",
       "title":"Typescript (Deno) Connector",
       "logo":"logo.png",

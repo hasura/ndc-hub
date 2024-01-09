@@ -1,6 +1,6 @@
 {
     "overview":{
-        "namespace": "hasura",
+        "namespace":"hasura",
         "description":"Connect to SendGrid v3 API and expose it to Hasura Cloud v3 project",
         "title":"SendGrid Native Data Connector",
         "logo":"logo.png",

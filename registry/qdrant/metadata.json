@@ -1,5 +1,6 @@
 {
     "overview":{
+        "namespace":"hasura",
         "description":"The Qdrant Data Connector allows for connecting to a Qdrant instance giving you an instant GraphQL API on top of your Qdrant Vector Data.",
         "title":"Qdrant Data Connector",
         "logo":"logo.png",

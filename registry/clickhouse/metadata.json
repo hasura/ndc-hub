@@ -1,5 +1,6 @@
 {
     "overview":{
+        "namespace":"hasura",
         "description":"The Clickhouse Native Data Connector allows for connecting to a Clickhouse instance giving you an instant GraphQL API on top of your Clickhouse data.",
         "title":"Clickhouse Native Data Connector",
         "logo":"logo.png",
