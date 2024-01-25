@@ -1049,7 +1049,7 @@ dependencies = [
 [[package]]
 name = "ndc-client"
 version = "0.1.0"
-source = "git+http://github.com/hasura/ndc-spec.git?branch=dmoverton/nested-select#2252d01cdd1c3fa29e97cdf2bbaa384df23764c7"
+source = "git+http://github.com/hasura/ndc-spec.git?branch=dmoverton/nested-select#9d561b05ff7060af2be4c4720116288655fd7946"
 dependencies = [
  "async-trait",
  "indexmap 2.1.0",
@@ -1104,7 +1104,7 @@ dependencies = [
 [[package]]
 name = "ndc-test"
 version = "0.1.0"
-source = "git+http://github.com/hasura/ndc-spec.git?branch=dmoverton/nested-select#2252d01cdd1c3fa29e97cdf2bbaa384df23764c7"
+source = "git+http://github.com/hasura/ndc-spec.git?branch=dmoverton/nested-select#9d561b05ff7060af2be4c4720116288655fd7946"
 dependencies = [
  "async-trait",
  "clap",
