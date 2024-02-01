@@ -783,9 +783,11 @@ fn map_fields(
                                     map_array_field(*field, collection, relationships)?;
                                 models::Field::Column {
                                     column,
-                                    fields: Some(models::NestedField::Array(models::NestedArray {
-                                        fields: Box::new(fields),
-                                    })),
+                                    fields: fields.map(|fields| {
+                                        models::NestedField::Array(models::NestedArray {
+                                            fields: Box::new(fields),
+                                        })
+                                    }),
                                 }
                             }
                         },
@@ -820,9 +822,11 @@ fn map_array_field(
             let (column, fields) = map_array_field(*field, collection, relationships)?;
             Ok((
                 column,
-                Some(models::NestedField::Array(models::NestedArray {
-                    fields: Box::new(fields),
-                })),
+                fields.map(|fields| {
+                    models::NestedField::Array(models::NestedArray {
+                        fields: Box::new(fields),
+                    })
+                }),
             ))
         }
     }
