@@ -196,5 +196,13 @@ In this mode, connectors can provide some native way of performing a hot-reloadi
 For example, for the NodeJS Lambda Connector, it could set the watch shell command to `npm run watch`, which would run the connector and activate its built-in hot-reloading functionality.
 
 ## Open Questions
+### Custom CLI Plugins
+- Do connectors need to declare if they have a custom CLI plugin?
+- If custom CLI plugins provide configuration update services (such as DB schema introspection), does this need to be integrated with watch mode, and if so, how is this declared?
 - Do we need a `validate` subcommand to support the LSP/CLI?
+
+### Publishing the Hasura Hub Connector Definition
+- How is this published to the Hub?
+  
+### OpenTelemetry
 - Do we want to reserve environment variables `OTEL_*` for possible future use of the [OTLP exporter spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md)?
