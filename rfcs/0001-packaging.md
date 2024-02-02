@@ -196,6 +196,11 @@ In this mode, connectors can provide some native way of performing a hot-reloadi
 For example, for the NodeJS Lambda Connector, it could set the watch shell command to `npm run watch`, which would run the connector and activate its built-in hot-reloading functionality.
 
 ## Open Questions
+### Build Inputs vs Configuration
+- Is there a difference between Docker build inputs and connector configuration files (currently the RFC does not distinguish these)? If so:
+  - Can connector configuration be optional (defaulted to zero files) where it is not used (ie NodeJS Lambda Connector)
+  - How is the difference represented on disk in the user's Hasura project? (Different directories?)
+
 ### Custom CLI Plugins
 - Do connectors need to declare if they have a custom CLI plugin?
 - If custom CLI plugins provide configuration update services (such as DB schema introspection), does this need to be integrated with watch mode, and if so, how is this declared?
