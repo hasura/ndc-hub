@@ -45,7 +45,7 @@ The Docker images of both categories of connectors behave in the same way with r
 - The connector executable should accept the following subcommands:
   - `serve` should start a HTTP server on port `8080`, which is compatible with the NDC specification, with `/` as its base URL.
     - For example, `http://connector:8080/query` should implement the query endpoint
-    - The default port can be overwritten using the `HASURA_CONNECTOR_PORT` environment variable.
+    - The default port can be overwritten using the `PORT` environment variable.
 
 - The image `ENTRYPOINT` should be set to the connector process, and the default `CMD` should be set to the `serve` command. This can mean setting it to the connector executable itself, or some intermediate executable/script that eventually provides its command line arguments to the connector executable.
 
@@ -157,7 +157,7 @@ In this mode, connectors can provide a `.hasura/docker-compose.yaml` file. This 
 
 - Define a single service, which represents the connector 
 - Build that service using the `.hasura/Dockerfile`
-- Define a port mapping that uses the environment variable `HASURA_CONNECTOR_PORT` for the host port and 8080 for the container port. This allows the watch tooling to control the port used by the connector and exposes the port on the host.
+- Define a port mapping that uses the environment variable `PORT` for the host port and 8080 for the container port. This allows the watch tooling to control the port used by the connector and exposes the port on the host.
 - Provide a [docker compose watch configuration](https://docs.docker.com/compose/compose-file/develop/#watch) that defines how to watch the configuration files and how to react to different files changing. It can react by causing a container rebuild and restart, or by copying the new file inside the existing container and optionally restarting the container. This allows the connector to optimise its hot reload capability by only performing a rebuild where necessary.
 
 For example, a NodeJS-based connector that needs to perform an npm package restore as a part of its Docker build may define the following `.hasura/docker.compose.yaml`:
@@ -169,7 +169,7 @@ services:
       context: ../ # The build context is the parent directory of .hasura/
       dockerfile: ./Dockerfile
     ports:
-      - ${HASURA_CONNECTOR_PORT}:8080 # Required so that the watch tooling can control the port used
+      - ${PORT}:8080 # Required so that the watch tooling can control the port used
     develop:
       watch:
         # Rebuild the container if a new package restore is required because package[-lock].json changed
@@ -189,7 +189,7 @@ services:
 In this mode, connectors can provide some native way of performing a hot-reloading watch mode. Whatever this custom method is, it will be started by running the shell command defined. This can be useful to allow local tooling to be used to run the connector and perform hot reloading.
 
 * The shell command will be executed with the working directory set to the root directory where the configuration files are located.
-* The HASURA_CONNECTOR_PORT environment variable will be set and must be respected. The connector must start serving on this port.
+* The PORT environment variable will be set and must be respected. The connector must start serving on this port.
 * SIGINT and SIGSTOP signals must be respected and must cause the watch mode and connector to shut down
 * Any stdout and stderr output will be collected by the Hasura tooling for display
 
