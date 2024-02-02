@@ -78,11 +78,11 @@ The connector definition package is a .tgz (tar file, gzipped) that contains the
   .hasura/
     connector-metadata.json # See ConnectorMetadataDefinition type
     docker-compose.yaml # If DockerComposeWatchMode is used
-  
-  ### Start: If Docker packaging requires a build step
-  .dockerignore
-  Dockerfile
-  ### End: If Docker packaging requires a build step
+    
+    ### Start: If Docker packaging requires a build step
+    .dockerignore
+    Dockerfile
+    ### End: If Docker packaging requires a build step
     
   ### Start: Connector specific configuration files
   src/
@@ -138,7 +138,7 @@ The `.hasura/connector-metadata.json` contains JSON that describes:
 - The environment variables the connector supports to configure it (`supportedEnvironmentVariables`)
 - The packaging definition, which can be either `PrebuiltDockerImagePackaging` (a connector that does not require a build step), or  `DockerBuildPackaging` (a connector that requires a build step).
   - `PrebuiltDockerImagePackaging` defines the prebuilt `dockerImage` used to run the connector (`dockerImage`)
-  - If `DockerBuildPackaging` is used, a Dockerfile must be in the root directory (and optionally, a `.dockerignore`). It will be used to build the connector. A `watchMode` must be specified, to tell the Hasura tooling how to perform watching for this connector (see [Watch Mode section](#watch-mode)).
+  - If `DockerBuildPackaging` is used, a Dockerfile must be in the `.hasura` directory (and optionally, a `.dockerignore`). It will be used to build the connector. A `watchMode` must be specified, to tell the Hasura tooling how to perform watching for this connector (see [Watch Mode section](#watch-mode)).
 
 #### Watch Mode
 When developing locally using the connector, the user may utilize the connector in a "watch mode" that automatically reloads the connector with new configuration as they change the configuration.
@@ -156,7 +156,7 @@ In this mode, if any configuration file changes, the Docker container is rebuilt
 In this mode, connectors can provide a `.hasura/docker-compose.yaml` file. This file should:
 
 - Define a single service, which represents the connector 
-- Build that service using the Dockerfile
+- Build that service using the `.hasura/Dockerfile`
 - Define a port mapping that uses the environment variable `HASURA_CONNECTOR_PORT` for the host port and 8080 for the container port. This allows the watch tooling to control the port used by the connector and exposes the port on the host.
 - Provide a [docker compose watch configuration](https://docs.docker.com/compose/compose-file/develop/#watch) that defines how to watch the configuration files and how to react to different files changing. It can react by causing a container rebuild and restart, or by copying the new file inside the existing container and optionally restarting the container. This allows the connector to optimise its hot reload capability by only performing a rebuild where necessary.
 
@@ -165,7 +165,9 @@ For example, a NodeJS-based connector that needs to perform an npm package resto
 ```yaml
 services:
   connector:
-    build: ../ # Use the Dockerfile in the directory above .hasura/
+    build: 
+      context: ../ # The build context is the parent directory of .hasura/
+      dockerfile: ./Dockerfile
     ports:
       - ${HASURA_CONNECTOR_PORT}:8080 # Required so that the watch tooling can control the port used
     develop:
