@@ -2,71 +2,20 @@
 
 ## Purpose
 
-For execution of queries and mutations, connectors are specified by the [NDC specification](http://hasura.github.io/ndc-spec/). However, for the purpose of deployment and configuration, their behavior is unspecified, or informally specified. 
-
-This document exists to specify how connectors should be packaged in order to be accepted for inclusion in the Hasura Connector Hub. Any included connectors will be deployable via the CLI.
-
-## Related Changes
-
-_This RFC does not specify the following planned changes:_
-
-- Work on existing connectors has shown that we need more configuration structure than a flat file. Therefore we plan to change the configuration file to a configuration directory with a supporting set of secrets in environment variables.
-- There will also be no more `HasuraHubConnector` in v3-engine metadata. Instead the engine will only see connector URLs, and the CLI will manage the instantiation and deployment of connectors, and the creation of those URLs.
+Connector behavior is specified by the [NDC specification](http://hasura.github.io/ndc-spec/), and the deployment API is specified in the [deployment RFC](./0000-deployment.md). This document specifies how the Hasura CLI and Hasura Connector Hub can work together to facilitate connector development, packaging and deployment via the API.
 
 ## Proposal
-Hasura Hub data connectors are packaged as Docker images which expect to receive a specific `CMD` format and expect specific Hasura-defined environment variables to be specified in order to control common connector configuration.
-
-They also define a Hasura Hub Connector Definition that Hasura tooling uses to understand how to interact with the connector and its packaging.
 
 ### Docker Packaging Categories
-There are two different categories of Docker-based packaging.
 
-#### Connectors that do not require a build step (`PrebuiltDockerImagePackaging`)
-These connectors have a pre-built Docker image that simply requires the configuration files to be provided at runtime to execute correctly. They do not require a time-consuming build step to occur based on the configuration files before the connector can run, and therefore can start immediately.
+Hasura Hub data connectors are packaged as Docker images which follow the [deployment specification](./0000-deployment.md). Per the deployment specification, there are two ways in which the CLI can describe those images to the deployment service:
 
-- The connector can expect configuration files to be mounted at `/etc/connector` inside the Docker image on startup. This may be done via volume mounting, or it may be done by including the files in the docker image itself. 
+- Connectors that do not require a build step can be described using a name and version, which should correspond to an entry in the connector hub registry.
+- Connectors that require a build step (performed over some build inputs before they can execute correctly) can be described using a Dockerfile bundled with any additional build inputs.
 
-- If the `HASURA_CONFIGURATION_DIRECTORY` environment variable is set, the connector should look for the configuration files in the location specified by the environment variable.
+### Connector Configuration
 
-- The connector should not modify these files during execution, and can expect them not to be changed.
-
-- The `/etc/connector/.hasura` subdirectory (or `{HASURA_CONFIGURATION_DIRECTORY}/.hasura` in the general case) is reserved for future use and should not be used for configuration. Any connectors which enumerate all subdirectories of `/etc/connector`, for any reason, should ignore this subdirectory if it exists.
-
-#### Connectors that require a build step (`DockerBuildPackaging`)
-These connectors require a time-consuming build step to be performed over their configuration before they can execute correctly. Once the build step is performed, the results can be retained, and they can start immediately.
-
-- The build steps are defined in a supporting Dockerfile (for example, installing dependencies). The configuration files (which are build inputs) will be provided to the Dockerfile as its build context.
-
-- The result of the Dockerfile build should be a connector Docker image that contains the configuration files and can start immediately.
-
-### Common Docker Image Behaviour
-The Docker images of both categories of connectors behave in the same way with respect to the following points:
-
-- The connector executable should accept the following subcommands:
-  - `serve` should start a HTTP server on port `8080`, which is compatible with the NDC specification, with `/` as its base URL.
-    - For example, `http://connector:8080/query` should implement the query endpoint
-    - The default port can be overwritten using the `PORT` environment variable.
-
-- The image `ENTRYPOINT` should be set to the connector process, and the default `CMD` should be set to the `serve` command. This can mean setting it to the connector executable itself, or some intermediate executable/script that eventually provides its command line arguments to the connector executable.
-
-- The connector can read environment variables on startup for configuration purposes
-  - The following environment variables are reserved, and should not be used for connector-specific configuration:
-    - `HASURA_*`
-  - Connectors can use environment variables as part of their configuration. Configuration that varies between different environments or regions (like connection strings) should be configurable via environment variables. 
-
-- The connector should send any relevant trace spans in the OTLP format to the OTEL collector hosted at the URL provided by the `HASURA_OTLP_ENDPOINT` environment variable.
-  - Spans should indicate the service name provided by the `HASURA_OTEL_SERVICE_NAME` environment variable.	
-
-- If the `HASURA_SERVICE_TOKEN_SECRET` environment variable is specified and non-empty, then the connector should implement bearer-token HTTP authorization using the provided static secret token.
-
-- Information log messages should be logged in plain text to standard output.
-
-- Error messages should be logged in plain text to standard error.
-
-- On startup, in case of failure to start, the connector should flush any error messages to standard error, and exit with a non-zero exit code.
-
-- The connector should respond to the following signals:
-  - `SIGTERM`/`SIGINT` - gracefully shutdown the server, and stop the connector process
+_TODO_: describe the layout of files on disk for prebuilt connectors, and for connectors which require a build step. Is this the same as the layout described in "Hasura Hub Connector Definition" below?
 
 ### Hasura Hub Connector Definition
 In order for the Hasura tooling to understand a connector, know how to interact with it and know how it is packaged, a connector will need a definition that contains this information.
