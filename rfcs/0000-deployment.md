@@ -1,10 +1,14 @@
-# Connector Packaging
+# Connector Deployment
 
 ## Purpose
 
 For execution of queries and mutations, connectors are specified by the [NDC specification](http://hasura.github.io/ndc-spec/). However, for the purpose of deployment and configuration, their behavior is unspecified, or informally specified. 
 
 This document exists to specify how connectors should be packaged in order to be accepted for inclusion in the Hasura Connector Hub. Any included connectors will be deployable via the CLI.
+
+### Out of Scope
+
+This RFC does not concern itself with the DX aspects of connector metadata authoring, development etc. in the CLI. As it relates to the connector hub, those aspects will be specified in a separate RFC.
 
 ## Related Changes
 
@@ -40,7 +44,32 @@ _This RFC does not specify the following planned changes:_
   - If there is a build step which depends on files controlled by the user (for example, installing dependencies), then they should be moved into a supporting `Dockerfile`. The Docker image which represents the connector would then be the result of `docker build` on this `Dockerfile`. 
     - To support this use case, tooling should be provided to build a Docker image from a local `Dockerfile`, which may refer to existing Hub connector images.
 
-## Open Questions
+### Open Questions
 
-- Do we need a `validate` subcommand to support the LSP/CLI?
 - Do we want to reserve environment variables `OTEL_*` for possible future use of the [OTLP exporter spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md)?
+
+## Deployment API
+
+Docker images should be built in the same environment as which they are run, to avoid possible issues with differences in architecture, etc. Therefore, we need to specify _how to build_ images which meet the specification above. 
+
+The _connector build request_ data structure describes the ways in which we can build such an image unambiguously. There are two alternatives: from a named and versioned hub connector, or from a Dockerfile.
+
+Here is a sketch of the data structure in Rust:
+
+```rust
+pub enum ConnectorBuildRequest {
+  FromHubConnector {
+    name: String,
+    version: Version, // sha hash
+  },
+  FromDockerfileAndBuildInputs {
+    tar: TarFile,
+  }
+}
+```
+
+How this structure gets built by CLI (or its supporting web service) is out of scope. For example, we might fetch tar bundles from Git repos, or from the filesystem. Dockerfiles might be under the user's control, or not. But this structure is what is required to build images for deployment.
+
+In the case of `FromHubConnector`, the expectation is that the connector build service maintains a list of prebuilt images, indexed by the names and versions of hub connectors.
+
+Here, in the case of `FromHubConnector`, a full directory containing a `Dockerfile` and any supporting build inputs is provided as the bytes of a `.tar` file, but the exact protocol can be up to the service implementer.
