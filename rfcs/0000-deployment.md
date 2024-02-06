@@ -27,13 +27,14 @@ _This RFC does not specify the following planned changes:_
   - `serve` should start a HTTP server on port `8080`, which is compatible with the NDC specification, with `/` as its base URL.
     - For example, `http://connector:8080/query` should implement the query endpoint
     - The default port can be overwritten using the `HASURA_CONNECTOR_PORT` environment variable.
-- The image entrypoint should be set to the connector process, and the default `CMD` should be set to the `serve` command.
+- The image `ENTRYPOINT` should be set to the connector process, and the default `CMD` should be set to the `serve` command. This can mean setting it to the connector executable itself, or some intermediate executable/script that eventually provides its command line arguments to the connector executable.
 - The connector can read environment variables on startup for configuration purposes
   - The following environment variables are reserved, and should not be used for connector-specific configuration:
     - `HASURA_*`
+    - `OTEL_EXPORTER_*`
   - Connectors can use environment variables as part of their configuration. Configuration that varies between different environments or regions (like connection strings) should be configurable via environment variables. 
-- The connector should send any relevant trace spans in the OTLP format to the OTEL collector hosted at the URL provided by the `HASURA_OTLP_ENDPOINT` environment variable.
-  - Spans should indicate the service name provided by the `HASURA_OTEL_SERVICE_NAME` environment variable.	
+- The connector should send any relevant trace spans in the OTLP format to the OTEL collector hosted at the URL provided by the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable.
+  - Spans should indicate the service name provided by the `OTEL_SERVICE_NAME` environment variable.	
 - If the `HASURA_SERVICE_TOKEN_SECRET` environment variable is specified and non-empty, then the connector should implement bearer-token HTTP authorization using the provided static secret token.
 - Information log messages should be logged in plain text to standard output.
 - Error messages should be logged in plain text to standard error.
@@ -41,8 +42,7 @@ _This RFC does not specify the following planned changes:_
 - The connector should respond to the following signals:
   - `SIGTERM`/`SIGINT` - gracefully shutdown the server, and stop the connector process
 - The connector should start as quickly as possible, without any build steps, by reading configuration from disk. Build steps should be performed in the construction of the Docker image, not on startup.
-  - If there is a build step which depends on files controlled by the user (for example, installing dependencies), then they should be moved into a supporting `Dockerfile`. The Docker image which represents the connector would then be the result of `docker build` on this `Dockerfile`. 
-    - To support this use case, tooling should be provided to build a Docker image from a local `Dockerfile`, which may refer to existing Hub connector images.
+  - To support these build steps, tooling should support building images from Dockerfiles. See "Deployment API" below.
 
 ### Open Questions
 
