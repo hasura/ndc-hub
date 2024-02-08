@@ -13,7 +13,7 @@ Hasura Hub data connectors are packaged as Docker images which follow the [deplo
 - Connectors that do not require a build step can be described using a name and version, which should correspond to an entry in the connector hub registry.
 - Connectors that require a build step (performed over some build inputs before they can execute correctly) can be described using a Dockerfile bundled with any additional build inputs.
 
-### Hasura Hub Connector Definition
+### Connector Definition
 In order for the Hasura tooling to understand a connector, know how to interact with it and know how it is packaged, a connector will need a definition that contains this information.
 
 The connector definition is a file structure that contains the following files and directories:
@@ -21,7 +21,7 @@ The connector definition is a file structure that contains the following files a
 ```
 /
   connector-metadata.json # See ConnectorMetadataDefinition type
-  
+
   docker-compose.yaml
 
   build-files/ # Connector specific build/configuration files
@@ -52,12 +52,6 @@ type PrebuiltDockerImagePackaging = {
 
 type ManagedDockerBuildPackaging = {
   type: "ManagedDockerBuild"
-  additionalWatchModes: ShellCommandWatchMode[]
-}
-
-type ShellCommandWatchMode = {
-  type: "ShellCommand"
-  command: string
 }
 
 type EnvironmentVariableDefinition = {
@@ -66,6 +60,7 @@ type EnvironmentVariableDefinition = {
   defaultValue?: string
 }
 
+// This is subject to change based on CLI plugin spec discussions
 type CliPluginDefinition = {
   pluginPackageUrl: string // https://url/to/download/plugin/to/install.tgz
   pluginPackageSHA256: string // To ensure plugin integrity and also to identify which version to use out of those installed
@@ -123,31 +118,21 @@ services:
 
 The `connector` service must be defined, and note that no `image` or `build` property is defined. The CLI tooling will [extend](https://docs.docker.com/compose/compose-file/05-services/#extends) from this to add the necessary `build` property based on the build context from `ConnectorManifest` and the Dockerfile included in the Connector Definition. This exists solely to provide the watch configuration.
 
-`ManagedDockerBuildPackaging` connectors can also optionally provide additional watch modes. This is intended to support connectors that can run using local developer machine tooling (for example, local NodeJS for debugging purposes). These additional watch modes may be chosen by the user to run _instead_ of the docker compose watch-based watch mode. They are configured via the `additionalWatchModes` property, which currently only supports `ShellCommandWatchMode`.
-
-##### `ShellCommandWatchMode`
-In this mode, connectors can provide some native way of performing a hot-reloading watch mode. Whatever this custom method is, it will be started by running the shell command defined. This can be useful to allow local tooling to be used to run the connector and perform hot reloading.
-
-* The shell command will be executed with the working directory set to the root directory where the configuration files are located.
-* The PORT environment variable will be set and must be respected. The connector must start serving on this port.
-* SIGINT and SIGSTOP signals must be respected and must cause the watch mode and connector to shut down
-* Any stdout and stderr output will be collected by the Hasura tooling for display
-
-For example, for the NodeJS Lambda Connector, it could set the watch shell command to `npm run watch`, which would run the connector and activate its built-in hot-reloading functionality.
-
 #### CLI Plugin Watch Mode
 If connectors need to extend the watch process with their own functionality, they can implement a CLI plugin that contains a `watch` subcommand. If specified in the `connector-metadata.json` the tooling will use it in addition to existing watch functionality.
 
 An example use case for this would be for a Postgres connector, where you may want to watch the database for schema changes, and when they occur, update the schema introspection configuration file in the connector's build directory with the latest schema details. The docker compose watch would then reload the connector with the updated introspection configuration file.
 
+Note that the exact definition of how this needs to be specified in the Connector Definition will need to wait until how CLI plugins work is specified.
+
 ### Connector Layout in Hasura Project
-When a new connector is added to a Hasura project using `hasura3 add ConnectorManifest --hub hasura/nodejs-lambda:1.0`, the CLI acquires the Hasura Hub Connector Definition for the specified Hub Connector. It then places this inside the `~/.hasura/hub-connectors/` directory. This is done to keep non-user editable files out of the user's source tree.
+When a new connector is added to a Hasura project using `hasura3 add ConnectorManifest --hub hasura/nodejs-lambda:1.0`, the CLI acquires the Connector Definition for the specified Hub Connector. It then places this inside the `~/.hasura/hub-connectors/` directory. This is done to keep non-user editable files out of the user's source tree.
 
 The CLI then puts the `build-files/` into the build directory for that connector and adds a `.build.hml` file with the `ConnectorManifest` metadata object.
 
 ```
-# A copy of the `Hasura Hub Connector Definition` for a particular hub connector version
-~/.hasura/hub-connectors/hasura/nodejs-lambda/1.0/ 
+# A copy of the `Connector Definition` for a particular hub connector version
+~/.hasura/hub-connectors/hasura/nodejs-lambda/1.0/
   connector-metadata.json
   docker-compose.yaml
   build-files/
@@ -164,13 +149,13 @@ project/
   subgraphs/default/dataconnectors/
     my-dataconnector/
       build/
-        ### Start: from `build-files/`
+        ### Start: copied from `build-files/`
         src/
           functions.ts
         package.json
         package-lock.json
         tsconfig.json
-        ### End: from `build-files/`
+        ### End: copied from `build-files/`
 
         my-dataconnector.build.hml # Connector manifest, see below
 ```
@@ -181,7 +166,9 @@ kind: ConnectorManifest
 definition:
   name: my-dataconnector
   type: local
-  hub-connector: hasura/nodejs-lambda:1.0 # This is used to find the Hasura Hub Connector Definition in ~/.hasura/hub-connectors/
+  connector:
+    type: hub
+    name: hasura/nodejs-lambda:1.0 # This is used to find the Hasura Hub Connector Definition in ~/.hasura/hub-connectors/
   tunnel: true
   instances:
   - build:
@@ -190,17 +177,56 @@ definition:
         STRIPE_API_ENDPOINT: https://api.stripe.com/
 ```
 
-## Open Questions
-### Build Inputs vs Configuration
-- Is there a difference between Docker build inputs and connector configuration files (currently the RFC does not distinguish these)? If so:
-  - Can connector configuration be optional (defaulted to zero files) where it is not used (ie NodeJS Lambda Connector)
-  - How is the difference represented on disk in the user's Hasura project? (Different directories?)
+It is worth clarifying that the contents what of the `build` directory in the Hasura project source tree contains changes depending on whether we are building a `PrebuiltDockerImagePackaging` connector versus a `ManagedDockerBuildPackaging` connector. For `PrebuiltDockerImagePackaging`, the build directory contains the configuration files that will be mounted to the `/etc/connector` directory of the Docker image at runtime. For `ManagedDockerBuildPackaging`, the build directory contains the Docker build context that is handed to the Dockerfile when it is built. There are no configuration files to be mounted at `/etc/connector` for `ManagedDockerBuildPackaging` connectors, as it is assumed that any relevant configuration will be built into the container image by the Dockerfile. In practice this means an empty volume will be mounted `/etc/connector` at runtime.
 
-### Custom CLI Plugins
-- `watchSubcommand` seems redundant if we're going to have a CLI contract. We could just have `watch: boolean` instead. Or perhaps the CLI plugin can declare what it supports and this exists outside of the connector-metadata.json?
+#### Non-Hasura Hub Connector
+To support the use case of a connector developer being and to share/iterate on a connector and use it inside a Hasura project without first publishing it to the Hasura Connector Hub, we will support the ability to inline a Connector Definition inside the Hasura project source tree. This enables the Hasura tooling to still know how to interact with the connector, but does not require it to be published on the Connector Hub.
 
-### Publishing the Hasura Hub Connector Definition
-- How is this published to the Hub? Git? `tar.gz`?
-  
-### OpenTelemetry
-- Do we want to reserve environment variables `OTEL_*` for possible future use of the [OTLP exporter spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md)?
+The CLI could support the use of non-Hasura Hub Connectors by supporting the use of `.tgz` archives of the Connector Definition: `hasura3 add ConnectorManifest --inline my-connector-definition.tgz`
+
+```
+project/
+  subgraphs/default/dataconnectors/
+    my-dataconnector/
+      connector-definition/ # `my-connector-definition.tgz` extracted into the source tree
+        connector-metadata.json
+        docker-compose.yaml
+        build-files/
+          src/
+            functions.ts
+          package.json
+          package-lock.json
+          tsconfig.json
+        docker/
+          .dockerignore
+          Dockerfile
+      build/
+        ### Start: copied from `build-files/`
+        src/
+          functions.ts
+        package.json
+        package-lock.json
+        tsconfig.json
+        ### End: copied from `build-files/`
+
+        my-dataconnector.build.hml # Connector manifest, see below
+```
+
+```yaml
+kind: ConnectorManifest
+definition:
+  name: my-dataconnector
+  type: local
+  connector:
+    type: inline # Tells the tooling to look for the connector definition in `connector-definition/`
+  tunnel: true
+  instances:
+  - build:
+      context: .
+      env:
+        STRIPE_API_ENDPOINT: https://api.stripe.com/
+```
+
+## Out of Scope for this RFC
+* How the Connector Definition is published to the Hasura Connector Hub (can assume for starters that the Connector Definition will be tar-gzipped into an archive and submitted somewhere)
+* How CLI plugins work
