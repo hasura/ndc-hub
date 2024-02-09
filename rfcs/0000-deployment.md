@@ -58,7 +58,7 @@ Here is a sketch of the data structure in Rust:
 
 ```rust
 pub enum ConnectorBuildRequest {
-  FromHubConnector {
+  FromNamedImage {
     name: String,
     version: Version, // sha hash
   },
@@ -70,6 +70,6 @@ pub enum ConnectorBuildRequest {
 
 How this structure gets built by CLI (or its supporting web service) is out of scope. For example, we might fetch tar bundles from Git repos, or from the filesystem. Dockerfiles might be under the user's control, or not. But this structure is what is required to build images for deployment.
 
-In the case of `FromHubConnector`, the expectation is that the connector build service maintains a list of prebuilt images, indexed by the names and versions of hub connectors.
+In the case of `FromNamedImage`, the expectation is that the connector build service maintains a list of prebuilt images, indexed by the names and versions of supported connectors.
 
 Here, in the case of `FromHubConnector`, a full directory containing a `Dockerfile` and any supporting build inputs is provided as the bytes of a `.tar` file, but the exact protocol can be up to the service implementer.
