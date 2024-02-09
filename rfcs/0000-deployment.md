@@ -23,11 +23,10 @@ _This RFC does not specify the following planned changes:_
 - The connector can expect configuration files to be mounted at `/etc/connector` inside the Docker image on startup. If the `HASURA_CONFIGURATION_DIRECTORY` environment variable is set, it should overwrite this default value.
   - The connector should not modify these files during execution, and can expect them not to be changed.
   - The `/etc/connector/.hasura` subdirectory (or `{HASURA_CONFIGURATION_DIRECTORY}/.hasura` in the general case) is reserved for future use and should not be used for configuration. Any connectors which enumerate all subdirectories of `/etc/connector`, for any reason, should ignore this subdirectory if it exists.
-- The connector executable should accept the following subcommands:
-  - `serve` should start a HTTP server on port `8080`, which is compatible with the NDC specification, with `/` as its base URL.
-    - For example, `http://connector:8080/query` should implement the query endpoint
-    - The default port can be overwritten using the `HASURA_CONNECTOR_PORT` environment variable.
-- The image `ENTRYPOINT` should be set to the connector process, and the default `CMD` should be set to the `serve` command. This can mean setting it to the connector executable itself, or some intermediate executable/script that eventually provides its command line arguments to the connector executable.
+- The image `ENTRYPOINT` and default `CMD` should be set to run the connector process and start a HTTP server on port `8080`, which is compatible with the NDC specification, with `/` as its base URL.
+  - For example, `http://connector:8080/query` should implement the query endpoint
+  - The default port can be overwritten using the `HASURA_CONNECTOR_PORT` environment variable.
+  - This can mean setting `ENTRYPOINT` to the connector executable itself, or some intermediate executable/script that eventually provides its command line arguments to the connector executable.
 - The connector can read environment variables on startup for configuration purposes
   - The following environment variables are reserved, and should not be used for connector-specific configuration:
     - `HASURA_*`
@@ -43,6 +42,7 @@ _This RFC does not specify the following planned changes:_
   - `SIGTERM`/`SIGINT` - gracefully shutdown the server, and stop the connector process
 - The connector should start as quickly as possible, without any build steps, by reading configuration from disk. Build steps should be performed in the construction of the Docker image, not on startup.
   - To support these build steps, tooling should support building images from Dockerfiles. See "Deployment API" below.
+  - The motivation is that we may want to provision a connector process on short notice, e.g. to serve an incoming request.
 
 ### Open Questions
 
