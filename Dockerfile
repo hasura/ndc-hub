@@ -10,6 +10,7 @@ RUN apt-get update \
 ENV CARGO_HOME=/app/.cargo
 ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
 
+COPY Cargo.lock .
 COPY ./rust-connector-sdk .
 
 RUN cargo build --release
