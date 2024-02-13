@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 
 use async_trait::async_trait;
 use tracing::info_span;
@@ -11,20 +12,11 @@ pub struct Example {}
 
 #[async_trait]
 impl Connector for Example {
-    type RawConfiguration = ();
     type Configuration = ();
     type State = ();
 
-    fn make_empty_configuration() -> Self::RawConfiguration {}
-
-    async fn update_configuration(
-        _config: Self::RawConfiguration,
-    ) -> Result<Self::RawConfiguration, UpdateConfigurationError> {
-        Ok(())
-    }
-
     async fn validate_raw_configuration(
-        _configuration: Self::Configuration,
+        _configuration_dir: PathBuf,
     ) -> Result<Self::Configuration, ValidateError> {
         Ok(())
     }
