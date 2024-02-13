@@ -11,10 +11,10 @@ use crate::{
 use async_trait::async_trait;
 use axum_extra::extract::WithRejection;
 
-use std::{error::Error, path::Path};
 use std::net;
 use std::path::PathBuf;
 use std::process::exit;
+use std::{error::Error, path::Path};
 
 use axum::{
     body::Body,
@@ -247,8 +247,7 @@ where
 /// Initialize the server state from the configuration file.
 pub async fn init_server_state<C: Connector + 'static>(
     config_directory: impl AsRef<Path> + Send,
-) -> ServerState<C>
-{
+) -> ServerState<C> {
     let configuration = C::validate_raw_configuration(config_directory)
         .await
         .unwrap();
@@ -524,8 +523,7 @@ impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C> {
 
 async fn test<C: Connector + 'static>(
     command: TestCommand,
-) -> Result<(), Box<dyn Error + Send + Sync>>
-{
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let test_configuration = ndc_test::TestConfiguration {
         seed: command.seed,
         snapshots_dir: command.snapshots_dir,
@@ -546,8 +544,7 @@ async fn test<C: Connector + 'static>(
 
 async fn replay<C: Connector + 'static>(
     command: ReplayCommand,
-) -> Result<(), Box<dyn Error + Send + Sync>>
-{
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let connector = make_connector_adapter::<C>(command.configuration).await;
     let results = ndc_test::test_snapshots_in_directory(&connector, command.snapshots_dir).await;
 
