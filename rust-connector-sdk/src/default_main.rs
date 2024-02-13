@@ -280,7 +280,7 @@ where
 {
     let router = Router::new()
         .route("/capabilities", get(get_capabilities::<C>))
-        .route("/health", get(get_health::<C>))
+        .route("/healthz", get(get_health::<C>))
         .route("/metrics", get(get_metrics::<C>))
         .route("/schema", get(get_schema::<C>))
         .route("/query", post(post_query::<C>))
@@ -415,7 +415,7 @@ where
         ))
         // capabilities and health endpoints are exempt from auth requirements
         .route("/capabilities", get(v2_compat::get_capabilities::<C>))
-        .route("/health", get(v2_compat::get_health))
+        .route("/healthz", get(v2_compat::get_health))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(make_span)
@@ -521,7 +521,7 @@ where
         .route("/", get(get_empty::<C>).post(post_update::<C>))
         .route("/schema", get(get_config_schema::<C>))
         .route("/validate", post(post_validate::<C>))
-        .route("/health", get(|| async {}))
+        .route("/healthz", get(|| async {}))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(make_span)

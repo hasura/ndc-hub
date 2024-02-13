@@ -33,7 +33,7 @@ pub async fn check_health(host: Option<String>, port: u16) -> Result<(), HealthC
             url.set_host(Some(&host))?;
         }
         url.set_port(Some(port)).unwrap(); // canont fail for HTTP URLs
-        url.set_path("/health");
+        url.set_path("/healthz");
         Ok(url)
     })()
     .map_err(HealthCheckError::ParseError)?;
