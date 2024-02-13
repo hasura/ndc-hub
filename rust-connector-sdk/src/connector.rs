@@ -202,11 +202,11 @@ pub enum MutationError {
 #[async_trait]
 pub trait Connector {
     /// The type of unvalidated, raw configuration, as provided by the user.
-    type RawConfiguration;
+    type RawConfiguration: Sync + Send;
     /// The type of validated configuration
-    type Configuration;
+    type Configuration: Sync + Send;
     /// The type of unserializable state
-    type State;
+    type State: Sync + Send;
 
     fn make_empty_configuration() -> Self::RawConfiguration;
 
