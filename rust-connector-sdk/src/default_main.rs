@@ -176,7 +176,7 @@ pub async fn default_main<C: Connector + Default + 'static>(
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
-    C::Configuration: Clone + Serialize + DeserializeOwned,
+    C::Configuration: Clone + Serialize,
     C::State: Clone,
 {
     let CliArgs { command } = CliArgs::parse();
@@ -195,7 +195,7 @@ async fn serve<C: Connector + Default + 'static>(
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: DeserializeOwned,
-    C::Configuration: Clone + Serialize + DeserializeOwned,
+    C::Configuration: Clone + Serialize,
     C::State: Clone,
 {
     init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
@@ -261,8 +261,6 @@ pub async fn init_server_state<C: Connector + Default + 'static>(
 ) -> ServerState<C>
 where
     C::RawConfiguration: DeserializeOwned,
-    C::Configuration: Clone + Serialize + DeserializeOwned,
-    C::State: Clone,
 {
     let configuration_json = std::fs::read_to_string(config_file).unwrap();
     let raw_configuration =
@@ -288,8 +286,7 @@ pub fn create_router<C: Connector + 'static>(
     service_token_secret: Option<String>,
 ) -> Router
 where
-    C::RawConfiguration: DeserializeOwned,
-    C::Configuration: Clone + Serialize,
+    C::Configuration: Clone,
     C::State: Clone,
 {
     let router = Router::new()
@@ -369,7 +366,6 @@ pub fn create_v2_router<C: Connector + 'static>(
     service_token_secret: Option<String>,
 ) -> Router
 where
-    C::RawConfiguration: DeserializeOwned,
     C::Configuration: Clone + Serialize,
     C::State: Clone,
 {
@@ -557,19 +553,13 @@ where
     Ok(())
 }
 
-async fn get_empty<C: Connector>() -> Json<C::RawConfiguration>
-where
-    C::RawConfiguration: Serialize,
-{
+async fn get_empty<C: Connector>() -> Json<C::RawConfiguration> {
     Json(C::make_empty_configuration())
 }
 
 async fn post_update<C: Connector>(
     WithRejection(Json(configuration), _): WithRejection<Json<C::RawConfiguration>, JsonRejection>,
-) -> Result<Json<C::RawConfiguration>, (StatusCode, String)>
-where
-    C::RawConfiguration: Serialize + DeserializeOwned,
-{
+) -> Result<Json<C::RawConfiguration>, (StatusCode, String)> {
     let updated = C::update_configuration(configuration)
         .await
         .map_err(|err| match err {
@@ -608,7 +598,6 @@ async fn post_validate<C: Connector>(
     WithRejection(Json(configuration), _): WithRejection<Json<C::RawConfiguration>, JsonRejection>,
 ) -> Result<Json<ValidateResponse>, (StatusCode, Json<ValidateErrors>)>
 where
-    C::RawConfiguration: DeserializeOwned,
     C::Configuration: Serialize,
 {
     let configuration =
