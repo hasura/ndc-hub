@@ -172,8 +172,7 @@ where
 /// - It reads configuration as JSON from a file specified on the command line,
 /// - It reports traces to an OTLP collector specified on the command line,
 /// - Logs are written to stdout
-pub async fn default_main<C: Connector + Default + 'static>(
-) -> Result<(), Box<dyn Error + Send + Sync>>
+pub async fn default_main<C: Connector + 'static>() -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
     C::Configuration: Clone + Serialize,
@@ -190,7 +189,7 @@ where
     }
 }
 
-async fn serve<C: Connector + Default + 'static>(
+async fn serve<C: Connector + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
@@ -256,7 +255,7 @@ where
 }
 
 /// Initialize the server state from the configuration file.
-pub async fn init_server_state<C: Connector + Default + 'static>(
+pub async fn init_server_state<C: Connector + 'static>(
     config_file: impl AsRef<Path>,
 ) -> ServerState<C>
 where
