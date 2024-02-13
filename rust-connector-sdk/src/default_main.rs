@@ -8,14 +8,14 @@ use crate::{
     routes,
     tracing::{init_tracing, make_span, on_response},
 };
+use async_trait::async_trait;
 use axum_extra::extract::WithRejection;
 
-use std::error::Error;
+use std::{error::Error, path::Path};
 use std::net;
 use std::path::PathBuf;
 use std::process::exit;
 
-use async_trait::async_trait;
 use axum::{
     body::Body,
     extract::State,
@@ -31,7 +31,7 @@ use ndc_client::models::{
 };
 use ndc_test::report;
 use prometheus::Registry;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 use tower_http::{trace::TraceLayer, validate_request::ValidateRequestHeaderLayer};
 
 #[derive(Parser)]
@@ -121,11 +121,25 @@ struct CheckHealthCommand {
 
 type Port = u16;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ServerState<C: Connector> {
     configuration: C::Configuration,
     state: C::State,
     metrics: Registry,
+}
+
+impl<C: Connector> Clone for ServerState<C>
+where
+    C::Configuration: Clone,
+    C::State: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            configuration: self.configuration.clone(),
+            state: self.state.clone(),
+            metrics: self.metrics.clone(),
+        }
+    }
 }
 
 /// A default main function for a connector.
@@ -151,11 +165,10 @@ pub struct ServerState<C: Connector> {
 /// - It reads configuration as JSON from a file specified on the command line,
 /// - It reports traces to an OTLP collector specified on the command line,
 /// - Logs are written to stdout
-pub async fn default_main<C: Connector + Clone + Default + 'static>(
-) -> Result<(), Box<dyn Error + Send + Sync>>
+pub async fn default_main<C: Connector + 'static>() -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Clone + Serialize,
+    C::State: Clone,
 {
     let CliArgs { command } = CliArgs::parse();
 
@@ -167,11 +180,11 @@ where
     }
 }
 
-async fn serve<C: Connector + Clone + Default + 'static>(
+async fn serve<C: Connector + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
+    C::Configuration: Serialize + Clone,
     C::State: Sync + Send + Clone,
 {
     init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
@@ -232,12 +245,9 @@ where
 }
 
 /// Initialize the server state from the configuration file.
-pub async fn init_server_state<C: Connector + Clone + Default + 'static>(
-    config_directory: PathBuf,
+pub async fn init_server_state<C: Connector + 'static>(
+    config_directory: impl AsRef<Path> + Send,
 ) -> ServerState<C>
-where
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
 {
     let configuration = C::validate_raw_configuration(config_directory)
         .await
@@ -255,13 +265,13 @@ where
     }
 }
 
-pub fn create_router<C: Connector + Clone + 'static>(
+pub fn create_router<C: Connector + 'static>(
     state: ServerState<C>,
     service_token_secret: Option<String>,
 ) -> Router
 where
-    C::Configuration: Serialize + Clone + Sync + Send,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Clone,
+    C::State: Clone,
 {
     let router = Router::new()
         .route("/capabilities", get(get_capabilities::<C>))
@@ -335,13 +345,13 @@ where
         ))
 }
 
-pub fn create_v2_router<C: Connector + Clone + 'static>(
+pub fn create_v2_router<C: Connector + 'static>(
     state: ServerState<C>,
     service_token_secret: Option<String>,
 ) -> Router
 where
-    C::Configuration: Serialize + Clone + Sync + Send,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Clone + Serialize,
+    C::State: Clone,
 {
     Router::new()
         .route("/schema", post(v2_compat::post_schema::<C>))
@@ -466,11 +476,7 @@ struct ConnectorAdapter<C: Connector> {
 }
 
 #[async_trait]
-impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C>
-where
-    C::Configuration: Send + Sync + 'static,
-    C::State: Send + Sync + 'static,
-{
+impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C> {
     async fn get_capabilities(
         &self,
     ) -> Result<ndc_client::models::CapabilitiesResponse, ndc_test::Error> {
@@ -519,9 +525,6 @@ where
 async fn test<C: Connector + 'static>(
     command: TestCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
-where
-    C::Configuration: Sync + Send + 'static,
-    C::State: Send + Sync + 'static,
 {
     let test_configuration = ndc_test::TestConfiguration {
         seed: command.seed,
@@ -544,9 +547,6 @@ where
 async fn replay<C: Connector + 'static>(
     command: ReplayCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
-where
-    C::Configuration: Sync + Send + 'static,
-    C::State: Send + Sync + 'static,
 {
     let connector = make_connector_adapter::<C>(command.configuration).await;
     let results = ndc_test::test_snapshots_in_directory(&connector, command.snapshots_dir).await;

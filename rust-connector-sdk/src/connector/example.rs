@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
 
 use async_trait::async_trait;
 use tracing::info_span;
@@ -16,7 +15,7 @@ impl Connector for Example {
     type State = ();
 
     async fn validate_raw_configuration(
-        _configuration_dir: PathBuf,
+        _configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<Self::Configuration, ValidateError> {
         Ok(())
     }

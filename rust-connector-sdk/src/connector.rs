@@ -1,4 +1,4 @@
-use std::{error::Error, path::PathBuf};
+use std::{error::Error, path::Path};
 
 use async_trait::async_trait;
 use ndc_client::models;
@@ -192,14 +192,14 @@ pub enum MutationError {
 #[async_trait]
 pub trait Connector {
     /// The type of validated configuration
-    type Configuration;
+    type Configuration: Sync + Send;
     /// The type of unserializable state
-    type State;
+    type State: Sync + Send;
 
     /// Validate the raw configuration provided by the user,
     /// returning a configuration error or a validated [`Connector::Configuration`].
     async fn validate_raw_configuration(
-        configuration_dir: PathBuf,
+        configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<Self::Configuration, ValidateError>;
 
     /// Initialize the connector's in-memory state.
