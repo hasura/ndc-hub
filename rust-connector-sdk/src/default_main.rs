@@ -128,11 +128,25 @@ struct CheckHealthCommand {
 
 type Port = u16;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ServerState<C: Connector> {
     configuration: C::Configuration,
     state: C::State,
     metrics: Registry,
+}
+
+impl<C: Connector> Clone for ServerState<C>
+where
+    C::Configuration: Clone,
+    C::State: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            configuration: self.configuration.clone(),
+            state: self.state.clone(),
+            metrics: self.metrics.clone(),
+        }
+    }
 }
 
 /// A default main function for a connector.
@@ -158,7 +172,7 @@ pub struct ServerState<C: Connector> {
 /// - It reads configuration as JSON from a file specified on the command line,
 /// - It reports traces to an OTLP collector specified on the command line,
 /// - Logs are written to stdout
-pub async fn default_main<C: Connector + Clone + Default + 'static>(
+pub async fn default_main<C: Connector + Default + 'static>(
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
@@ -176,7 +190,7 @@ where
     }
 }
 
-async fn serve<C: Connector + Clone + Default + 'static>(
+async fn serve<C: Connector + Default + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
@@ -242,7 +256,7 @@ where
 }
 
 /// Initialize the server state from the configuration file.
-pub async fn init_server_state<C: Connector + Clone + Default + 'static>(
+pub async fn init_server_state<C: Connector + Default + 'static>(
     config_file: impl AsRef<Path>,
 ) -> ServerState<C>
 where
@@ -269,7 +283,7 @@ where
     }
 }
 
-pub fn create_router<C: Connector + Clone + 'static>(
+pub fn create_router<C: Connector + 'static>(
     state: ServerState<C>,
     service_token_secret: Option<String>,
 ) -> Router
@@ -350,7 +364,7 @@ where
         ))
 }
 
-pub fn create_v2_router<C: Connector + Clone + 'static>(
+pub fn create_v2_router<C: Connector + 'static>(
     state: ServerState<C>,
     service_token_secret: Option<String>,
 ) -> Router
