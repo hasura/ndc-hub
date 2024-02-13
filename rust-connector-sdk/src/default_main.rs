@@ -175,9 +175,9 @@ where
 pub async fn default_main<C: Connector + Default + 'static>(
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
+    C::Configuration: Clone + Serialize + DeserializeOwned,
+    C::State: Clone,
 {
     let CliArgs { command } = CliArgs::parse();
 
@@ -194,9 +194,9 @@ async fn serve<C: Connector + Default + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Clone + Serialize + DeserializeOwned,
+    C::State: Clone,
 {
     init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
         .expect("Unable to initialize tracing");
@@ -260,9 +260,9 @@ pub async fn init_server_state<C: Connector + Default + 'static>(
     config_file: impl AsRef<Path>,
 ) -> ServerState<C>
 where
-    C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Clone + Serialize + DeserializeOwned,
+    C::State: Clone,
 {
     let configuration_json = std::fs::read_to_string(config_file).unwrap();
     let raw_configuration =
@@ -288,9 +288,9 @@ pub fn create_router<C: Connector + 'static>(
     service_token_secret: Option<String>,
 ) -> Router
 where
-    C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + Clone + Sync + Send,
-    C::State: Sync + Send + Clone,
+    C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Clone + Serialize,
+    C::State: Clone,
 {
     let router = Router::new()
         .route("/capabilities", get(get_capabilities::<C>))
@@ -369,9 +369,9 @@ pub fn create_v2_router<C: Connector + 'static>(
     service_token_secret: Option<String>,
 ) -> Router
 where
-    C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + Clone + Sync + Send,
-    C::State: Sync + Send + Clone,
+    C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Clone + Serialize,
+    C::State: Clone,
 {
     Router::new()
         .route("/schema", post(v2_compat::post_schema::<C>))
@@ -494,8 +494,8 @@ async fn configuration<C: Connector + 'static>(
     command: ConfigurationCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
-    C::Configuration: Sync + Send + Serialize,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
+    C::Configuration: Serialize,
 {
     match command.command {
         ConfigurationSubcommand::Serve(serve_command) => {
@@ -508,8 +508,8 @@ async fn serve_configuration<C: Connector + 'static>(
     serve_command: ServeConfigurationCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
-    C::Configuration: Sync + Send + Serialize,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
+    C::Configuration: Serialize,
 {
     let port = serve_command.port;
     let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
@@ -685,11 +685,7 @@ struct ConnectorAdapter<C: Connector> {
 }
 
 #[async_trait]
-impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C>
-where
-    C::Configuration: Send + Sync + 'static,
-    C::State: Send + Sync + 'static,
-{
+impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C> {
     async fn get_capabilities(
         &self,
     ) -> Result<ndc_client::models::CapabilitiesResponse, ndc_test::Error> {
@@ -740,8 +736,6 @@ async fn test<C: Connector + 'static>(
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: DeserializeOwned,
-    C::Configuration: Sync + Send + 'static,
-    C::State: Send + Sync + 'static,
 {
     let test_configuration = ndc_test::TestConfiguration {
         seed: command.seed,
@@ -766,8 +760,6 @@ async fn replay<C: Connector + 'static>(
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: DeserializeOwned,
-    C::Configuration: Sync + Send + 'static,
-    C::State: Send + Sync + 'static,
 {
     let connector = make_connector_adapter::<C>(command.configuration).await;
     let results = ndc_test::test_snapshots_in_directory(&connector, command.snapshots_dir).await;
