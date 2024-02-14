@@ -245,7 +245,7 @@ where
 }
 
 /// Initialize the server state from the configuration file.
-pub async fn init_server_state<C: Connector + 'static>(
+pub async fn init_server_state<C: Connector>(
     config_directory: impl AsRef<Path> + Send,
 ) -> ServerState<C> {
     let configuration = C::validate_raw_configuration(config_directory)
@@ -521,9 +521,7 @@ impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C> {
     }
 }
 
-async fn test<C: Connector + 'static>(
-    command: TestCommand,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+async fn test<C: Connector>(command: TestCommand) -> Result<(), Box<dyn Error + Send + Sync>> {
     let test_configuration = ndc_test::TestConfiguration {
         seed: command.seed,
         snapshots_dir: command.snapshots_dir,
@@ -542,9 +540,7 @@ async fn test<C: Connector + 'static>(
     Ok(())
 }
 
-async fn replay<C: Connector + 'static>(
-    command: ReplayCommand,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+async fn replay<C: Connector>(command: ReplayCommand) -> Result<(), Box<dyn Error + Send + Sync>> {
     let connector = make_connector_adapter::<C>(command.configuration).await;
     let results = ndc_test::test_snapshots_in_directory(&connector, command.snapshots_dir).await;
 
@@ -558,9 +554,7 @@ async fn replay<C: Connector + 'static>(
     Ok(())
 }
 
-async fn make_connector_adapter<C: Connector + 'static>(
-    configuration_path: PathBuf,
-) -> ConnectorAdapter<C> {
+async fn make_connector_adapter<C: Connector>(configuration_path: PathBuf) -> ConnectorAdapter<C> {
     let configuration = C::validate_raw_configuration(configuration_path)
         .await
         .unwrap();
