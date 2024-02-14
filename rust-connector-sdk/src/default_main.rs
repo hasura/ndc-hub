@@ -1,21 +1,11 @@
 mod v2_compat;
 
-use crate::{
-    check_health,
-    connector::Connector,
-    json_rejection::JsonRejection,
-    json_response::JsonResponse,
-    routes,
-    tracing::{init_tracing, make_span, on_response},
-};
-use async_trait::async_trait;
-use axum_extra::extract::WithRejection;
-
+use std::error::Error;
 use std::net;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::exit;
-use std::{error::Error, path::Path};
 
+use async_trait::async_trait;
 use axum::{
     body::Body,
     extract::State,
@@ -24,15 +14,24 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use axum_extra::extract::WithRejection;
 use clap::{Parser, Subcommand};
+use prometheus::Registry;
+use serde::Serialize;
+use tower_http::{trace::TraceLayer, validate_request::ValidateRequestHeaderLayer};
+
 use ndc_client::models::{
     CapabilitiesResponse, ErrorResponse, ExplainResponse, MutationRequest, MutationResponse,
     QueryRequest, QueryResponse, SchemaResponse,
 };
 use ndc_test::report;
-use prometheus::Registry;
-use serde::Serialize;
-use tower_http::{trace::TraceLayer, validate_request::ValidateRequestHeaderLayer};
+
+use crate::check_health;
+use crate::connector::Connector;
+use crate::json_rejection::JsonRejection;
+use crate::json_response::JsonResponse;
+use crate::routes;
+use crate::tracing::{init_tracing, make_span, on_response};
 
 #[derive(Parser)]
 struct CliArgs {
