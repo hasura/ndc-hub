@@ -247,9 +247,7 @@ where
 pub async fn init_server_state<C: Connector>(
     config_directory: impl AsRef<Path> + Send,
 ) -> ServerState<C> {
-    let configuration = C::validate_raw_configuration(config_directory)
-        .await
-        .unwrap();
+    let configuration = C::parse_configuration(config_directory).await.unwrap();
 
     let mut metrics = Registry::new();
     let state = C::try_init_state(&configuration, &mut metrics)
@@ -554,9 +552,7 @@ async fn replay<C: Connector>(command: ReplayCommand) -> Result<(), Box<dyn Erro
 }
 
 async fn make_connector_adapter<C: Connector>(configuration_path: PathBuf) -> ConnectorAdapter<C> {
-    let configuration = C::validate_raw_configuration(configuration_path)
-        .await
-        .unwrap();
+    let configuration = C::parse_configuration(configuration_path).await.unwrap();
 
     let mut metrics = Registry::new();
     let state = C::try_init_state(&configuration, &mut metrics)

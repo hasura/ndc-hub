@@ -14,7 +14,7 @@ impl Connector for Example {
     type Configuration = ();
     type State = ();
 
-    async fn validate_raw_configuration(
+    async fn parse_configuration(
         _configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<Self::Configuration, ValidateError> {
         Ok(())

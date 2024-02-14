@@ -198,7 +198,7 @@ pub trait Connector {
 
     /// Validate the raw configuration provided by the user,
     /// returning a configuration error or a validated [`Connector::Configuration`].
-    async fn validate_raw_configuration(
+    async fn parse_configuration(
         configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<Self::Configuration, ValidateError>;
 
