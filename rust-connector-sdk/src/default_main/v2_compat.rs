@@ -22,7 +22,7 @@ use crate::json_response::JsonResponse;
 
 pub async fn get_health() -> impl IntoResponse {
     // todo: if source_name and config provided, check if that specific source is healthy
-    StatusCode::NO_CONTENT
+    StatusCode::OK
 }
 
 pub async fn get_capabilities<C: Connector>(
