@@ -1,4 +1,4 @@
-# Connector Package Distribution
+# Connector Package Distribution RFC
 
 This is a Work-In-Progress document. Please provide any feedback you wish to contribute via Github comments and suggestions.
 
