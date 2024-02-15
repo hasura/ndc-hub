@@ -2,6 +2,18 @@
 
 This is a Work-In-Progress document. Please provide any feedback you wish to contribute via Github comments and suggestions.
 
+## Items Outstanding in this Specification (TODO)
+
+The following items are intended to be fleshed-out in this specification prior to approval:
+
+* Data-formats
+* URI locations
+* Identifiers
+* Assignment of implementation
+* Dependencies
+
+In addition, all "TODO" references should be replaced before finalization.
+
 
 ## Purpose
 
@@ -72,6 +84,11 @@ Package definitions take the form described in the packaging spec. These need to
 
 While this abstract definition is useful for system-requirements, in practice our initial implementation will use Google Cloud Buckets.
 
+Storage conventions will be followed so that our system could initially predict the location of packages and we can incrementally transition to API based package access in service of rapid delivery.
+
+Storage location convention will initially be: `ORG/PACKAGE/VERSION/SHA/org-packge-version-sha.tar.gz`
+
+
 ### Database
 
 The database backing the API provides all of the APIs state management capabilities outside of package archive storage (as described in "Storage").
@@ -86,21 +103,37 @@ The API will be implemented via a Hasura V3 instance. (TODO: Check if V3 has the
 
 The various functions of the API are described as follows:
 
+#### Operation
+
+* System health monitoring
+* Restarts
+* Resource allocation
+
 #### Administration
 
-* TODO
+* Creation of organisations
+* Creation of users
+* Creation of packages
+* Assignment of roles
+* Verification
+* Revocation of content
+* Redirection of resources
 
 #### Authoring
 
-* TODO
+* Creation of packages
+* Publication of new versions of packages
+* Association of new metadata with organisation/package/versions
+* Request for verification
+* Revocation (requests?) of package versions
 
 #### Discoverability
 
-* TODO
+* Search for package by metadata filters
 
 #### Acquisition
 
-* TODO
+* Request for package download URI
 
 
 ### Applications / CLI
@@ -178,4 +211,19 @@ Verification information should describe what has been checked and to what it ap
 
 This is for granularity and auditing purposes.
 
+
+### System Abuse Scenarios and Mitigation
+
+Any publicly accessible APIs with publication capabilities have the potential to be abused and as such we should attempt to predict and mitigate the scenarios that we can anticipate:
+
+* Identity misappropriation
+* Inappropriate content
+* Leaked credentials
+* Denial of service
+* IP harvesting by third parties and competitors
+* Incorrect application of verification
+* Recycling of content
+* Unintentional mistakes
+* Spam / Reflection
+* Etc.
 
