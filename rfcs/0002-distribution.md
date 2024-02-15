@@ -2,6 +2,22 @@
 
 This is a Work-In-Progress document. Please provide any feedback you wish to contribute via Github comments and suggestions.
 
+
+## Purpose
+
+Connector API, definition and packaging are specified respectively by:
+
+* [NDC specification](http://hasura.github.io/ndc-spec/)
+* [Deployment Specification](https://github.com/hasura/ndc-hub/blob/main/rfcs/0000-deployment.md)
+* [Packaging Specification (WIP)](https://github.com/hasura/ndc-hub/pull/89/files)
+
+This new distribution specification details how connector packages are intended to be owned, stored, indexed, searched, fetched and automatically published.
+
+The intuition for this system is inspired by other package management systems such as NPM, Cabal, etc.
+
+There was a previous implementation of these concepts as described (TODO: Get docs links from Shraddha)
+
+
 ## Items Outstanding in this Specification (TODO)
 
 The following items are intended to be fleshed-out in this specification prior to approval:
@@ -23,21 +39,6 @@ After implementation of this system, follow-up actions should be performed:
 * Migration and deprecation of previous hub API
 * Publication of new compatible versions of all available connectors
 * TODO
-
-
-## Purpose
-
-Connector API, definition and packaging are specified respectively by:
-
-* [NDC specification](http://hasura.github.io/ndc-spec/)
-* [Deployment Specification](https://github.com/hasura/ndc-hub/blob/main/rfcs/0000-deployment.md)
-* [Packaging Specification (WIP)](https://github.com/hasura/ndc-hub/pull/89/files)
-
-This new distribution specification details how connector packages are intended to be owned, stored, indexed, searched, fetched and automatically published.
-
-The intuition for this system is inspired by other package management systems such as NPM, Cabal, etc.
-
-There was a previous implementation of these concepts as described (TODO: Get docs links from Shraddha)
 
 
 ## Out of Scope for this RFC
