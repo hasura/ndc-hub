@@ -18,7 +18,7 @@ The intuition for this system is inspired by other package management systems su
 There was a previous implementation of these concepts as described (TODO: Get docs links from Shraddha)
 
 
-## Items Outstanding in this Specification (TODO)
+### Items Outstanding in this Specification (TODO)
 
 The following items are intended to be fleshed-out in this specification prior to approval:
 
@@ -31,8 +31,7 @@ The following items are intended to be fleshed-out in this specification prior t
 
 In addition, all "TODO" references should be replaced before finalization.
 
-
-## Follow-Up Work
+### Follow-Up Work
 
 After implementation of this system, follow-up actions should be performed:
 
@@ -40,8 +39,7 @@ After implementation of this system, follow-up actions should be performed:
 * Publication of new compatible versions of all available connectors
 * TODO
 
-
-## Out of Scope for this RFC
+### Out of Scope for this RFC
 
 The following are not described in this specification:
 
