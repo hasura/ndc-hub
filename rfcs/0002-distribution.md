@@ -141,6 +141,14 @@ The various functions of the API are described as follows:
 
 The Hasura V3 CLI will provide a consistent and convenient interface to interacting with the API.
 
+The CLI commands will include the following:
+
+* hasura3 package create
+* hasura3 package publish
+* hasura3 package revoke
+* hasura3 package search
+* hasura3 package fetch
+
 
 ### CI
 
