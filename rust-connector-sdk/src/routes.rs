@@ -76,55 +76,74 @@ pub async fn get_schema<C: Connector>(
     })
 }
 
-pub async fn post_explain<C: Connector>(
+/// Invoke the connector's mutation_explain method and potentially map errors back to error responses.
+pub async fn post_mutation_explain<C: Connector>(
+    configuration: &C::Configuration,
+    state: &C::State,
+    request: models::MutationRequest,
+) -> Result<JsonResponse<models::ExplainResponse>, (StatusCode, Json<models::ErrorResponse>)> {
+    C::mutation_explain(configuration, state, request)
+        .await
+        .map_err(convert_explain_error)
+}
+
+/// Invoke the connector's query_explain method and potentially map errors back to error responses.
+pub async fn post_query_explain<C: Connector>(
     configuration: &C::Configuration,
     state: &C::State,
     request: models::QueryRequest,
 ) -> Result<JsonResponse<models::ExplainResponse>, (StatusCode, Json<models::ErrorResponse>)> {
-    C::explain(configuration, state, request)
+    C::query_explain(configuration, state, request)
         .await
-        .map_err(|e| match e {
-            crate::connector::ExplainError::Other(err) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(models::ErrorResponse {
-                    message: "Internal error".into(),
-                    details: serde_json::Value::Object(serde_json::Map::from_iter([(
-                        "cause".into(),
-                        serde_json::Value::String(err.to_string()),
-                    )])),
-                }),
-            ),
-            crate::connector::ExplainError::InvalidRequest(detail) => (
-                StatusCode::BAD_REQUEST,
-                Json(models::ErrorResponse {
-                    message: "Invalid request".into(),
-                    details: serde_json::Value::Object(serde_json::Map::from_iter([(
-                        "detail".into(),
-                        serde_json::Value::String(detail),
-                    )])),
-                }),
-            ),
-            crate::connector::ExplainError::UnprocessableContent(detail) => (
-                StatusCode::UNPROCESSABLE_ENTITY,
-                Json(models::ErrorResponse {
-                    message: "Unprocessable content".into(),
-                    details: serde_json::Value::Object(serde_json::Map::from_iter([(
-                        "detail".into(),
-                        serde_json::Value::String(detail),
-                    )])),
-                }),
-            ),
-            crate::connector::ExplainError::UnsupportedOperation(detail) => (
-                StatusCode::NOT_IMPLEMENTED,
-                Json(models::ErrorResponse {
-                    message: "Unsupported operation".into(),
-                    details: serde_json::Value::Object(serde_json::Map::from_iter([(
-                        "detail".into(),
-                        serde_json::Value::String(detail),
-                    )])),
-                }),
-            ),
-        })
+        .map_err(convert_explain_error)
+}
+
+/// Convert an sdk explain error to an error response and status code.
+fn convert_explain_error(
+    error: crate::connector::ExplainError,
+) -> (StatusCode, Json<models::ErrorResponse>) {
+    match error {
+        crate::connector::ExplainError::Other(err) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(models::ErrorResponse {
+                message: "Internal error".into(),
+                details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                    "cause".into(),
+                    serde_json::Value::String(err.to_string()),
+                )])),
+            }),
+        ),
+        crate::connector::ExplainError::InvalidRequest(detail) => (
+            StatusCode::BAD_REQUEST,
+            Json(models::ErrorResponse {
+                message: "Invalid request".into(),
+                details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                    "detail".into(),
+                    serde_json::Value::String(detail),
+                )])),
+            }),
+        ),
+        crate::connector::ExplainError::UnprocessableContent(detail) => (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(models::ErrorResponse {
+                message: "Unprocessable content".into(),
+                details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                    "detail".into(),
+                    serde_json::Value::String(detail),
+                )])),
+            }),
+        ),
+        crate::connector::ExplainError::UnsupportedOperation(detail) => (
+            StatusCode::NOT_IMPLEMENTED,
+            Json(models::ErrorResponse {
+                message: "Unsupported operation".into(),
+                details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                    "detail".into(),
+                    serde_json::Value::String(detail),
+                )])),
+            }),
+        ),
+    }
 }
 
 pub async fn post_mutation<C: Connector>(
