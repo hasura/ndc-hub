@@ -260,8 +260,9 @@ where
         .route("/metrics", get(get_metrics::<C>))
         .route("/schema", get(get_schema::<C>))
         .route("/query", post(post_query::<C>))
-        .route("/explain", post(post_explain::<C>))
+        .route("/query/explain", post(post_query_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
+        .route("/mutation/explain", post(post_mutation_explain::<C>))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(make_span)
@@ -339,7 +340,7 @@ where
         .route("/query", post(v2_compat::post_query::<C>))
         // .route("/mutation", post(v2_compat::post_mutation::<C>))
         // .route("/raw", post(v2_compat::post_raw::<C>))
-        .route("/explain", post(v2_compat::post_explain::<C>))
+        .route("/query/explain", post(v2_compat::post_explain::<C>))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(make_span)
@@ -430,11 +431,18 @@ async fn get_schema<C: Connector>(
     routes::get_schema::<C>(&state.configuration).await
 }
 
-async fn post_explain<C: Connector>(
+async fn post_query_explain<C: Connector>(
     State(state): State<ServerState<C>>,
     WithRejection(Json(request), _): WithRejection<Json<QueryRequest>, JsonRejection>,
 ) -> Result<JsonResponse<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
-    routes::post_explain::<C>(&state.configuration, &state.state, request).await
+    routes::post_query_explain::<C>(&state.configuration, &state.state, request).await
+}
+
+async fn post_mutation_explain<C: Connector>(
+    State(state): State<ServerState<C>>,
+    WithRejection(Json(request), _): WithRejection<Json<MutationRequest>, JsonRejection>,
+) -> Result<JsonResponse<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
+    routes::post_mutation_explain::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_mutation<C: Connector>(
