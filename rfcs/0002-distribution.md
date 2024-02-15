@@ -16,6 +16,15 @@ The following items are intended to be fleshed-out in this specification prior t
 In addition, all "TODO" references should be replaced before finalization.
 
 
+## Follow-Up Work
+
+After implementation of this system, follow-up actions should be performed:
+
+* Migration and deprecation of previous hub API
+* Publication of new compatible versions of all available connectors
+* TODO
+
+
 ## Purpose
 
 Connector API, definition and packaging are specified respectively by:
@@ -228,6 +237,7 @@ Any publicly accessible APIs with publication capabilities have the potential to
 * Identity misappropriation
 * Inappropriate content
 * Leaked credentials
+* Squatting
 * Denial of service
 * IP harvesting by third parties and competitors
 * Incorrect application of verification
