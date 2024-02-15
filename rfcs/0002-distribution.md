@@ -11,6 +11,7 @@ The following items are intended to be fleshed-out in this specification prior t
 * Identifiers
 * Assignment of implementation
 * Dependencies
+* Revocation concerns
 
 In addition, all "TODO" references should be replaced before finalization.
 
