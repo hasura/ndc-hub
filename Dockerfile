@@ -23,4 +23,4 @@ RUN set -ex; \
       libssl-dev
 COPY --from=build /app/target/release/ndc_hub_example ./ndc_hub_example
 ENTRYPOINT [ "/ndc_hub_example" ]
-CMD [ "serve" ]
+CMD [ "serve", "--configuration", "/etc/connector" ]

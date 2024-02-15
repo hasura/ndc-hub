@@ -53,12 +53,7 @@ enum Command {
 
 #[derive(Clone, Parser)]
 struct ServeCommand {
-    #[arg(
-        long,
-        value_name = "DIRECTORY",
-        env = "HASURA_CONFIGURATION_DIRECTORY",
-        default_value = "/etc/connector"
-    )]
+    #[arg(long, value_name = "DIRECTORY", env = "HASURA_CONFIGURATION_DIRECTORY")]
     configuration: PathBuf,
     #[arg(long, value_name = "ENDPOINT", env = "OTEL_EXPORTER_OTLP_ENDPOINT")]
     otlp_endpoint: Option<String>,
@@ -81,12 +76,7 @@ struct ServeCommand {
 struct TestCommand {
     #[arg(long, value_name = "SEED", env = "SEED")]
     seed: Option<String>,
-    #[arg(
-        long,
-        value_name = "DIRECTORY",
-        env = "HASURA_CONFIGURATION_DIRECTORY",
-        default_value = "/etc/connector"
-    )]
+    #[arg(long, value_name = "DIRECTORY", env = "HASURA_CONFIGURATION_DIRECTORY")]
     configuration: PathBuf,
     #[arg(long, value_name = "DIRECTORY", env = "HASURA_SNAPSHOTS_DIR")]
     snapshots_dir: Option<PathBuf>,
@@ -94,12 +84,7 @@ struct TestCommand {
 
 #[derive(Clone, Parser)]
 struct ReplayCommand {
-    #[arg(
-        long,
-        value_name = "DIRECTORY",
-        env = "HASURA_CONFIGURATION_DIRECTORY",
-        default_value = "/etc/connector"
-    )]
+    #[arg(long, value_name = "DIRECTORY", env = "HASURA_CONFIGURATION_DIRECTORY")]
     configuration: PathBuf,
     #[arg(long, value_name = "DIRECTORY", env = "HASURA_SNAPSHOTS_DIR")]
     snapshots_dir: PathBuf,
