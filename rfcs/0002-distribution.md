@@ -1,5 +1,8 @@
 # Connector Package Distribution
 
+This is a Work-In-Progress document. Please provide any feedback you wish to contribute via Github comments and suggestions.
+
+
 ## Purpose
 
 Connector API, definition and packaging are specified respectively by:
@@ -17,9 +20,11 @@ There was a previous implementation of these concepts as described (TODO: Get do
 
 ## Out of Scope for this RFC
 
-The format of the metadata used for indexing, etc.
+The following are not described in this specification:
 
-Authentication mechanisms.
+* The format of the metadata used for indexing, etc
+* Authentication mechanisms
+* Verification policies and procedures
 
 
 ## Proposal
@@ -77,6 +82,8 @@ The initial implementation of the Database will be Postgres.
 
 The API provides the user-interaction layer that mediates the database and storage components. No direct user interaction should occur with either the database, or storage, except for the case when the API delegates a storage interaction - such as providing an author a pre-authorized URL for publication, or providing a Hasura V3 project user a public storage URL for a package definition.
 
+The API will be implemented via a Hasura V3 instance. (TODO: Check if V3 has the capabilities to implement this yet, or if we should start with a V2 instance for stability reasons)
+
 The various functions of the API are described as follows:
 
 #### Administration
@@ -95,10 +102,80 @@ The various functions of the API are described as follows:
 
 * TODO
 
+
+### Applications / CLI
+
+The Hasura V3 CLI will provide a consistent and convenient interface to interacting with the API.
+
+
+### CI
+
+Contributors may leverage the API or CLI in their CI workflows in order to automate the publication of new versions of their packages.
+
+
+### Community Topic Consumption
+
+Hasura may automatically crawl pre-defined locations (such as Github) in order to collect third-party community contributions without authors needing to explicitly create new pull-requests, etc.
+
+For example: Github Topics can be use to search for e.g. "#hasura-v3-packge" and if the repository contains valid package definitions, consume these and index them.
+
+Please see previous work: TODO: Previous topic collection proof-of-concept
+
+*Open-Question: How would a community crawled package transition to an explicitly managed package? How would ownership be established and transitioned, etc?*
+
+
 ### Indexing
+
+The technical considerations were described in the "API" section, however, users should be able to leverage indexes on the following properties:
+
+* Name
+* Version
+* Date of Publication
+* Organisation
+* Author
+* Tags
+* Category
+* Free-text description
+* Related packages
+* Underlying DB (or Data solution)
+* Any metadata in the Package description
+* Verification status
+
 ### Discoverability
+
+The discoverability component will simply hard-code various permutations of the "Indexing" criteria to provide the user browsable lists of packages.
+
+These could include lists such as:
+
+* Most popular packages
+* Most recent packages
+* Verified packages
+* Etc.
+
 ### Access
+
+Roles should be deliberately narrow in their scope, with higher level roles being able to grant lower-level roles, but not able to perform their duties implicitly.
+
+
 ### Publication
-### Validation (TODO: What did I mean by this?)
+
+The publication of packages should be performed via the API by users who have the Author role.
+
+The mechanism used is a three-step process:
+
+* Request pre-authorized storage URI for a package version via API
+* Upload the package definition archive via the storage URI
+* Set the metadata for the package version
+
+This can be done via a single user-interaction if an application (such as Hasura V3 CLI) abstracts these three steps.
+
+
+### Verification
+
+Verification status procedures and policies Organisation/Package should be defined further in subsequent specifications.
+
+Verification information should describe what has been checked and to what it applies. A separate table should be kept for this information, not just a bit on existing resources.
+
+This is for granularity and auditing purposes.
 
 
