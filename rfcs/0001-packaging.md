@@ -76,7 +76,7 @@ The `connector-metadata.json` contains JSON that describes:
 - The environment variables the connector supports to configure it (`supportedEnvironmentVariables`)
 - The packaging definition, which can be either `PrebuiltDockerImagePackaging` (a connector that does not require a build step), or  `ManagedDockerBuildPackaging` (a connector that requires a build step).
   - `PrebuiltDockerImagePackaging` defines the prebuilt `dockerImage` used to run the connector (`dockerImage`)
-  - If `ManagedDockerBuildPackaging` is used, a Dockerfile must be in the `.hasura` directory (and optionally, a `.dockerignore`). It will be used to build the connector.
+  - If `ManagedDockerBuildPackaging` is used, a Dockerfile must be in the `.hasura3` directory (and optionally, a `.dockerignore`). It will be used to build the connector.
 - A `commands` structure that optionally defines what shell commands to run for an "update" (eg. refresh schema introspection details) and "watch" (eh. watch and refresh schema introspection details periodically) scenario.
 - An optional `CLIPluginDefinition` that describes where to acquire the CLI plugin for this connector that can be used by the `commands` structure. If provided, the CLI plugin executable will be made available on the `PATH` for the commands and some configuration environment variables will be set (see the [CLI plugin RFC](https://github.com/hasura/ndc-hub/blob/cli-guidelines/rfcs/0002-cli-guidelines.md) for more details).
 
@@ -131,13 +131,13 @@ An example use case for this would be for a Postgres connector, where you may wa
 Note that the exact definition of how this needs to be specified in the Connector Definition will need to wait until how CLI plugins work is specified.
 
 ### Connector Layout in Hasura Project
-When a new connector is added to a Hasura project using `hasura3 add ConnectorManifest --hub hasura/nodejs-lambda:1.0`, the CLI acquires the Connector Definition for the specified Hub Connector. It then places this inside the `~/.hasura/hub-connectors/` directory. This is done to keep non-user editable files out of the user's source tree.
+When a new connector is added to a Hasura project using `hasura3 add ConnectorManifest --hub hasura/nodejs-lambda:1.0`, the CLI acquires the Connector Definition for the specified Hub Connector. It then places this inside the `~/.hasura3/hub-connectors/` directory. This is done to keep non-user editable files out of the user's source tree.
 
 The CLI then puts the `build-files/` into the build directory for that connector and adds a `.build.hml` file with the `ConnectorManifest` metadata object.
 
 ```
 # A copy of the `Connector Definition` for a particular hub connector version
-~/.hasura/hub-connectors/hasura/nodejs-lambda/1.0/
+~/.hasura3/hub-connectors/hasura/nodejs-lambda/1.0/
   connector-metadata.json
   docker-compose.yaml
   build-files/
@@ -173,7 +173,7 @@ definition:
   type: local
   connector:
     type: hub
-    name: hasura/nodejs-lambda:1.0 # This is used to find the Hasura Hub Connector Definition in ~/.hasura/hub-connectors/
+    name: hasura/nodejs-lambda:1.0 # This is used to find the Hasura Hub Connector Definition in ~/.hasura3/hub-connectors/
   tunnel: true
   instances:
   - build:
