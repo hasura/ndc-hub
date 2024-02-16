@@ -40,6 +40,7 @@ The connector definition is a file structure that contains the following files a
 type ConnectorMetadataDefinition = {
   packagingDefinition: PackagingDefinition
   supportedEnvironmentVariables: EnvironmentVariableDefinition[]
+  commands: Commands
   cliPlugin?: CliPluginDefinition
 }
 
@@ -60,11 +61,14 @@ type EnvironmentVariableDefinition = {
   defaultValue?: string
 }
 
-// This is subject to change based on CLI plugin spec discussions
+type Commands = {
+  update?: string
+  watch?: string
+}
+
 type CliPluginDefinition = {
-  pluginPackageUrl: string // https://url/to/download/plugin/to/install.tgz
-  pluginPackageSHA256: string // To ensure plugin integrity and also to identify which version to use out of those installed
-  watchSubcommand?: string // If the connector wants to add to the watch mode, it can define what subcommand to use "watch --whatever --flags"
+  name: string
+  version: string
 }
 ```
 
@@ -73,7 +77,8 @@ The `connector-metadata.json` contains JSON that describes:
 - The packaging definition, which can be either `PrebuiltDockerImagePackaging` (a connector that does not require a build step), or  `ManagedDockerBuildPackaging` (a connector that requires a build step).
   - `PrebuiltDockerImagePackaging` defines the prebuilt `dockerImage` used to run the connector (`dockerImage`)
   - If `ManagedDockerBuildPackaging` is used, a Dockerfile must be in the `.hasura` directory (and optionally, a `.dockerignore`). It will be used to build the connector.
-- An optional `CLIPluginDefinition` that describes where to acquire the CLI plugin for this connector that can be used to enhance watch mode with connector-specific configuration updates
+- A `commands` structure that optionally defines what shell commands to run for an "update" (eg. refresh schema introspection details) and "watch" (eh. watch and refresh schema introspection details periodically) scenario.
+- An optional `CLIPluginDefinition` that describes where to acquire the CLI plugin for this connector that can be used by the `commands` structure. If provided, the CLI plugin executable will be made available on the `PATH` for the commands and some configuration environment variables will be set (see the [CLI plugin RFC](https://github.com/hasura/ndc-hub/blob/cli-guidelines/rfcs/0002-cli-guidelines.md) for more details).
 
 ### Watch Mode
 When developing locally using the connector, the user may utilize the connector in a "watch mode" that automatically reloads the connector with new configuration as they change the configuration.
@@ -229,4 +234,4 @@ definition:
 
 ## Out of Scope for this RFC
 * How the Connector Definition is published to the Hasura Connector Hub (can assume for starters that the Connector Definition will be tar-gzipped into an archive and submitted somewhere)
-* How CLI plugins work
+* How CLI plugins work (see the [CLI Plugins RFC](https://github.com/hasura/ndc-hub/blob/cli-guidelines/rfcs/0002-cli-guidelines.md))
