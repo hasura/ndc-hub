@@ -128,11 +128,25 @@ struct CheckHealthCommand {
 
 type Port = u16;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ServerState<C: Connector> {
     configuration: C::Configuration,
     state: C::State,
     metrics: Registry,
+}
+
+impl<C: Connector> Clone for ServerState<C>
+where
+    C::Configuration: Clone,
+    C::State: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            configuration: self.configuration.clone(),
+            state: self.state.clone(),
+            metrics: self.metrics.clone(),
+        }
+    }
 }
 
 /// A default main function for a connector.
@@ -158,12 +172,11 @@ pub struct ServerState<C: Connector> {
 /// - It reads configuration as JSON from a file specified on the command line,
 /// - It reports traces to an OTLP collector specified on the command line,
 /// - Logs are written to stdout
-pub async fn default_main<C: Connector + Clone + Default + 'static>(
-) -> Result<(), Box<dyn Error + Send + Sync>>
+pub async fn default_main<C: Connector + 'static>() -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
+    C::Configuration: Clone + Serialize,
+    C::State: Clone,
 {
     let CliArgs { command } = CliArgs::parse();
 
@@ -176,13 +189,13 @@ where
     }
 }
 
-async fn serve<C: Connector + Clone + Default + 'static>(
+async fn serve<C: Connector + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::RawConfiguration: DeserializeOwned,
+    C::Configuration: Clone + Serialize,
+    C::State: Clone,
 {
     init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
         .expect("Unable to initialize tracing");
@@ -242,13 +255,11 @@ where
 }
 
 /// Initialize the server state from the configuration file.
-pub async fn init_server_state<C: Connector + Clone + Default + 'static>(
+pub async fn init_server_state<C: Connector + 'static>(
     config_file: impl AsRef<Path>,
 ) -> ServerState<C>
 where
-    C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + DeserializeOwned + Sync + Send + Clone,
-    C::State: Sync + Send + Clone,
+    C::RawConfiguration: DeserializeOwned,
 {
     let configuration_json = std::fs::read_to_string(config_file).unwrap();
     let raw_configuration =
@@ -269,14 +280,13 @@ where
     }
 }
 
-pub fn create_router<C: Connector + Clone + 'static>(
+pub fn create_router<C: Connector + 'static>(
     state: ServerState<C>,
     service_token_secret: Option<String>,
 ) -> Router
 where
-    C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + Clone + Sync + Send,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Clone,
+    C::State: Clone,
 {
     let router = Router::new()
         .route("/capabilities", get(get_capabilities::<C>))
@@ -284,8 +294,9 @@ where
         .route("/metrics", get(get_metrics::<C>))
         .route("/schema", get(get_schema::<C>))
         .route("/query", post(post_query::<C>))
-        .route("/explain", post(post_explain::<C>))
+        .route("/query/explain", post(post_query_explain::<C>))
         .route("/mutation", post(post_mutation::<C>))
+        .route("/mutation/explain", post(post_mutation_explain::<C>))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(make_span)
@@ -350,21 +361,20 @@ where
         ))
 }
 
-pub fn create_v2_router<C: Connector + Clone + 'static>(
+pub fn create_v2_router<C: Connector + 'static>(
     state: ServerState<C>,
     service_token_secret: Option<String>,
 ) -> Router
 where
-    C::RawConfiguration: DeserializeOwned + Sync + Send,
-    C::Configuration: Serialize + Clone + Sync + Send,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Clone + Serialize,
+    C::State: Clone,
 {
     Router::new()
         .route("/schema", post(v2_compat::post_schema::<C>))
         .route("/query", post(v2_compat::post_query::<C>))
         // .route("/mutation", post(v2_compat::post_mutation::<C>))
         // .route("/raw", post(v2_compat::post_raw::<C>))
-        .route("/explain", post(v2_compat::post_explain::<C>))
+        .route("/query/explain", post(v2_compat::post_explain::<C>))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(make_span)
@@ -455,11 +465,18 @@ async fn get_schema<C: Connector>(
     routes::get_schema::<C>(&state.configuration).await
 }
 
-async fn post_explain<C: Connector>(
+async fn post_query_explain<C: Connector>(
     State(state): State<ServerState<C>>,
     WithRejection(Json(request), _): WithRejection<Json<QueryRequest>, JsonRejection>,
 ) -> Result<JsonResponse<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
-    routes::post_explain::<C>(&state.configuration, &state.state, request).await
+    routes::post_query_explain::<C>(&state.configuration, &state.state, request).await
+}
+
+async fn post_mutation_explain<C: Connector>(
+    State(state): State<ServerState<C>>,
+    WithRejection(Json(request), _): WithRejection<Json<MutationRequest>, JsonRejection>,
+) -> Result<JsonResponse<ExplainResponse>, (StatusCode, Json<ErrorResponse>)> {
+    routes::post_mutation_explain::<C>(&state.configuration, &state.state, request).await
 }
 
 async fn post_mutation<C: Connector>(
@@ -480,8 +497,8 @@ async fn configuration<C: Connector + 'static>(
     command: ConfigurationCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
-    C::Configuration: Sync + Send + Serialize,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
+    C::Configuration: Serialize,
 {
     match command.command {
         ConfigurationSubcommand::Serve(serve_command) => {
@@ -494,8 +511,8 @@ async fn serve_configuration<C: Connector + 'static>(
     serve_command: ServeConfigurationCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema + Sync + Send,
-    C::Configuration: Sync + Send + Serialize,
+    C::RawConfiguration: Serialize + DeserializeOwned + JsonSchema,
+    C::Configuration: Serialize,
 {
     let port = serve_command.port;
     let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
@@ -543,19 +560,13 @@ where
     Ok(())
 }
 
-async fn get_empty<C: Connector>() -> Json<C::RawConfiguration>
-where
-    C::RawConfiguration: Serialize,
-{
+async fn get_empty<C: Connector>() -> Json<C::RawConfiguration> {
     Json(C::make_empty_configuration())
 }
 
 async fn post_update<C: Connector>(
     WithRejection(Json(configuration), _): WithRejection<Json<C::RawConfiguration>, JsonRejection>,
-) -> Result<Json<C::RawConfiguration>, (StatusCode, String)>
-where
-    C::RawConfiguration: Serialize + DeserializeOwned,
-{
+) -> Result<Json<C::RawConfiguration>, (StatusCode, String)> {
     let updated = C::update_configuration(configuration)
         .await
         .map_err(|err| match err {
@@ -594,7 +605,6 @@ async fn post_validate<C: Connector>(
     WithRejection(Json(configuration), _): WithRejection<Json<C::RawConfiguration>, JsonRejection>,
 ) -> Result<Json<ValidateResponse>, (StatusCode, Json<ValidateErrors>)>
 where
-    C::RawConfiguration: DeserializeOwned,
     C::Configuration: Serialize,
 {
     let configuration =
@@ -671,11 +681,7 @@ struct ConnectorAdapter<C: Connector> {
 }
 
 #[async_trait]
-impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C>
-where
-    C::Configuration: Send + Sync + 'static,
-    C::State: Send + Sync + 'static,
-{
+impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C> {
     async fn get_capabilities(
         &self,
     ) -> Result<ndc_client::models::CapabilitiesResponse, ndc_test::Error> {
@@ -726,8 +732,6 @@ async fn test<C: Connector + 'static>(
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: DeserializeOwned,
-    C::Configuration: Sync + Send + 'static,
-    C::State: Send + Sync + 'static,
 {
     let test_configuration = ndc_test::TestConfiguration {
         seed: command.seed,
@@ -752,8 +756,6 @@ async fn replay<C: Connector + 'static>(
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::RawConfiguration: DeserializeOwned,
-    C::Configuration: Sync + Send + 'static,
-    C::State: Send + Sync + 'static,
 {
     let connector = make_connector_adapter::<C>(command.configuration).await;
     let results = ndc_test::test_snapshots_in_directory(&connector, command.snapshots_dir).await;

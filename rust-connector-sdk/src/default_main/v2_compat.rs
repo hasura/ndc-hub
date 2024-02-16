@@ -22,7 +22,7 @@ use crate::json_response::JsonResponse;
 
 pub async fn get_health() -> impl IntoResponse {
     // todo: if source_name and config provided, check if that specific source is healthy
-    StatusCode::NO_CONTENT
+    StatusCode::OK
 }
 
 pub async fn get_capabilities<C: Connector>(
@@ -67,17 +67,31 @@ pub async fn get_capabilities<C: Connector>(
                                 models::Type::Named { name } => Some((function_name, name)),
                                 models::Type::Nullable { .. } => None,
                                 models::Type::Array { .. } => None,
+                                models::Type::Predicate { .. } => None,
                             },
                         ),
                     )),
                     comparison_operators: Some(IndexMap::from_iter(
                         scalar_type.comparison_operators.into_iter().filter_map(
-                            |(operator_name, comparison_operator)| match comparison_operator
-                                .argument_type
-                            {
-                                models::Type::Named { name } => Some((operator_name, name)),
-                                models::Type::Nullable { .. } => None,
-                                models::Type::Array { .. } => None,
+                            |(operator_name, comparison_operator)| match comparison_operator {
+                                models::ComparisonOperatorDefinition::Equal => {
+                                    Some(("equal".to_string(), "equal".to_string()))
+                                }
+                                models::ComparisonOperatorDefinition::In => {
+                                    Some(("in".to_string(), "in".to_string()))
+                                }
+                                models::ComparisonOperatorDefinition::Custom {
+                                    argument_type: models::Type::Named { name },
+                                } => Some((operator_name, name)),
+                                models::ComparisonOperatorDefinition::Custom {
+                                    argument_type: models::Type::Nullable { .. },
+                                } => None,
+                                models::ComparisonOperatorDefinition::Custom {
+                                    argument_type: models::Type::Array { .. },
+                                } => None,
+                                models::ComparisonOperatorDefinition::Custom {
+                                    argument_type: models::Type::Predicate { .. },
+                                } => None,
                             },
                         ),
                     )),
@@ -116,7 +130,7 @@ pub async fn get_capabilities<C: Connector>(
         },
         config_schemas: get_openapi_config_schema_response(),
         display_name: None,
-        release_name: Some(v3_capabilities.versions.to_owned()),
+        release_name: Some(v3_capabilities.version.to_owned()),
     };
 
     Ok(Json(response))
@@ -355,6 +369,7 @@ fn get_field_type(column_type: &models::Type, schema: &models::SchemaResponse) -
                 nullable: matches!(**element_type, models::Type::Nullable { .. }),
             })
         }
+        models::Type::Predicate { .. } => todo!(),
     }
 }
 
@@ -415,7 +430,7 @@ pub async fn post_explain<C: Connector>(
             }),
         )
     })?;
-    let response = C::explain(&state.configuration, &state.state, request.clone())
+    let response = C::query_explain(&state.configuration, &state.state, request.clone())
         .await
         .and_then(JsonResponse::into_value)
         .map_err(|err| match err {
@@ -479,7 +494,7 @@ fn map_query_request(request: QueryRequest) -> Result<models::QueryRequest, Erro
                         name: key.to_owned(),
                         path: vec![],
                     },
-                    operator: models::BinaryComparisonOperator::Equal,
+                    operator: "equal".to_string(),
                     value: models::ComparisonValue::Variable {
                         name: key.to_owned(),
                     },
@@ -658,7 +673,10 @@ fn map_query(
                             Field::Column {
                                 column,
                                 column_type: _,
-                            } => models::Field::Column { column },
+                            } => models::Field::Column {
+                                column,
+                                fields: None,
+                            },
                             Field::Relationship {
                                 query,
                                 relationship,
@@ -808,12 +826,13 @@ fn map_order_by_path(
             relationship: format!("{}.{}", source_table, segment),
             arguments,
             predicate: if let Some(predicate) = &relation.r#where {
-                Box::new(map_expression(predicate, &target_table, relationships)?)
+                Some(Box::new(map_expression(
+                    predicate,
+                    &target_table,
+                    relationships,
+                )?))
             } else {
-                // hack: predicate is not optional, so default to empty "And" expression, which evaluates to true.
-                Box::new(models::Expression::And {
-                    expressions: vec![],
-                })
+                None
             },
         });
 
@@ -897,28 +916,12 @@ fn map_expression(
         } => models::Expression::BinaryComparisonOperator {
             column: map_comparison_column(column)?,
             operator: match operator {
-                BinaryComparisonOperator::LessThan => models::BinaryComparisonOperator::Other {
-                    name: "less_than".to_string(),
-                },
-                BinaryComparisonOperator::LessThanOrEqual => {
-                    models::BinaryComparisonOperator::Other {
-                        name: "less_than_or_equal".to_string(),
-                    }
-                }
-                BinaryComparisonOperator::Equal => models::BinaryComparisonOperator::Equal,
-                BinaryComparisonOperator::GreaterThan => models::BinaryComparisonOperator::Other {
-                    name: "greater_than".to_string(),
-                },
-                BinaryComparisonOperator::GreaterThanOrEqual => {
-                    models::BinaryComparisonOperator::Other {
-                        name: "greater_than_or_equal".to_string(),
-                    }
-                }
-                BinaryComparisonOperator::Other(operator) => {
-                    models::BinaryComparisonOperator::Other {
-                        name: operator.to_owned(),
-                    }
-                }
+                BinaryComparisonOperator::LessThan => "less_than".to_string(),
+                BinaryComparisonOperator::LessThanOrEqual => "less_than_or_equal".to_string(),
+                BinaryComparisonOperator::Equal => "equal".to_string(),
+                BinaryComparisonOperator::GreaterThan => "greater_than".to_string(),
+                BinaryComparisonOperator::GreaterThanOrEqual => "greater_than_or_equal".to_string(),
+                BinaryComparisonOperator::Other(operator) => operator.to_owned(),
             },
             value: match value {
                 ComparisonValue::Scalar {
@@ -937,10 +940,10 @@ fn map_expression(
             operator,
             value_type: _,
             values,
-        } => models::Expression::BinaryArrayComparisonOperator {
+        } => models::Expression::BinaryComparisonOperator {
             column: map_comparison_column(column)?,
             operator: match operator {
-                BinaryArrayComparisonOperator::In => models::BinaryArrayComparisonOperator::In,
+                BinaryArrayComparisonOperator::In => "in".to_string(),
                 BinaryArrayComparisonOperator::Other(operator) => {
                     return Err(ErrorResponse {
                         details: None,
@@ -949,12 +952,9 @@ fn map_expression(
                     })
                 }
             },
-            values: values
-                .iter()
-                .map(|value| models::ComparisonValue::Scalar {
-                    value: value.clone(),
-                })
-                .collect(),
+            value: models::ComparisonValue::Scalar {
+                value: serde_json::to_value(values).unwrap(),
+            },
         },
         Expression::Exists { in_table, r#where } => match in_table {
             ExistsInTable::Unrelated { table } => models::Expression::Exists {
@@ -962,7 +962,11 @@ fn map_expression(
                     collection: get_name(table)?,
                     arguments: BTreeMap::new(),
                 },
-                predicate: Box::new(map_expression(r#where, &get_name(table)?, relationships)?),
+                predicate: Some(Box::new(map_expression(
+                    r#where,
+                    &get_name(table)?,
+                    relationships,
+                )?)),
             },
             ExistsInTable::Related { relationship } => {
                 let (target_table, arguments) =
@@ -973,7 +977,11 @@ fn map_expression(
                         relationship: format!("{}.{}", collection, relationship),
                         arguments,
                     },
-                    predicate: Box::new(map_expression(r#where, &target_table, relationships)?),
+                    predicate: Some(Box::new(map_expression(
+                        r#where,
+                        &target_table,
+                        relationships,
+                    )?)),
                 }
             }
         },
