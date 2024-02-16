@@ -11,20 +11,11 @@ pub struct Example {}
 
 #[async_trait]
 impl Connector for Example {
-    type RawConfiguration = ();
     type Configuration = ();
     type State = ();
 
-    fn make_empty_configuration() -> Self::RawConfiguration {}
-
-    async fn update_configuration(
-        _config: Self::RawConfiguration,
-    ) -> Result<Self::RawConfiguration, UpdateConfigurationError> {
-        Ok(())
-    }
-
-    async fn validate_raw_configuration(
-        _configuration: Self::Configuration,
+    async fn parse_configuration(
+        _configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<Self::Configuration, ValidateError> {
         Ok(())
     }

@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, path::Path};
 
 use async_trait::async_trait;
 use ndc_client::models;
@@ -30,16 +30,6 @@ pub struct InvalidRange {
 pub enum KeyOrIndex {
     Key(String),
     Index(u32),
-}
-
-/// Errors which occur when trying to validate connector
-/// configuration.
-///
-/// See [`Connector::update_configuration`].
-#[derive(Debug, Error)]
-pub enum UpdateConfigurationError {
-    #[error("error validating configuration: {0}")]
-    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when trying to initialize connector
@@ -201,23 +191,15 @@ pub enum MutationError {
 /// connection string would be state.
 #[async_trait]
 pub trait Connector {
-    /// The type of unvalidated, raw configuration, as provided by the user.
-    type RawConfiguration: Sync + Send;
     /// The type of validated configuration
     type Configuration: Sync + Send;
     /// The type of unserializable state
     type State: Sync + Send;
 
-    fn make_empty_configuration() -> Self::RawConfiguration;
-
-    async fn update_configuration(
-        config: Self::RawConfiguration,
-    ) -> Result<Self::RawConfiguration, UpdateConfigurationError>;
-
     /// Validate the raw configuration provided by the user,
     /// returning a configuration error or a validated [`Connector::Configuration`].
-    async fn validate_raw_configuration(
-        configuration: Self::RawConfiguration,
+    async fn parse_configuration(
+        configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<Self::Configuration, ValidateError>;
 
     /// Initialize the connector's in-memory state.

@@ -16,6 +16,11 @@ COPY ./rust-connector-sdk .
 RUN cargo build --release
 
 FROM debian:buster-slim as connector
+RUN set -ex; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive \
+      apt-get install --no-install-recommends --assume-yes \
+      libssl-dev
 COPY --from=build /app/target/release/ndc_hub_example ./ndc_hub_example
 ENTRYPOINT [ "/ndc_hub_example" ]
-CMD [ "serve", "--port", "8080" ]
+CMD [ "serve", "--configuration", "/etc/connector" ]
