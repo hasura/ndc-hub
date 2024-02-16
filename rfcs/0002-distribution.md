@@ -48,6 +48,32 @@ The following are not described in this specification:
 * Verification policies and procedures
 
 
+## Motivation and Why and How this Differs from Existing Solutions
+
+First, where are the current and proposed system different?
+
+| Layer | Current System | Proposed System | Difference |
+| ---   | ---            | ---             | ---        |
+| Package Definition Storage | Github Tag | .tar.gz | Currently the package definitions are stored in a directory hierarchy on a github branch/tag  |
+| Database | Postgres | Postgres | Same infrastructure with a new schema |
+| API | Hasura | Hasura | Same infrastructure with different roles and actions |
+| CLI | N/A | Hasura V3 CLI Plugin | No current CLI interactions available |
+| Registry | ndc-hub/registry | No central component in proposal | There is no central definition source outside of the DB/Storage layer in the proposal |
+| Third-party CI | No current component | Usage via CLI/API | Third-parties are able to integrate into their CI via API |
+| Topic Scraping | No current component | Scheduled/Webhook trigger of topic ingestion of community connectors | Arbitrary ingestion is possible via the API/CLI |
+
+The current system's GraphQL: https://data.pro.arusah.com/ - Looking at all the graphql queries starting with connector_ should give all the things that we have so far.
+
+Google cloud function (https://github.com/hasura/connectors-cloud-integration/tree/main/sync_connector_hub_data) runs every 24 hours and scrapes registry and inserts into DB.
+
+Issues with the current system:
+
+* Pull-based ingestion of registry - Changes should ideally propagate instantaneously
+* No ability to treat connectors independently - Need to PR to central registry
+* Artefacts are not distributable outside of Github references - Tied to Github
+* TODO
+
+
 ## Proposal
 
 While the precursor specifications outline the structure and mechanisms of packaging, this RFC details how the packages are owned, distributed, and indexed. A layered solution is outlined from storage up to user-applications and how they can be leveraged by CI in order to automatically publish updated versions and scrape topics for community contribution discovery.
@@ -60,6 +86,7 @@ This solution enables the following UX scenarios:
 * Packages browsed and searched for by Hasura V3 users
 * Packages are referenced in Hasura V3 projects
 * Packages are fetched for local usage in Hasura V3 projects
+
 
 ### Ownership
 
