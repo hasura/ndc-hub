@@ -18,7 +18,7 @@ pub mod example;
 #[derive(Debug, Error)]
 pub enum ParseError {
     #[error("error parsing configuration: {0}")]
-    ParseError(Position),
+    ParseError(LocatedError),
     #[error("error validating configuration: {0}")]
     ValidateError(InvalidPaths),
     #[error("error processing configuration: {0}")]
@@ -29,20 +29,22 @@ pub enum ParseError {
 
 /// The position of a single character in a text file.
 #[derive(Debug, Clone)]
-pub struct Position {
+pub struct LocatedError {
     pub path: PathBuf,
     pub line: usize,
     pub column: usize,
+    pub message: String,
 }
 
-impl Display for Position {
+impl Display for LocatedError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{0}:{1}:{2}",
+            "{0}:{1}:{2}: {3}",
             self.path.display(),
             self.line,
-            self.column
+            self.column,
+            self.message
         )
     }
 }
