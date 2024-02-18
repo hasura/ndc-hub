@@ -60,14 +60,14 @@ could be useful:
    variables specified in the `ConnectorManifest` (for eg. in the case of postgres, it will 
    pass `PG_URL` , etc) to the Plugin. In addition to these Env vars, the main CLI passes
    the following ENV vars:
-      - `HASURA_PLUGIN_DDN_PAT` (string)- the PAT token which can be used to make authenticated 
-      calls to Hasura Cloud.
-      - `HASURA_PLUGIN_DISABLE_TELEMETRY` (boolean string, `true` or `false`) - If the plugins 
-      are sending any sort of telemetry back to Hasura, it should be disabled if this is `true`.
-      - `HASURA_PLUGIN_INSTANCE_ID` (string) - A UUID for every unique user. Can be used in 
-      telemetry.
-      - `HASURA_PLUGIN_EXECUTION_ID` (string) - A UUID unique to every invocation of Hasura CLI.
-      - `HASURA_PLUGIN_LOG_LEVEL` (string) - Can be one of [these](https://github.com/rs/zerolog?tab=readme-ov-file#leveled-logging) 
-      log levels.
-      - `HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH` (string) - Fully qualified path to the context
-      directory of the connector. 
+   - `HASURA_PLUGIN_DDN_PAT` (string)- the PAT token which can be used to make authenticated 
+   calls to Hasura Cloud.
+   - `HASURA_PLUGIN_DISABLE_TELEMETRY` (boolean string, `true` or `false`) - If the plugins 
+   are sending any sort of telemetry back to Hasura, it should be disabled if this is `true`.
+   - `HASURA_PLUGIN_INSTANCE_ID` (string) - A UUID for every unique user. Can be used in 
+   telemetry.
+   - `HASURA_PLUGIN_EXECUTION_ID` (string) - A UUID unique to every invocation of Hasura CLI.
+   - `HASURA_PLUGIN_LOG_LEVEL` (string) - Can be one of [these](https://github.com/rs/zerolog?tab=readme-ov-file#leveled-logging) 
+   log levels.
+   - `HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH` (string) - Fully qualified path to the context
+   directory of the connector. 
