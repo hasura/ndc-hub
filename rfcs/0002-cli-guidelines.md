@@ -32,10 +32,6 @@ could be useful:
    <pg-plugin> update-config --include-schema public
    ```
 
-   The idea is that the user would specify a specific incantation of the update
-   command that cli would then call at a fixed interval when the user invokes
-   `h3 dev`.
-
    > [!NOTE]
    > In the case of Postgres connector, the whole `configureOptions` section
    > goes away from the connector's config because that doesn't affect the
@@ -51,3 +47,27 @@ could be useful:
    In future, you could also have specific commands to validate parts of the
    config such as native queries.
 
+4. watch
+
+   This is basically (for the most common use case) the update command run on loop. 
+   This could also be a totally different implementation. This is a convenience 
+   command for the CLI to use during `h3 dev` so that the CLI can invoke this once, 
+   and terminate it once the `dev` command has ended.  
+
+#### Inputs to the Plugin Invocation
+
+   The main CLI invokes the above commands as sub-processes and passes all the Environment 
+   variables specified in the `ConnectorManifest` (for eg. in the case of postgres, it will 
+   pass `PG_URL` , etc) to the Plugin. In addition to these Env vars, the main CLI passes
+   the following ENV vars:
+      - `HASURA_PLUGIN_DDN_PAT` (string)- the PAT token which can be used to make authenticated 
+      calls to Hasura Cloud.
+      - `HASURA_PLUGIN_DISABLE_TELEMETRY` (boolean string, `true` or `false`) - If the plugins 
+      are sending any sort of telemetry back to Hasura, it should be disabled if this is `true`.
+      - `HASURA_PLUGIN_INSTANCE_ID` (string) - A UUID for every unique user. Can be used in 
+      telemetry.
+      - `HASURA_PLUGIN_EXECUTION_ID` (string) - A UUID unique to every invocation of Hasura CLI.
+      - `HASURA_PLUGIN_LOG_LEVEL` (string) - Can be one of [these](https://github.com/rs/zerolog?tab=readme-ov-file#leveled-logging) 
+      log levels.
+      - `HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH` (string) - Fully qualified path to the context
+      directory of the connector. 
