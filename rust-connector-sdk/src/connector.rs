@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, path::Path};
 
 use async_trait::async_trait;
 use ndc_client::models;
@@ -30,16 +30,6 @@ pub struct InvalidRange {
 pub enum KeyOrIndex {
     Key(String),
     Index(u32),
-}
-
-/// Errors which occur when trying to validate connector
-/// configuration.
-///
-/// See [`Connector::update_configuration`].
-#[derive(Debug, Error)]
-pub enum UpdateConfigurationError {
-    #[error("error validating configuration: {0}")]
-    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
 /// Errors which occur when trying to initialize connector
@@ -105,7 +95,7 @@ pub enum QueryError {
 
 /// Errors which occur when explaining a query.
 ///
-/// See [`Connector::explain`].
+/// See [`Connector::query_explain`, `Connector::mutation_explain`].
 #[derive(Debug, Error)]
 pub enum ExplainError {
     /// The request was invalid or did not match the
@@ -123,7 +113,7 @@ pub enum ExplainError {
     /// or just an unimplemented feature.
     #[error("unsupported operation: {0}")]
     UnsupportedOperation(String),
-    #[error("error explaining query: {0}")]
+    #[error("explain error: {0}")]
     Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
@@ -163,8 +153,8 @@ pub enum MutationError {
 ///
 ///
 /// It provides methods which implement the standard endpoints
-/// defined by the specification: capabilities, schema, query, mutation
-/// and explain.
+/// defined by the specification: capabilities, schema, query, mutation,
+/// query/explain, and mutation/explain.
 ///
 /// In addition, it introduces names for types to manage
 /// state and configuration (if any), and provides any necessary context
@@ -201,23 +191,15 @@ pub enum MutationError {
 /// connection string would be state.
 #[async_trait]
 pub trait Connector {
-    /// The type of unvalidated, raw configuration, as provided by the user.
-    type RawConfiguration;
     /// The type of validated configuration
-    type Configuration;
+    type Configuration: Sync + Send;
     /// The type of unserializable state
-    type State;
-
-    fn make_empty_configuration() -> Self::RawConfiguration;
-
-    async fn update_configuration(
-        config: Self::RawConfiguration,
-    ) -> Result<Self::RawConfiguration, UpdateConfigurationError>;
+    type State: Sync + Send;
 
     /// Validate the raw configuration provided by the user,
     /// returning a configuration error or a validated [`Connector::Configuration`].
-    async fn validate_raw_configuration(
-        configuration: Self::RawConfiguration,
+    async fn parse_configuration(
+        configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<Self::Configuration, ValidateError>;
 
     /// Initialize the connector's in-memory state.
@@ -269,12 +251,22 @@ pub trait Connector {
 
     /// Explain a query by creating an execution plan
     ///
-    /// This function implements the [explain endpoint](https://hasura.github.io/ndc-spec/specification/explain.html)
+    /// This function implements the [query/explain endpoint](https://hasura.github.io/ndc-spec/specification/explain.html)
     /// from the NDC specification.
-    async fn explain(
+    async fn query_explain(
         configuration: &Self::Configuration,
         state: &Self::State,
         request: models::QueryRequest,
+    ) -> Result<JsonResponse<models::ExplainResponse>, ExplainError>;
+
+    /// Explain a mutation by creating an execution plan
+    ///
+    /// This function implements the [mutation/explain endpoint](https://hasura.github.io/ndc-spec/specification/explain.html)
+    /// from the NDC specification.
+    async fn mutation_explain(
+        configuration: &Self::Configuration,
+        state: &Self::State,
+        request: models::MutationRequest,
     ) -> Result<JsonResponse<models::ExplainResponse>, ExplainError>;
 
     /// Execute a mutation

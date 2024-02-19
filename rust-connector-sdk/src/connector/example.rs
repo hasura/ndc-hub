@@ -11,20 +11,11 @@ pub struct Example {}
 
 #[async_trait]
 impl Connector for Example {
-    type RawConfiguration = ();
     type Configuration = ();
     type State = ();
 
-    fn make_empty_configuration() -> Self::RawConfiguration {}
-
-    async fn update_configuration(
-        _config: Self::RawConfiguration,
-    ) -> Result<Self::RawConfiguration, UpdateConfigurationError> {
-        Ok(())
-    }
-
-    async fn validate_raw_configuration(
-        _configuration: Self::Configuration,
+    async fn parse_configuration(
+        _configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<Self::Configuration, ValidateError> {
         Ok(())
     }
@@ -52,13 +43,17 @@ impl Connector for Example {
 
     async fn get_capabilities() -> JsonResponse<models::CapabilitiesResponse> {
         models::CapabilitiesResponse {
-            versions: "^0.1.0".into(),
+            version: "0.1.0".into(),
             capabilities: models::Capabilities {
-                explain: None,
                 relationships: None,
                 query: models::QueryCapabilities {
                     variables: None,
                     aggregates: None,
+                    explain: None,
+                },
+                mutation: models::MutationCapabilities {
+                    transactional: None,
+                    explain: None,
                 },
             },
         }
@@ -84,10 +79,18 @@ impl Connector for Example {
         .into())
     }
 
-    async fn explain(
+    async fn query_explain(
         _configuration: &Self::Configuration,
         _state: &Self::State,
         _request: models::QueryRequest,
+    ) -> Result<JsonResponse<models::ExplainResponse>, ExplainError> {
+        todo!()
+    }
+
+    async fn mutation_explain(
+        _configuration: &Self::Configuration,
+        _state: &Self::State,
+        _request: models::MutationRequest,
     ) -> Result<JsonResponse<models::ExplainResponse>, ExplainError> {
         todo!()
     }

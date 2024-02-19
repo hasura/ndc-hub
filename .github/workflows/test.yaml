@@ -1,0 +1,23 @@
+name: test
+
+on:
+  push:
+
+jobs:
+  cargo-test:
+    name: run cargo test
+    runs-on: ubuntu-latest
+    env:
+      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+      RUSTFLAGS: "-D warnings" # fail on warnings
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install tools
+        run: |
+          rustup show
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: run tests
+        run: cargo test
