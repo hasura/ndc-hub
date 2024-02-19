@@ -17,6 +17,8 @@ The intuition for this system is inspired by other package management systems su
 
 There was a previous implementation of these concepts as described (TODO: Get docs links from Shraddha)
 
+This proposal intends to allow the existing system to be extended to support new functionality and not require a migration.
+
 
 ### Items Outstanding in this Specification (TODO)
 
@@ -31,7 +33,10 @@ The following items are intended to be fleshed-out in this specification prior t
 
 In addition, all "TODO" references should be replaced before finalization.
 
+
 ### Delivery Roadmap
+
+The delivery of the changes outlined in this RFC can be rolled out incrementally, and this can be paused or stopped at any stage without disruption to the current system.
 
 Milestone 1 - Definition Links:
 
@@ -59,7 +64,8 @@ Milestone 4 - CLI:
 
 After implementation of this system, follow-up actions should be performed:
 
-* Publication of new compatible versions of all available connectors
+* Publication of package definition archives for all connectors
+* Publication of new versions of all available connectors linking to archives
 
 
 ### Out of Scope for this RFC
@@ -132,6 +138,7 @@ Only Operations can grant the Operations role.
 
 All changes within the system are logged and can be viewed by the auditor role.
 
+
 ### Storage
 
 Package definitions take the form described in the packaging spec. These need to be stored. The storage mechanism can be described abstractly:
@@ -153,6 +160,7 @@ Storage location convention will initially be: `ORG/PACKAGE/VERSION/SHA/org-pack
 The database backing the API provides all of the APIs state management capabilities outside of package archive storage (as described in "Storage").
 
 The initial implementation of the Database will be Postgres.
+
 
 ### API
 
