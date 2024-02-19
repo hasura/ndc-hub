@@ -31,13 +31,36 @@ The following items are intended to be fleshed-out in this specification prior t
 
 In addition, all "TODO" references should be replaced before finalization.
 
+### Delivery Roadmap
+
+Milestone 1 - Definition Links:
+
+* Where there are currently git tag references:
+	* Add link and checksum to package definition archive to DB Schema
+	* Add link and checksum to package definition archive to Github metadata format
+
+Milestone 2 - Topic Tributary:
+
+* Add a CI process to ingest connectors tagged with a topic in addition to registry connectors
+
+Milestone 3 - User and Role updates:
+
+* Extend the DB schema to include user/role information
+* Set up auth to allow signup/login/token flows
+* Extend the API permissions to allow role and resource based access to data
+* Add validation actions to authoring flows
+
+Milestone 4 - CLI:
+
+* Create a new CLI plugin to manage interaction with the API
+
+
 ### Follow-Up Work
 
 After implementation of this system, follow-up actions should be performed:
 
-* Migration and deprecation of previous hub API
 * Publication of new compatible versions of all available connectors
-* TODO
+
 
 ### Out of Scope for this RFC
 
