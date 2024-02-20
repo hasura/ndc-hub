@@ -20,17 +20,17 @@ pub enum ParseError {
     #[error("error parsing configuration: {0}")]
     ParseError(LocatedError),
     #[error("error validating configuration: {0}")]
-    ValidateError(InvalidPaths),
+    ValidateError(InvalidNodes),
     #[error("error processing configuration: {0}")]
     IoError(#[from] std::io::Error),
     #[error("error processing configuration: {0}")]
     Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
-/// The position of a single character in a text file.
+/// An error associated with the position of a single character in a text file.
 #[derive(Debug, Clone)]
 pub struct LocatedError {
-    pub path: PathBuf,
+    pub file_path: PathBuf,
     pub line: usize,
     pub column: usize,
     pub message: String,
@@ -41,7 +41,7 @@ impl Display for LocatedError {
         write!(
             f,
             "{0}:{1}:{2}: {3}",
-            self.path.display(),
+            self.file_path.display(),
             self.line,
             self.column,
             self.message
@@ -49,26 +49,30 @@ impl Display for LocatedError {
     }
 }
 
+/// An error associated with a node in a graph structure.
 #[derive(Debug, Clone)]
-pub struct InvalidPath {
+pub struct InvalidNode {
+    pub file_path: PathBuf,
+    pub node_path: Vec<KeyOrIndex>,
     pub message: String,
-    pub path: Vec<KeyOrIndex>,
 }
 
-impl Display for InvalidPath {
+impl Display for InvalidNode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} at ", self.message)?;
-        for segment in &self.path {
+        write!(f, "{}, at ", self.file_path.display())?;
+        for segment in &self.node_path {
             write!(f, ".{}", segment)?;
         }
+        write!(f, ": {}", self.message)?;
         Ok(())
     }
 }
 
+/// A set of invalid nodes.
 #[derive(Debug, Clone)]
-pub struct InvalidPaths(pub Vec<InvalidPath>);
+pub struct InvalidNodes(pub Vec<InvalidNode>);
 
-impl Display for InvalidPaths {
+impl Display for InvalidNodes {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut iterator = self.0.iter();
         if let Some(first) = iterator.next() {
@@ -81,6 +85,7 @@ impl Display for InvalidPaths {
     }
 }
 
+/// A segment in a node path, used with [InvalidNode].
 #[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub enum KeyOrIndex {
