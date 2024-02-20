@@ -80,6 +80,15 @@ The initial change to the metadata format would look as follows for the [Postgre
 }
 ```
 
+While package definition releases can be hosted at any URL, some convenient locations could include:
+
+* Under the github releases artefacts
+* As a standalone github repository using the "download archive" feature
+* In a Hasura Google cloud bucket (for Hasura authors)
+
+We will establish conventions for this that make authoring as streamlined as possible.
+
+
 #### Milestone 2 - Topic Tributary:
 
 * Add a CI process to ingest connectors tagged with a topic in addition to registry connectors
