@@ -20,9 +20,7 @@ The connector definition is a file structure that contains the following files a
 
 ```
 /
-  connector-metadata.json # See ConnectorMetadataDefinition type
-
-  docker-compose.yaml
+  connector-metadata.yaml # See ConnectorMetadataDefinition type
 
   build-files/ # Connector specific build/configuration files
     src/
@@ -42,6 +40,7 @@ type ConnectorMetadataDefinition = {
   supportedEnvironmentVariables: EnvironmentVariableDefinition[]
   commands: Commands
   cliPlugin?: CliPluginDefinition
+  dockerComposeWatch: DockerComposeWatch
 }
 
 type PackagingDefinition = PrebuiltDockerImagePackaging | ManagedDockerBuildPackaging
@@ -70,61 +69,67 @@ type CliPluginDefinition = {
   name: string
   version: string
 }
+
+// From: https://github.com/compose-spec/compose-spec/blob/1938efd103f8e0817ca90e5f15177ec0317bbaf8/schema/compose-spec.json#L455
+type DockerComposeWatch = DockerComposeWatchItem[]
+
+type DockerComposeWatchItem = {
+  path: string
+  action: "rebuild" | "sync" | "sync+restart"
+  target?: string
+  ignore?: string[]
+}
+
 ```
 
-The `connector-metadata.json` contains JSON that describes:
+The `connector-metadata.yaml` contains YAML that describes:
 - The environment variables the connector supports to configure it (`supportedEnvironmentVariables`)
 - The packaging definition, which can be either `PrebuiltDockerImagePackaging` (a connector that does not require a build step), or  `ManagedDockerBuildPackaging` (a connector that requires a build step).
   - `PrebuiltDockerImagePackaging` defines the prebuilt `dockerImage` used to run the connector (`dockerImage`)
   - If `ManagedDockerBuildPackaging` is used, a Dockerfile must be in the `.hasura3` directory (and optionally, a `.dockerignore`). It will be used to build the connector.
 - A `commands` structure that optionally defines what shell commands to run for an "update" (eg. refresh schema introspection details) and "watch" (eh. watch and refresh schema introspection details periodically) scenario.
 - An optional `CLIPluginDefinition` that describes where to acquire the CLI plugin for this connector that can be used by the `commands` structure. If provided, the CLI plugin executable will be made available on the `PATH` for the commands and some configuration environment variables will be set (see the [CLI plugin RFC](https://github.com/hasura/ndc-hub/blob/cli-guidelines/rfcs/0002-cli-guidelines.md) for more details).
+- A `dockerComposeWatch` that defines how to rebuild/restart the container if the user modifies their connector configuration in their project (see below)
 
 ### Watch Mode
 When developing locally using the connector, the user may utilize the connector in a "watch mode" that automatically reloads the connector with new configuration as they change the configuration.
 
-Every connector must specify a `docker-compose.yaml` in their connector definition that defines how to watch the container.
+Every connector must specify a `dockerComposeWatch` property in their `connector-metadata.yaml` that defines how to watch the container.
 
 #### Connectors that do not require a build step (`PrebuiltDockerImagePackaging`)
-The `docker-compose.yaml` should contain something like this:
+The `connector-metadata.yaml` should contain something like this:
 
 ```yaml
-services:
-  connector:
-    develop:
-      watch:
-        - path: ./
-          target: /etc/connector
-          action: sync+restart
+dockerComposeWatch:
+  - path: ./
+    target: /etc/connector
+    action: sync+restart
 ```
 
-The `connector` service must be defined, and note that no `image` or `build` property is defined. The CLI tooling will [extend](https://docs.docker.com/compose/compose-file/05-services/#extends) from this to add the necessary pre-built image. This exists solely to provide the watch configuration.
+When configuration files change, this simply copies them into the container and restarts it.
 
 #### Connectors that require a build step (`ManagedDockerBuildPackaging`)
-The `docker-compose.yaml` should contain something like this (specific to the watch requirements of the connector):
+The `connector-metadata.yaml` should contain something like this (specific to the watch requirements of the connector):
 
 ```yaml
-services:
-  connector:
-    develop:
-      watch:
-        # Rebuild the container if a new package restore is required because package[-lock].json changed
-        - path: package.json
-          target: /etc/connector/package.json
-          action: rebuild
-        - path: package-lock.json
-          target: /etc/connector/package-lock.json
-          action: rebuild
-        # For any other file change, simply copy it into the existing container and restart it
-        - path: ./
-          target: /etc/connector
-          action: sync+restart
+dockerComposeWatch:
+  # Rebuild the container if a new package restore is required because package[-lock].json changed
+  - path: package.json
+    target: /functions/package.json
+    action: rebuild
+  - path: package-lock.json
+    target: /functions/package-lock.json
+    action: rebuild
+  # For any other file change, simply copy it into the existing container and restart it
+  - path: ./
+    target: /functions
+    action: sync+restart
 ```
 
-The `connector` service must be defined, and note that no `image` or `build` property is defined. The CLI tooling will [extend](https://docs.docker.com/compose/compose-file/05-services/#extends) from this to add the necessary `build` property based on the build context from `ConnectorManifest` and the Dockerfile included in the Connector Definition. This exists solely to provide the watch configuration.
+When the package.json or package-lock.json files change, the container is rebuilt, but for all other files, they are simply copied into the container and it is restarted.
 
 #### CLI Plugin Watch Mode
-If connectors need to extend the watch process with their own functionality, they can implement a CLI plugin that contains a `watch` subcommand. If specified in the `connector-metadata.json` the tooling will use it in addition to existing watch functionality.
+If connectors need to extend the watch process with their own functionality, they can implement a CLI plugin that contains a `watch` subcommand. If specified in the `connector-metadata.yaml` the tooling will use it in addition to existing watch functionality.
 
 An example use case for this would be for a Postgres connector, where you may want to watch the database for schema changes, and when they occur, update the schema introspection configuration file in the connector's build directory with the latest schema details. The docker compose watch would then reload the connector with the updated introspection configuration file.
 
@@ -138,8 +143,7 @@ The CLI then puts the `build-files/` into the build directory for that connector
 ```
 # A copy of the `Connector Definition` for a particular hub connector version
 ~/.hasura3/hub-connectors/hasura/nodejs-lambda/1.0/
-  connector-metadata.json
-  docker-compose.yaml
+  connector-metadata.yaml
   build-files/
     src/
       functions.ts
@@ -194,8 +198,7 @@ project/
   subgraphs/default/dataconnectors/
     my-dataconnector/
       connector-definition/ # `my-connector-definition.tgz` extracted into the source tree
-        connector-metadata.json
-        docker-compose.yaml
+        connector-metadata.yaml
         build-files/
           src/
             functions.ts
