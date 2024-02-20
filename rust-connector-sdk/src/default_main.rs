@@ -17,7 +17,6 @@ use axum::{
 use axum_extra::extract::WithRejection;
 use clap::{Parser, Subcommand};
 use prometheus::Registry;
-use serde::Serialize;
 use tower_http::{trace::TraceLayer, validate_request::ValidateRequestHeaderLayer};
 
 use ndc_client::models::{
@@ -151,7 +150,7 @@ where
 /// - Logs are written to stdout
 pub async fn default_main<C: Connector + 'static>() -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::Configuration: Clone + Serialize,
+    C::Configuration: Clone,
     C::State: Clone,
 {
     let CliArgs { command } = CliArgs::parse();
@@ -168,8 +167,8 @@ async fn serve<C: Connector + 'static>(
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::Configuration: Serialize + Clone,
-    C::State: Sync + Send + Clone,
+    C::Configuration: Clone,
+    C::State: Clone,
 {
     init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
         .expect("Unable to initialize tracing");
@@ -332,7 +331,7 @@ pub fn create_v2_router<C: Connector + 'static>(
     service_token_secret: Option<String>,
 ) -> Router
 where
-    C::Configuration: Clone + Serialize,
+    C::Configuration: Clone,
     C::State: Clone,
 {
     Router::new()
