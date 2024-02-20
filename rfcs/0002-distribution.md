@@ -38,24 +38,60 @@ In addition, all "TODO" references should be replaced before finalization.
 
 The delivery of the changes outlined in this RFC can be rolled out incrementally, and this can be paused or stopped at any stage without disruption to the current system.
 
-Milestone 1 - Definition Links:
+#### Milestone 1 - Definition Links:
 
 * Where there are currently git tag references:
 	* Add link and checksum to package definition archive to DB Schema
 	* Add link and checksum to package definition archive to Github metadata format
 
-Milestone 2 - Topic Tributary:
+The initial change to the metadata format would look as follows for the [Postgres Connector](https://github.com/hasura/ndc-hub/blob/lyndon/distribution-rfc/registry/postgres/metadata.json):
+
+```json
+{
+  "overview": { ... },
+  "author": { ... },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  // New stanza
+  "packages": [
+    {
+      "uri": "https://foobar.com/releases/postgres-postgresql-v0.2.0-9283dh9283u...hd092ujdf2ued.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "9283dh9283u...hd092ujdf2ued"
+      },
+      // Optional link from package to source
+      "source": {
+        "hash": "98801634b0e1396c933188eef88178952f412a8c",
+      }
+    }
+  ]
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-postgres",
+    "version": [
+      {
+        "tag": "v0.2.0",
+        "hash": "98801634b0e1396c933188eef88178952f412a8c",
+        "is_verified": true
+      }
+    ]
+  }
+}
+```
+
+#### Milestone 2 - Topic Tributary:
 
 * Add a CI process to ingest connectors tagged with a topic in addition to registry connectors
 
-Milestone 3 - User and Role updates:
+#### Milestone 3 - User and Role updates:
 
 * Extend the DB schema to include user/role information
 * Set up auth to allow signup/login/token flows
 * Extend the API permissions to allow role and resource based access to data
 * Add validation actions to authoring flows
 
-Milestone 4 - CLI:
+#### Milestone 4 - CLI:
 
 * Create a new CLI plugin to manage interaction with the API
 
