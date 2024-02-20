@@ -662,65 +662,7 @@ fn map_query(
             )
         }))
     });
-    let fields = fields
-        .map(|fields| {
-            let fields = fields
-                .into_iter()
-                .map(|(key, field)| {
-                    Ok((
-                        key,
-                        match field {
-                            Field::Column {
-                                column,
-                                column_type: _,
-                            } => models::Field::Column {
-                                column,
-                                fields: None,
-                            },
-                            Field::Relationship {
-                                query,
-                                relationship,
-                            } => {
-                                let (target_collection, arguments) =
-                                    get_relationship_collection_arguments(
-                                        collection,
-                                        &relationship,
-                                        relationships,
-                                    )?;
-
-                                models::Field::Relationship {
-                                    query: Box::new(map_query(
-                                        query,
-                                        &target_collection,
-                                        relationships,
-                                        None,
-                                    )?),
-                                    relationship: format!("{}.{}", collection, relationship),
-                                    arguments,
-                                }
-                            }
-                            Field::Object { .. } => {
-                                return Err(ErrorResponse {
-                                    details: None,
-                                    message: "Object fields not supported".to_string(),
-                                    r#type: None,
-                                })
-                            }
-                            Field::Array { .. } => {
-                                return Err(ErrorResponse {
-                                    details: None,
-                                    message: "Array fields not supported".to_string(),
-                                    r#type: None,
-                                })
-                            }
-                        },
-                    ))
-                })
-                .collect::<Result<Vec<(String, models::Field)>, _>>()?
-                .into_iter();
-            Ok(IndexMap::from_iter(fields))
-        })
-        .transpose()?;
+    let fields = map_fields(fields, collection, relationships)?;
 
     let applicable_limit = match (limit, aggregates_limit) {
         (None, None) => None,
@@ -800,6 +742,109 @@ fn map_query(
         order_by,
         predicate,
     })
+}
+
+fn map_fields(
+    fields: Option<IndexMap<String, Field>>,
+    collection: &String,
+    relationships: &Vec<TableRelationships>,
+) -> Result<Option<IndexMap<String, models::Field>>, ErrorResponse> {
+    let fields = fields
+        .map(|fields| {
+            let fields = fields
+                .into_iter()
+                .map(|(key, field)| {
+                    Ok((
+                        key,
+                        match field {
+                            Field::Column {
+                                column,
+                                column_type: _,
+                            } => models::Field::Column {
+                                column,
+                                fields: None,
+                            },
+                            Field::Relationship {
+                                query,
+                                relationship,
+                            } => {
+                                let (target_collection, arguments) =
+                                    get_relationship_collection_arguments(
+                                        collection,
+                                        &relationship,
+                                        relationships,
+                                    )?;
+
+                                models::Field::Relationship {
+                                    query: Box::new(map_query(
+                                        query,
+                                        &target_collection,
+                                        relationships,
+                                        None,
+                                    )?),
+                                    relationship: format!("{}.{}", collection, relationship),
+                                    arguments,
+                                }
+                            }
+                            Field::Object { column, query } => {
+                                let fields = map_fields(query.fields, collection, relationships)?
+                                    .map(|fields| {
+                                        models::NestedField::Object(models::NestedObject { fields })
+                                    });
+                                models::Field::Column { column, fields }
+                            }
+                            Field::Array { field, .. } => {
+                                let (column, fields) =
+                                    map_array_field(*field, collection, relationships)?;
+                                models::Field::Column {
+                                    column,
+                                    fields: fields.map(|fields| {
+                                        models::NestedField::Array(models::NestedArray {
+                                            fields: Box::new(fields),
+                                        })
+                                    }),
+                                }
+                            }
+                        },
+                    ))
+                })
+                .collect::<Result<Vec<(String, models::Field)>, _>>()?
+                .into_iter();
+            Ok(IndexMap::from_iter(fields))
+        })
+        .transpose()?;
+    Ok(fields)
+}
+
+fn map_array_field(
+    field: Field,
+    collection: &String,
+    relationships: &Vec<TableRelationships>,
+) -> Result<(String, Option<models::NestedField>), ErrorResponse> {
+    match field {
+        Field::Column { column, .. } => Ok((column, None)),
+        Field::Relationship { .. } => Err(ErrorResponse {
+            details: None,
+            message: "Relationships in nested array fields are not supported".to_string(),
+            r#type: None,
+        }),
+        Field::Object { column, query } => {
+            let fields = map_fields(query.fields, collection, relationships)?
+                .map(|fields| models::NestedField::Object(models::NestedObject { fields }));
+            Ok((column, fields))
+        }
+        Field::Array { field, .. } => {
+            let (column, fields) = map_array_field(*field, collection, relationships)?;
+            Ok((
+                column,
+                fields.map(|fields| {
+                    models::NestedField::Array(models::NestedArray {
+                        fields: Box::new(fields),
+                    })
+                }),
+            ))
+        }
+    }
 }
 
 fn map_order_by_path(
