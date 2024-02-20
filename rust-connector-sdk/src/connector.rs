@@ -1,4 +1,6 @@
-use std::{error::Error, path::Path};
+use std::error::Error;
+use std::fmt::Display;
+use std::path::{Path, PathBuf};
 
 use async_trait::async_trait;
 use ndc_client::models;
@@ -12,24 +14,92 @@ pub mod example;
 /// Errors which occur when trying to validate connector
 /// configuration.
 ///
-/// See [`Connector::validate_raw_configuration`].
+/// See [`Connector::parse_configuration`].
 #[derive(Debug, Error)]
-pub enum ValidateError {
-    #[error("error validating configuration: {0:?}")]
-    ValidateError(Vec<InvalidRange>),
+pub enum ParseError {
+    #[error("error parsing configuration: {0}")]
+    ParseError(LocatedError),
+    #[error("error validating configuration: {0}")]
+    ValidateError(InvalidNodes),
+    #[error("error processing configuration: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("error processing configuration: {0}")]
+    Other(#[from] Box<dyn Error + Send + Sync>),
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub struct InvalidRange {
-    pub path: Vec<KeyOrIndex>,
+/// An error associated with the position of a single character in a text file.
+#[derive(Debug, Clone)]
+pub struct LocatedError {
+    pub file_path: PathBuf,
+    pub line: usize,
+    pub column: usize,
     pub message: String,
 }
 
+impl Display for LocatedError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{0}:{1}:{2}: {3}",
+            self.file_path.display(),
+            self.line,
+            self.column,
+            self.message
+        )
+    }
+}
+
+/// An error associated with a node in a graph structure.
+#[derive(Debug, Clone)]
+pub struct InvalidNode {
+    pub file_path: PathBuf,
+    pub node_path: Vec<KeyOrIndex>,
+    pub message: String,
+}
+
+impl Display for InvalidNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}, at ", self.file_path.display())?;
+        for segment in &self.node_path {
+            write!(f, ".{}", segment)?;
+        }
+        write!(f, ": {}", self.message)?;
+        Ok(())
+    }
+}
+
+/// A set of invalid nodes.
+#[derive(Debug, Clone)]
+pub struct InvalidNodes(pub Vec<InvalidNode>);
+
+impl Display for InvalidNodes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut iterator = self.0.iter();
+        if let Some(first) = iterator.next() {
+            first.fmt(f)?;
+        }
+        for next in iterator {
+            write!(f, ", {next}")?;
+        }
+        Ok(())
+    }
+}
+
+/// A segment in a node path, used with [InvalidNode].
 #[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub enum KeyOrIndex {
     Key(String),
     Index(u32),
+}
+
+impl Display for KeyOrIndex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Key(key) => write!(f, "[{key:?}]"),
+            Self::Index(index) => write!(f, "[{index}]"),
+        }
+    }
 }
 
 /// Errors which occur when trying to initialize connector
@@ -200,7 +270,7 @@ pub trait Connector {
     /// returning a configuration error or a validated [`Connector::Configuration`].
     async fn parse_configuration(
         configuration_dir: impl AsRef<Path> + Send,
-    ) -> Result<Self::Configuration, ValidateError>;
+    ) -> Result<Self::Configuration, ParseError>;
 
     /// Initialize the connector's in-memory state.
     ///

@@ -16,7 +16,7 @@ impl Connector for Example {
 
     async fn parse_configuration(
         _configuration_dir: impl AsRef<Path> + Send,
-    ) -> Result<Self::Configuration, ValidateError> {
+    ) -> Result<Self::Configuration, ParseError> {
         Ok(())
     }
 
