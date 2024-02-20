@@ -20,18 +20,21 @@ The connector definition is a file structure that contains the following files a
 
 ```
 /
-  connector-metadata.yaml # See ConnectorMetadataDefinition type
-
-  build-files/ # Connector specific build/configuration files
-    src/
-      functions.ts
-    package.json
-    package-lock.json
-    tsconfig.json
-
-  docker/ # If ManagedDockerBuildPackaging is used
+  .hasura-connector/
+    connector-metadata.yaml # See ConnectorMetadataDefinition type
+    ### Start: If ManagedDockerBuildPackaging is used
     .dockerignore
     Dockerfile
+    ### End: If ManagedDockerBuildPackaging is used
+
+  ### Start: Connector specific build/configuration files
+  src/
+    functions.ts
+  package.json
+  package-lock.json
+  tsconfig.json
+  ### End: Connector specific build/configuration files
+
 ```
 
 ```typescript
@@ -143,28 +146,27 @@ The CLI then puts the `build-files/` into the build directory for that connector
 ```
 # A copy of the `Connector Definition` for a particular hub connector version
 ~/.hasura3/hub-connectors/hasura/nodejs-lambda/1.0/
-  connector-metadata.yaml
-  build-files/
-    src/
-      functions.ts
-    package.json
-    package-lock.json
-    tsconfig.json
-  docker/
+  .hasura-connector/
+    connector-metadata.yaml
     .dockerignore
     Dockerfile
+  src/
+    functions.ts
+  package.json
+  package-lock.json
+  tsconfig.json
 
 project/
   subgraphs/default/dataconnectors/
     my-dataconnector/
       build/
-        ### Start: copied from `build-files/`
+        ### Start: Unpack `Connector Definition` and delete `.hasura-connector/`
         src/
           functions.ts
         package.json
         package-lock.json
         tsconfig.json
-        ### End: copied from `build-files/`
+        ### End: Unpack `Connector Definition` and delete `.hasura-connector/`
 
         my-dataconnector.build.hml # Connector manifest, see below
 ```
@@ -197,25 +199,18 @@ The CLI could support the use of non-Hasura Hub Connectors by supporting the use
 project/
   subgraphs/default/dataconnectors/
     my-dataconnector/
-      connector-definition/ # `my-connector-definition.tgz` extracted into the source tree
-        connector-metadata.yaml
-        build-files/
-          src/
-            functions.ts
-          package.json
-          package-lock.json
-          tsconfig.json
-        docker/
+      build/
+        ### Start: `my-connector-definition.tgz` extracted into the source tree
+        .hasura-connector/
+          connector-metadata.yaml
           .dockerignore
           Dockerfile
-      build/
-        ### Start: copied from `build-files/`
         src/
           functions.ts
         package.json
         package-lock.json
         tsconfig.json
-        ### End: copied from `build-files/`
+        ### End: `my-connector-definition.tgz` extracted into the source tree
 
         my-dataconnector.build.hml # Connector manifest, see below
 ```
