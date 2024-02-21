@@ -31,7 +31,6 @@ _This RFC does not specify the following planned changes:_
   - The following environment variables are reserved, and should not be used for connector-specific configuration:
     - `HASURA_*`
     - `OTEL_*`
-    - `OTEL_EXPORTER_*`
   - Connectors can use environment variables as part of their configuration. Configuration that varies between different environments or regions (like connection strings) should be configurable via environment variables. 
 - The connector should send any relevant trace spans in the OTLP format to the OTEL collector hosted at the URL provided by the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable. 
   - Note: `OTEL_EXPORTER_OTLP_ENDPOINT` indicates the _root URL_ of the collector, and not the `/v1/traces` endpoint.
