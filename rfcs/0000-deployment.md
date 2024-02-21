@@ -30,6 +30,7 @@ _This RFC does not specify the following planned changes:_
 - The connector can read environment variables on startup for configuration purposes
   - The following environment variables are reserved, and should not be used for connector-specific configuration:
     - `HASURA_*`
+    - `OTEL_*`
     - `OTEL_EXPORTER_*`
   - Connectors can use environment variables as part of their configuration. Configuration that varies between different environments or regions (like connection strings) should be configurable via environment variables. 
 - The connector should send any relevant trace spans in the OTLP format to the OTEL collector hosted at the URL provided by the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable. 
@@ -38,6 +39,7 @@ _This RFC does not specify the following planned changes:_
   - The connector can configure additional headers to add in outgoing gRPC or HTTP requests by the `OTEL_EXPORTER_OTLP_HEADERS` environment variables.
   - The connector also can configure additional resource attributes for requests by the `OTEL_RESOURCE_ATTRIBUTES` environment variables.
   - Note: the value of `OTEL_EXPORTER_OTLP_HEADERS` and `OTEL_RESOURCE_ATTRIBUTES` is key-value pairs, for example, `api-key=key,other-config-value=value`.
+  - Other OTLP exporter configurations are optional. However, they must follow the [Environment Variable Specification](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables) and [SDK config](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/).  
 - If the `HASURA_SERVICE_TOKEN_SECRET` environment variable is specified and non-empty, then the connector should implement bearer-token HTTP authorization using the provided static secret token.
 - Information log messages should be logged in plain text to standard output.
 - Error messages should be logged in plain text to standard error.
@@ -47,10 +49,6 @@ _This RFC does not specify the following planned changes:_
 - The connector should start as quickly as possible, without any build steps, by reading configuration from disk. Build steps should be performed in the construction of the Docker image, not on startup.
   - To support these build steps, tooling should support building images from Dockerfiles. See "Deployment API" below.
   - The motivation is that we may want to provision a connector process on short notice, e.g. to serve an incoming request.
-
-### Open Questions
-
-- Do we want to reserve environment variables `OTEL_*` for possible future use of the [OTLP exporter spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md)?
 
 ## Deployment API
 
