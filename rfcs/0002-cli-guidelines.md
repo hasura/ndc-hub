@@ -71,3 +71,13 @@ could be useful:
    log levels.
    - `HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH` (string) - Fully qualified path to the context
    directory of the connector. 
+
+#### Publishing the Plugin
+   The plugin details (name, version, download location, etc., what we call the plugin manifest) 
+   should be published to the [cli-plugin-index](https://github.com/hasura/cli-plugins-index) repo. 
+   The CLI will track the contents of the `master` branch of this repo and will be able to install
+   any version of the published plugin. (Version should be a CalVer of the format `YYYYMMDD` or a SemVer).
+   Also, we need plugin binaries for `linux/amd64`, `darwin/amd64`, `darwin/arm64`, `windows/amd64` platforms.
+   The name of the plugin must be `hasura-<your-plugin-name>` for it to be recognized in by the CLI. 
+   The plugin binary (preferably statically linked) should be pushed as a gzipped tarball and its URI 
+   mentioned in the manifest for each platform. The sha256 value in the [manifest](https://github.com/hasura/cli-plugins-index/blob/master/plugins/connector/20240125/manifest.yaml) is the checksum of the gzipped tarball.
