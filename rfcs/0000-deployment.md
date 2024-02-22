@@ -35,10 +35,10 @@ _This RFC does not specify the following planned changes:_
 - The connector should send any relevant trace spans in the OTLP format to the OTEL collector hosted at the URL provided by the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable. 
   - Note: `OTEL_EXPORTER_OTLP_ENDPOINT` indicates the _root URL_ of the collector, and not the `/v1/traces` endpoint.
   - Spans should indicate the service name provided by the `OTEL_SERVICE_NAME` environment variable.	
-  - The connector can configure additional headers to add in outgoing gRPC or HTTP requests by the `OTEL_EXPORTER_OTLP_HEADERS` environment variables.
-  - The connector also can configure additional resource attributes for requests by the `OTEL_RESOURCE_ATTRIBUTES` environment variables.
+  - The connector can respect `OTEL_EXPORTER_OTLP_HEADERS` and `OTEL_RESOURCE_ATTRIBUTES` environment variables to add additional headers and resource attributes in outgoing gRPC or HTTP requests.
   - Note: the value of `OTEL_EXPORTER_OTLP_HEADERS` and `OTEL_RESOURCE_ATTRIBUTES` is key-value pairs, for example, `api-key=key,other-config-value=value`.
-  - Other OTLP exporter configurations are optional. However, they must follow the [Environment Variable Specification](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables) and [SDK config](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/).  
+  - The connector must use the [tracecontext](https://www.w3.org/TR/trace-context) propagation.
+  - Other OTLP exporter configurations are optional depending on its language SDK. However, they must follow the [Environment Variable Specification](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables) and [SDK config](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/).
 - If the `HASURA_SERVICE_TOKEN_SECRET` environment variable is specified and non-empty, then the connector should implement bearer-token HTTP authorization using the provided static secret token.
 - Information log messages should be logged in plain text to standard output.
 - Error messages should be logged in plain text to standard error.
