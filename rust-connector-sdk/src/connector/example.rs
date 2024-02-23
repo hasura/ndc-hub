@@ -11,16 +11,19 @@ pub struct Example {}
 
 #[async_trait]
 impl Connector for Example {
+    type InitializationContext = ();
     type Configuration = ();
     type State = ();
 
     async fn parse_configuration(
+        _context: &Self::InitializationContext,
         _configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<Self::Configuration, ParseError> {
         Ok(())
     }
 
     async fn try_init_state(
+        _context: &Self::InitializationContext,
         _configuration: &Self::Configuration,
         _metrics: &mut prometheus::Registry,
     ) -> Result<Self::State, InitializationError> {

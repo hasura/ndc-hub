@@ -145,10 +145,26 @@ where
 /// not described in the [NDC specification](http://hasura.github.io/ndc-spec/).
 /// Specifically:
 ///
-/// - It reads configuration as JSON from a file specified on the command line,
+/// - It reads configuration from a directory specified on the command line,
 /// - It reports traces to an OTLP collector specified on the command line,
 /// - Logs are written to stdout
+///
+/// It provides the default initialization context to the connector configuration.
 pub async fn default_main<C: Connector + 'static>() -> Result<(), Box<dyn Error + Send + Sync>>
+where
+    C::InitializationContext: Default,
+    C::Configuration: Clone,
+    C::State: Clone,
+{
+    default_main_with::<C>(C::InitializationContext::default()).await
+}
+
+/// A default main function for a connector that takes an initialization context.
+///
+/// This works just like [`default_main`], but allows you to use a non-default context.
+pub async fn default_main_with<C: Connector + 'static>(
+    context: C::InitializationContext,
+) -> Result<(), Box<dyn Error + Send + Sync>>
 where
     C::Configuration: Clone,
     C::State: Clone,
@@ -156,14 +172,15 @@ where
     let CliArgs { command } = CliArgs::parse();
 
     match command {
-        Command::Serve(serve_command) => serve::<C>(serve_command).await,
-        Command::Test(test_command) => test::<C>(test_command).await,
-        Command::Replay(replay_command) => replay::<C>(replay_command).await,
+        Command::Serve(serve_command) => serve::<C>(&context, serve_command).await,
+        Command::Test(test_command) => test::<C>(&context, test_command).await,
+        Command::Replay(replay_command) => replay::<C>(&context, replay_command).await,
         Command::CheckHealth(check_health_command) => check_health(check_health_command).await,
     }
 }
 
 async fn serve<C: Connector + 'static>(
+    context: &C::InitializationContext,
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
@@ -173,7 +190,7 @@ where
     init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
         .expect("Unable to initialize tracing");
 
-    let server_state = init_server_state::<C>(serve_command.configuration).await;
+    let server_state = init_server_state::<C>(context, serve_command.configuration).await;
 
     let router = create_router::<C>(
         server_state.clone(),
@@ -229,12 +246,15 @@ where
 
 /// Initialize the server state from the configuration file.
 pub async fn init_server_state<C: Connector>(
+    context: &C::InitializationContext,
     config_directory: impl AsRef<Path> + Send,
 ) -> ServerState<C> {
-    let configuration = C::parse_configuration(config_directory).await.unwrap();
+    let configuration = C::parse_configuration(context, config_directory)
+        .await
+        .unwrap();
 
     let mut metrics = Registry::new();
-    let state = C::try_init_state(&configuration, &mut metrics)
+    let state = C::try_init_state(context, &configuration, &mut metrics)
         .await
         .unwrap();
 
@@ -510,13 +530,16 @@ impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C> {
     }
 }
 
-async fn test<C: Connector>(command: TestCommand) -> Result<(), Box<dyn Error + Send + Sync>> {
+async fn test<C: Connector>(
+    context: &C::InitializationContext,
+    command: TestCommand,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let test_configuration = ndc_test::TestConfiguration {
         seed: command.seed,
         snapshots_dir: command.snapshots_dir,
     };
 
-    let connector = make_connector_adapter::<C>(command.configuration).await;
+    let connector = make_connector_adapter::<C>(context, command.configuration).await;
     let results = ndc_test::test_connector(&test_configuration, &connector).await;
 
     if !results.failures.is_empty() {
@@ -529,8 +552,11 @@ async fn test<C: Connector>(command: TestCommand) -> Result<(), Box<dyn Error + 
     Ok(())
 }
 
-async fn replay<C: Connector>(command: ReplayCommand) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let connector = make_connector_adapter::<C>(command.configuration).await;
+async fn replay<C: Connector>(
+    context: &C::InitializationContext,
+    command: ReplayCommand,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let connector = make_connector_adapter::<C>(context, command.configuration).await;
     let results = ndc_test::test_snapshots_in_directory(&connector, command.snapshots_dir).await;
 
     if !results.failures.is_empty() {
@@ -543,11 +569,16 @@ async fn replay<C: Connector>(command: ReplayCommand) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-async fn make_connector_adapter<C: Connector>(configuration_path: PathBuf) -> ConnectorAdapter<C> {
-    let configuration = C::parse_configuration(configuration_path).await.unwrap();
+async fn make_connector_adapter<C: Connector>(
+    context: &C::InitializationContext,
+    configuration_path: PathBuf,
+) -> ConnectorAdapter<C> {
+    let configuration = C::parse_configuration(context, configuration_path)
+        .await
+        .unwrap();
 
     let mut metrics = Registry::new();
-    let state = C::try_init_state(&configuration, &mut metrics)
+    let state = C::try_init_state(context, &configuration, &mut metrics)
         .await
         .unwrap();
 
