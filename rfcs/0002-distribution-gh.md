@@ -40,6 +40,7 @@ The initial change to the metadata format would look as follows for the [Postgre
   // New stanza
   "packages": [
     {
+      "version": "1.2.3",
       "uri": "https://foobar.com/releases/postgres-postgresql-v0.2.0-9283dh9283u...hd092ujdf2ued.tar.gz",
       "checksum": {
         "type": "sha256",
@@ -161,6 +162,11 @@ as well as all the existing registry metadata, and all metadata included in the 
 ### Checksums
 
 All package definition references should be accompanied by a checksum in order to verify that the definition hasn't been changed in storage. Any definition fetch operation should verify the checksum.
+
+
+### Versioning
+
+Package Metadata will include a version. This should follow [Semantic Versioning](https://semver.org) practices.
 
 
 ### Discoverability
