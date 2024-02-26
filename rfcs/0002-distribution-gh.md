@@ -38,33 +38,12 @@ The initial change to the metadata format would look as follows for the [Postgre
   "is_verified": true,
   "is_hosted_by_hasura": true,
   // New stanza
-  "packages": [
-    {
-      "version": "1.2.3",
-      "uri": "https://foobar.com/releases/postgres-postgresql-v0.2.0-9283dh9283u...hd092ujdf2ued.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "9283dh9283u...hd092ujdf2ued"
-      },
-      // Optional link from package to source
-      "source": {
-        "hash": "98801634b0e1396c933188eef88178952f412a8c",
-      }
-    }
-  ]
-  "source_code": {
-    "is_open_source": true,
-    "repository": "https://github.com/hasura/ndc-postgres",
-    "version": [
-      {
-        "tag": "v0.2.0",
-        "hash": "98801634b0e1396c933188eef88178952f412a8c",
-        "is_verified": true
-      }
-    ]
-  }
+  "packages": [ ... ],
+  "source_code": { ... }
 }
 ```
+
+See [the "data-format"](#data-format) section for more information.
 
 While package definition releases can be hosted at any URL, some convenient locations could include:
 
