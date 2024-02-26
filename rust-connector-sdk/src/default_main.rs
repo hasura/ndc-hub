@@ -125,6 +125,16 @@ where
     }
 }
 
+impl<C: Connector> ServerState<C> {
+    pub fn new(configuration: C::Configuration, state: C::State, metrics: Registry) -> Self {
+        Self {
+            configuration,
+            state,
+            metrics,
+        }
+    }
+}
+
 /// A default main function for a connector.
 ///
 /// The intent is that this function can replace your `main` function
@@ -173,7 +183,7 @@ where
     init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
         .expect("Unable to initialize tracing");
 
-    let server_state = init_server_state::<C>(serve_command.configuration).await;
+    let server_state = init_server_state::<C>(serve_command.configuration).await?;
 
     let router = create_router::<C>(
         server_state.clone(),
@@ -230,19 +240,11 @@ where
 /// Initialize the server state from the configuration file.
 pub async fn init_server_state<C: Connector>(
     config_directory: impl AsRef<Path> + Send,
-) -> ServerState<C> {
-    let configuration = C::parse_configuration(config_directory).await.unwrap();
-
+) -> Result<ServerState<C>, Box<dyn Error + Send + Sync>> {
     let mut metrics = Registry::new();
-    let state = C::try_init_state(&configuration, &mut metrics)
-        .await
-        .unwrap();
-
-    ServerState::<C> {
-        configuration,
-        state,
-        metrics,
-    }
+    let configuration = C::parse_configuration(config_directory).await?;
+    let state = C::try_init_state(&configuration, &mut metrics).await?;
+    Ok(ServerState::new(configuration, state, metrics))
 }
 
 pub fn create_router<C: Connector + 'static>(
@@ -516,7 +518,7 @@ async fn test<C: Connector>(command: TestCommand) -> Result<(), Box<dyn Error + 
         snapshots_dir: command.snapshots_dir,
     };
 
-    let connector = make_connector_adapter::<C>(command.configuration).await;
+    let connector = make_connector_adapter::<C>(command.configuration).await?;
     let results = ndc_test::test_connector(&test_configuration, &connector).await;
 
     if !results.failures.is_empty() {
@@ -530,7 +532,7 @@ async fn test<C: Connector>(command: TestCommand) -> Result<(), Box<dyn Error + 
 }
 
 async fn replay<C: Connector>(command: ReplayCommand) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let connector = make_connector_adapter::<C>(command.configuration).await;
+    let connector = make_connector_adapter::<C>(command.configuration).await?;
     let results = ndc_test::test_snapshots_in_directory(&connector, command.snapshots_dir).await;
 
     if !results.failures.is_empty() {
@@ -543,18 +545,16 @@ async fn replay<C: Connector>(command: ReplayCommand) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-async fn make_connector_adapter<C: Connector>(configuration_path: PathBuf) -> ConnectorAdapter<C> {
-    let configuration = C::parse_configuration(configuration_path).await.unwrap();
-
+async fn make_connector_adapter<C: Connector>(
+    configuration_path: PathBuf,
+) -> Result<ConnectorAdapter<C>, Box<dyn Error + Send + Sync>> {
     let mut metrics = Registry::new();
-    let state = C::try_init_state(&configuration, &mut metrics)
-        .await
-        .unwrap();
-
-    ConnectorAdapter::<C> {
+    let configuration = C::parse_configuration(configuration_path).await?;
+    let state = C::try_init_state(&configuration, &mut metrics).await?;
+    Ok(ConnectorAdapter {
         configuration,
         state,
-    }
+    })
 }
 
 async fn check_health(
