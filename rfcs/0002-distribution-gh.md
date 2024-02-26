@@ -131,6 +131,77 @@ The database backing the API provides all of the APIs state management capabilit
 The initial implementation of the Database will be an extension of the exiting hub registry Postgres instance.
 
 
+### Data Format
+
+Data will be ingested from the ndc-hub/registry initially via the API, although in future it may come from other sources too.
+
+
+```json
+{
+  "overview": { ... },
+  "author": { ... },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  // New stanza
+  "packages": [
+    {
+      "version": "1.2.3",
+      "uri": "https://foobar.com/releases/postgres-postgresql-v0.2.0-9283dh9283u...hd092ujdf2ued.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "9283dh9283u...hd092ujdf2ued"
+      },
+      // Optional link from package to source
+      "source": {
+        "hash": "98801634b0e1396c933188eef88178952f412a8c",
+      },
+      // Imported directly from the package definition archive - See: https://github.com/hasura/ndc-hub/pull/89
+      "definition": {
+        "packagingDefinition": {
+          "type": "PrebuiltDockerImage"
+          "dockerImage": "hasura/ndc-clickhouse:v0.1.0"
+        },
+        "supportedEnvironmentVariables": [
+          {
+             "name": "username",
+             "description": "user name to access click house DB"
+          }
+        ],
+        "cliPlugin": {
+            // fill in the blanks
+        },
+        ...
+      }
+    }
+  ]
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-postgres",
+    "version": [
+      {
+        "tag": "v0.2.0",
+        "hash": "98801634b0e1396c933188eef88178952f412a8c",
+        "is_verified": true
+      }
+    ]
+  }
+}
+```
+
+This matches the previous version found in the hub registry with the addition of a new "packages" stanza.
+
+Of note:
+
+* The `version` field should represent the canonical version of the connector and use semantic versioning
+* The `uri` field should be a stable URI that can be fetched without auth
+* The `checksum` field should be include a checksum of the archive
+  * Specifying that it is of type sha256 initially
+* The `source` field can reference an item in the "source_code" stanza to establish provenance of the distribution
+  * Any fields can be used to match the item, however `hash` is the most stable field to use
+* The `definition` field copies the definition metadata from inside the package definition archive
+  * For indexing and informational purposes
+
+
 ### API
 
 The API provides the user-interaction layer that mediates the database and storage components. No direct user interaction should occur with either the database, or storage, except for the case when the API delegates a storage interaction - such as providing a Hasura V3 project user a public storage URL for read access to a package definition.
