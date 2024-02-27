@@ -10,22 +10,29 @@ use super::*;
 pub struct Example {}
 
 #[async_trait]
-impl Connector for Example {
-    type Configuration = ();
-    type State = ();
+impl ConnectorSetup for Example {
+    type Connector = Self;
 
     async fn parse_configuration(
+        &self,
         _configuration_dir: impl AsRef<Path> + Send,
-    ) -> Result<Self::Configuration, ParseError> {
+    ) -> Result<<Self as Connector>::Configuration, ParseError> {
         Ok(())
     }
 
     async fn try_init_state(
-        _configuration: &Self::Configuration,
+        &self,
+        _configuration: &<Self as Connector>::Configuration,
         _metrics: &mut prometheus::Registry,
-    ) -> Result<Self::State, InitializationError> {
+    ) -> Result<<Self as Connector>::State, InitializationError> {
         Ok(())
     }
+}
+
+#[async_trait]
+impl Connector for Example {
+    type Configuration = ();
+    type State = ();
 
     fn fetch_metrics(
         _configuration: &Self::Configuration,

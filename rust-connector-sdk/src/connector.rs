@@ -221,68 +221,41 @@ pub enum MutationError {
 
 /// Connectors using this library should implement this trait.
 ///
+/// It provides methods which implement the standard endpoints defined by the
+/// specification: capabilities, schema, query, mutation, query/explain,
+/// and mutation/explain.
 ///
-/// It provides methods which implement the standard endpoints
-/// defined by the specification: capabilities, schema, query, mutation,
-/// query/explain, and mutation/explain.
-///
-/// In addition, it introduces names for types to manage
-/// state and configuration (if any), and provides any necessary context
-/// for observability purposes (metrics, logging and tracing).
+/// In addition, it introduces names for types to manage state and configuration
+/// (if any), and provides any necessary context for observability purposes
+/// (metrics, logging and tracing).
 ///
 /// ## Configuration
 ///
 /// Connectors encapsulate data sources, and likely require configuration
-/// (connection strings, web service tokens, etc.). The NDC specification
-/// does not discuss this sort of configuration, because it is an
-/// implementation detail of a specific connector, but it is useful to
-/// adopt a convention here for simplified configuration management.
+/// (connection strings, web service tokens, etc.). The NDC specification does
+/// not discuss this sort of configuration, because it is an implementation
+/// detail of a specific connector, but it is useful to adopt a convention here
+/// for simplified configuration management.
 ///
-/// Configuration is specified as JSON, validated, and stored in a binary
-/// format.
-///
-/// This trait defines two types for managing configuration:
-///
-/// - [`Connector::RawConfiguration`] defines the type of unvalidated, raw
-///   configuration.
-/// - [`Connector::Configuration`] defines the type of validated
-///   configuration. Ideally, invalid configuration should not be representable
-///   in this form.
+/// Configuration is specified by the connector implementation. It is provided
+/// as a path to a directory. Parsing this directory should result in a
+/// [`Connector::Configuration`].
 ///
 /// ## State
 ///
-/// In addition to configuration, this trait defines a type for state management:
+/// In addition to configuration, this trait defines a [`Connector::State`] type
+/// for state management.
 ///
-/// - [`Connector::State`] defines the type of any unserializable runtime state.
-///
-/// State is distinguished from configuration in that it is not provided directly by
-/// the user, and would not ordinarily be serializable. For example, a connection string
-/// would be configuration, but a connection pool object created from that
-/// connection string would be state.
+/// State is distinguished from configuration in that it is not provided
+/// directly by the user, and would not ordinarily be serializable. For example,
+/// a connection string would be configuration, but a connection pool object
+/// created from that connection string would be state.
 #[async_trait]
 pub trait Connector {
     /// The type of validated configuration
     type Configuration: Sync + Send;
     /// The type of unserializable state
     type State: Sync + Send;
-
-    /// Validate the raw configuration provided by the user,
-    /// returning a configuration error or a validated [`Connector::Configuration`].
-    async fn parse_configuration(
-        configuration_dir: impl AsRef<Path> + Send,
-    ) -> Result<Self::Configuration, ParseError>;
-
-    /// Initialize the connector's in-memory state.
-    ///
-    /// For example, any connection pools, prepared queries,
-    /// or other managed resources would be allocated here.
-    ///
-    /// In addition, this function should register any
-    /// connector-specific metrics with the metrics registry.
-    async fn try_init_state(
-        configuration: &Self::Configuration,
-        metrics: &mut prometheus::Registry,
-    ) -> Result<Self::State, InitializationError>;
 
     /// Update any metrics from the state
     ///
@@ -358,4 +331,35 @@ pub trait Connector {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::QueryResponse>, QueryError>;
+}
+
+/// Connectors are set up by values that implement this trait.
+///
+/// It provides a method for parsing configuration, and another for initializing
+/// state.
+///
+/// See [`Connector`] for further details.
+#[async_trait]
+pub trait ConnectorSetup {
+    type Connector: Connector;
+
+    /// Validate the configuration provided by the user, returning a
+    /// configuration error or a validated [`Connector::Configuration`].
+    async fn parse_configuration(
+        &self,
+        configuration_dir: impl AsRef<Path> + Send,
+    ) -> Result<<Self::Connector as Connector>::Configuration, ParseError>;
+
+    /// Initialize the connector's in-memory state.
+    ///
+    /// For example, any connection pools, prepared queries, or other managed
+    /// resources would be allocated here.
+    ///
+    /// In addition, this function should register any connector-specific
+    /// metrics with the metrics registry.
+    async fn try_init_state(
+        &self,
+        configuration: &<Self::Connector as Connector>::Configuration,
+        metrics: &mut prometheus::Registry,
+    ) -> Result<<Self::Connector as Connector>::State, InitializationError>;
 }

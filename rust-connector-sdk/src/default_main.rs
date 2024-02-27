@@ -26,7 +26,7 @@ use ndc_client::models::{
 use ndc_test::report;
 
 use crate::check_health;
-use crate::connector::Connector;
+use crate::connector::{Connector, ConnectorSetup};
 use crate::json_rejection::JsonRejection;
 use crate::json_response::JsonResponse;
 use crate::routes;
@@ -158,34 +158,52 @@ impl<C: Connector> ServerState<C> {
 /// - It reads configuration as JSON from a file specified on the command line,
 /// - It reports traces to an OTLP collector specified on the command line,
 /// - Logs are written to stdout
-pub async fn default_main<C: Connector + 'static>() -> Result<(), Box<dyn Error + Send + Sync>>
+pub async fn default_main<Setup>() -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::Configuration: Clone,
-    C::State: Clone,
+    Setup: ConnectorSetup + Default,
+    Setup::Connector: Connector + 'static,
+    <Setup::Connector as Connector>::Configuration: Clone,
+    <Setup::Connector as Connector>::State: Clone,
+{
+    default_main_with(Setup::default()).await
+}
+
+/// A default main function for a connector, with a non-default setup.
+///
+/// See [`default_main`] for further details.
+pub async fn default_main_with<Setup>(setup: Setup) -> Result<(), Box<dyn Error + Send + Sync>>
+where
+    Setup: ConnectorSetup,
+    Setup::Connector: Connector + 'static,
+    <Setup::Connector as Connector>::Configuration: Clone,
+    <Setup::Connector as Connector>::State: Clone,
 {
     let CliArgs { command } = CliArgs::parse();
 
     match command {
-        Command::Serve(serve_command) => serve::<C>(serve_command).await,
-        Command::Test(test_command) => test::<C>(test_command).await,
-        Command::Replay(replay_command) => replay::<C>(replay_command).await,
+        Command::Serve(serve_command) => serve(setup, serve_command).await,
+        Command::Test(test_command) => test(setup, test_command).await,
+        Command::Replay(replay_command) => replay(setup, replay_command).await,
         Command::CheckHealth(check_health_command) => check_health(check_health_command).await,
     }
 }
 
-async fn serve<C: Connector + 'static>(
+async fn serve<Setup>(
+    setup: Setup,
     serve_command: ServeCommand,
 ) -> Result<(), Box<dyn Error + Send + Sync>>
 where
-    C::Configuration: Clone,
-    C::State: Clone,
+    Setup: ConnectorSetup,
+    Setup::Connector: Connector + 'static,
+    <Setup::Connector as Connector>::Configuration: Clone,
+    <Setup::Connector as Connector>::State: Clone,
 {
     init_tracing(&serve_command.service_name, &serve_command.otlp_endpoint)
         .expect("Unable to initialize tracing");
 
-    let server_state = init_server_state::<C>(serve_command.configuration).await?;
+    let server_state = init_server_state(setup, serve_command.configuration).await?;
 
-    let router = create_router::<C>(
+    let router = create_router::<Setup::Connector>(
         server_state.clone(),
         serve_command.service_token_secret.clone(),
     );
@@ -238,20 +256,19 @@ where
 }
 
 /// Initialize the server state from the configuration file.
-pub async fn init_server_state<C: Connector>(
+pub async fn init_server_state<Setup: ConnectorSetup>(
+    setup: Setup,
     config_directory: impl AsRef<Path> + Send,
-) -> Result<ServerState<C>, Box<dyn Error + Send + Sync>> {
+) -> Result<ServerState<Setup::Connector>, Box<dyn Error + Send + Sync>> {
     let mut metrics = Registry::new();
-    let configuration = C::parse_configuration(config_directory).await?;
-    let state = C::try_init_state(&configuration, &mut metrics).await?;
+    let configuration = setup.parse_configuration(config_directory).await?;
+    let state = setup.try_init_state(&configuration, &mut metrics).await?;
     Ok(ServerState::new(configuration, state, metrics))
 }
 
-pub fn create_router<C: Connector + 'static>(
-    state: ServerState<C>,
-    service_token_secret: Option<String>,
-) -> Router
+pub fn create_router<C>(state: ServerState<C>, service_token_secret: Option<String>) -> Router
 where
+    C: Connector + 'static,
     C::Configuration: Clone,
     C::State: Clone,
 {
@@ -328,11 +345,9 @@ where
         ))
 }
 
-pub fn create_v2_router<C: Connector + 'static>(
-    state: ServerState<C>,
-    service_token_secret: Option<String>,
-) -> Router
+pub fn create_v2_router<C>(state: ServerState<C>, service_token_secret: Option<String>) -> Router
 where
+    C: Connector + 'static,
     C::Configuration: Clone,
     C::State: Clone,
 {
@@ -512,13 +527,16 @@ impl<C: Connector> ndc_test::Connector for ConnectorAdapter<C> {
     }
 }
 
-async fn test<C: Connector>(command: TestCommand) -> Result<(), Box<dyn Error + Send + Sync>> {
+async fn test<Setup: ConnectorSetup>(
+    setup: Setup,
+    command: TestCommand,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let test_configuration = ndc_test::TestConfiguration {
         seed: command.seed,
         snapshots_dir: command.snapshots_dir,
     };
 
-    let connector = make_connector_adapter::<C>(command.configuration).await?;
+    let connector = make_connector_adapter(setup, command.configuration).await?;
     let results = ndc_test::test_connector(&test_configuration, &connector).await;
 
     if !results.failures.is_empty() {
@@ -531,8 +549,11 @@ async fn test<C: Connector>(command: TestCommand) -> Result<(), Box<dyn Error + 
     Ok(())
 }
 
-async fn replay<C: Connector>(command: ReplayCommand) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let connector = make_connector_adapter::<C>(command.configuration).await?;
+async fn replay<Setup: ConnectorSetup>(
+    setup: Setup,
+    command: ReplayCommand,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let connector = make_connector_adapter(setup, command.configuration).await?;
     let results = ndc_test::test_snapshots_in_directory(&connector, command.snapshots_dir).await;
 
     if !results.failures.is_empty() {
@@ -545,12 +566,13 @@ async fn replay<C: Connector>(command: ReplayCommand) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-async fn make_connector_adapter<C: Connector>(
+async fn make_connector_adapter<Setup: ConnectorSetup>(
+    setup: Setup,
     configuration_path: PathBuf,
-) -> Result<ConnectorAdapter<C>, Box<dyn Error + Send + Sync>> {
+) -> Result<ConnectorAdapter<Setup::Connector>, Box<dyn Error + Send + Sync>> {
     let mut metrics = Registry::new();
-    let configuration = C::parse_configuration(configuration_path).await?;
-    let state = C::try_init_state(&configuration, &mut metrics).await?;
+    let configuration = setup.parse_configuration(configuration_path).await?;
+    let state = setup.try_init_state(&configuration, &mut metrics).await?;
     Ok(ConnectorAdapter {
         configuration,
         state,
