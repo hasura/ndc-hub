@@ -491,7 +491,9 @@ impl<C: Connector> ndc_test::connector::Connector for ConnectorAdapter<C> {
             .map_err(|err| ndc_test::error::Error::OtherError(err))
     }
 
-    async fn get_schema(&self) -> Result<ndc_client::models::SchemaResponse, ndc_test::error::Error> {
+    async fn get_schema(
+        &self,
+    ) -> Result<ndc_client::models::SchemaResponse, ndc_test::error::Error> {
         match C::get_schema(&self.configuration).await {
             Ok(response) => response
                 .into_value::<Box<dyn std::error::Error + Send + Sync>>()
