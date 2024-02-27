@@ -545,8 +545,8 @@ async fn test<Setup: ConnectorSetup>(
     ndc_test::test_connector(&test_configuration, &connector, &mut reporter).await;
 
     if !reporter.1.failures.is_empty() {
-        // println!();
-        // println!("{}", report(reporter.1));
+        println!();
+        println!("{}", reporter.1.report());
 
         exit(1)
     }
@@ -564,8 +564,8 @@ async fn replay<Setup: ConnectorSetup>(
     ndc_test::test_snapshots_in_directory(&connector, &mut reporter, command.snapshots_dir).await;
 
     if !reporter.1.failures.is_empty() {
-        // println!();
-        // println!("{}", report(reporter.1));
+        println!();
+        println!("{}", reporter.1.report());
 
         exit(1)
     }
