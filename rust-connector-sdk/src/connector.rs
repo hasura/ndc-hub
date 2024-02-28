@@ -21,6 +21,8 @@ pub enum ParseError {
     ParseError(LocatedError),
     #[error("error validating configuration: {0}")]
     ValidateError(InvalidNodes),
+    #[error("could not find configuration file: {0}")]
+    CouldNotFindConfiguration(PathBuf),
     #[error("error processing configuration: {0}")]
     IoError(#[from] std::io::Error),
     #[error("error processing configuration: {0}")]
