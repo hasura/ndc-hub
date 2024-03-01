@@ -13,8 +13,8 @@ path = "bin/main.rs"
 
 [dependencies]
 gdc_rust_types = { git = "https://github.com/hasura/gdc_rust_types.git", rev = "3273434" }
-ndc-client = { git = "http://github.com/hasura/ndc-spec.git", rev = "cf9f8d2350618b595b7d030eaa1cf0d5312726a1" }
-ndc-test = { git = "http://github.com/hasura/ndc-spec.git", rev = "cf9f8d2350618b595b7d030eaa1cf0d5312726a1" }
+ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.19" }
+ndc-test = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.19" }
 
 async-trait = "^0.1.74"
 axum = "^0.6.20"

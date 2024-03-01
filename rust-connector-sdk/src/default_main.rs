@@ -47,6 +47,8 @@ enum Command {
     #[command()]
     Replay(ReplayCommand),
     #[command()]
+    Bench(BenchCommand),
+    #[command()]
     CheckHealth(CheckHealthCommand),
 }
 
@@ -85,6 +87,27 @@ struct TestCommand {
 struct ReplayCommand {
     #[arg(long, value_name = "DIRECTORY", env = "HASURA_CONFIGURATION_DIRECTORY")]
     configuration: PathBuf,
+    #[arg(long, value_name = "DIRECTORY", env = "HASURA_SNAPSHOTS_DIR")]
+    snapshots_dir: PathBuf,
+}
+
+#[derive(Clone, Parser)]
+struct BenchCommand {
+    #[arg(long, value_name = "DIRECTORY", env = "HASURA_CONFIGURATION_DIRECTORY")]
+    configuration: PathBuf,
+    #[arg(
+        long,
+        value_name = "COUNT",
+        help = "the number of samples to collect per test",
+        default_value = "100"
+    )]
+    samples: u32,
+    #[arg(
+        long,
+        value_name = "TOLERANCE",
+        help = "tolerable deviation from previous report, in standard deviations from the mean"
+    )]
+    tolerance: Option<f64>,
     #[arg(long, value_name = "DIRECTORY", env = "HASURA_SNAPSHOTS_DIR")]
     snapshots_dir: PathBuf,
 }
@@ -183,6 +206,7 @@ where
     match command {
         Command::Serve(serve_command) => serve(setup, serve_command).await,
         Command::Test(test_command) => test(setup, test_command).await,
+        Command::Bench(bench_command) => bench(setup, bench_command).await,
         Command::Replay(replay_command) => replay(setup, replay_command).await,
         Command::CheckHealth(check_health_command) => check_health(check_health_command).await,
     }
@@ -562,6 +586,36 @@ async fn replay<Setup: ConnectorSetup>(
     let mut reporter = (ConsoleReporter::new(), TestResults::default());
 
     ndc_test::test_snapshots_in_directory(&connector, &mut reporter, command.snapshots_dir).await;
+
+    if !reporter.1.failures.is_empty() {
+        println!();
+        println!("{}", reporter.1.report());
+
+        exit(1)
+    }
+
+    Ok(())
+}
+async fn bench<Setup: ConnectorSetup>(
+    setup: Setup,
+    command: BenchCommand,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let configuration = ndc_test::ReportConfiguration {
+        samples: command.samples,
+        tolerance: command.tolerance,
+    };
+
+    let connector = make_connector_adapter(setup, command.configuration).await?;
+    let mut reporter = (ConsoleReporter::new(), TestResults::default());
+
+    ndc_test::bench_snapshots_in_directory(
+        &configuration,
+        &connector,
+        &mut reporter,
+        command.snapshots_dir,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
 
     if !reporter.1.failures.is_empty() {
         println!();
