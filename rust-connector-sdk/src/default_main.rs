@@ -3,9 +3,7 @@ mod v2_compat;
 use std::error::Error;
 use std::net;
 use std::path::{Path, PathBuf};
-use std::process::exit;
 
-use async_trait::async_trait;
 use axum::{
     body::Body,
     extract::State,
@@ -16,7 +14,6 @@ use axum::{
 };
 use axum_extra::extract::WithRejection;
 use clap::{Parser, Subcommand};
-use ndc_test::reporter::{ConsoleReporter, TestResults};
 use prometheus::Registry;
 use tower_http::{trace::TraceLayer, validate_request::ValidateRequestHeaderLayer};
 
@@ -43,10 +40,13 @@ enum Command {
     #[command()]
     Serve(ServeCommand),
     #[command()]
+    #[cfg(feature = "ndc-test")]
     Test(TestCommand),
     #[command()]
+    #[cfg(feature = "ndc-test")]
     Replay(ReplayCommand),
     #[command()]
+    #[cfg(feature = "ndc-test")]
     Bench(BenchCommand),
     #[command()]
     CheckHealth(CheckHealthCommand),
@@ -205,10 +205,13 @@ where
 
     match command {
         Command::Serve(serve_command) => serve(setup, serve_command).await,
-        Command::Test(test_command) => test(setup, test_command).await,
-        Command::Bench(bench_command) => bench(setup, bench_command).await,
-        Command::Replay(replay_command) => replay(setup, replay_command).await,
         Command::CheckHealth(check_health_command) => check_health(check_health_command).await,
+        #[cfg(feature = "ndc-test")]
+        Command::Test(test_command) => ndc_test_commands::test(setup, test_command).await,
+        #[cfg(feature = "ndc-test")]
+        Command::Bench(bench_command) => ndc_test_commands::bench(setup, bench_command).await,
+        #[cfg(feature = "ndc-test")]
+        Command::Replay(replay_command) => ndc_test_commands::replay(setup, replay_command).await,
     }
 }
 
@@ -499,145 +502,159 @@ async fn post_query<C: Connector>(
     routes::post_query::<C>(&state.configuration, &state.state, request).await
 }
 
-struct ConnectorAdapter<C: Connector> {
-    configuration: C::Configuration,
-    state: C::State,
-}
+#[cfg(feature = "ndc-test")]
+mod ndc_test_commands {
+    use super::{BenchCommand, Connector, ConnectorSetup};
+    use crate::json_response::JsonResponse;
+    use async_trait::async_trait;
+    use ndc_test::reporter::{ConsoleReporter, TestResults};
+    use prometheus::Registry;
+    use std::error::Error;
+    use std::path::PathBuf;
+    use std::process::exit;
 
-#[async_trait(?Send)]
-impl<C: Connector> ndc_test::connector::Connector for ConnectorAdapter<C> {
-    async fn get_capabilities(
-        &self,
-    ) -> Result<ndc_client::models::CapabilitiesResponse, ndc_test::error::Error> {
-        C::get_capabilities()
-            .await
-            .into_value::<Box<dyn std::error::Error + Send + Sync>>()
-            .map_err(|err| ndc_test::error::Error::OtherError(err))
+    struct ConnectorAdapter<C: Connector> {
+        configuration: C::Configuration,
+        state: C::State,
     }
 
-    async fn get_schema(
-        &self,
-    ) -> Result<ndc_client::models::SchemaResponse, ndc_test::error::Error> {
-        match C::get_schema(&self.configuration).await {
-            Ok(response) => response
+    #[async_trait(?Send)]
+    impl<C: Connector> ndc_test::connector::Connector for ConnectorAdapter<C> {
+        async fn get_capabilities(
+            &self,
+        ) -> Result<ndc_client::models::CapabilitiesResponse, ndc_test::error::Error> {
+            C::get_capabilities()
+                .await
                 .into_value::<Box<dyn std::error::Error + Send + Sync>>()
-                .map_err(|err| ndc_test::error::Error::OtherError(err)),
-            Err(err) => Err(ndc_test::error::Error::OtherError(err.into())),
+                .map_err(|err| ndc_test::error::Error::OtherError(err))
+        }
+
+        async fn get_schema(
+            &self,
+        ) -> Result<ndc_client::models::SchemaResponse, ndc_test::error::Error> {
+            match C::get_schema(&self.configuration).await {
+                Ok(response) => response
+                    .into_value::<Box<dyn std::error::Error + Send + Sync>>()
+                    .map_err(|err| ndc_test::error::Error::OtherError(err)),
+                Err(err) => Err(ndc_test::error::Error::OtherError(err.into())),
+            }
+        }
+
+        async fn query(
+            &self,
+            request: ndc_client::models::QueryRequest,
+        ) -> Result<ndc_client::models::QueryResponse, ndc_test::error::Error> {
+            match C::query(&self.configuration, &self.state, request)
+                .await
+                .and_then(JsonResponse::into_value)
+            {
+                Ok(response) => Ok(response),
+                Err(err) => Err(ndc_test::error::Error::OtherError(err.into())),
+            }
+        }
+
+        async fn mutation(
+            &self,
+            request: ndc_client::models::MutationRequest,
+        ) -> Result<ndc_client::models::MutationResponse, ndc_test::error::Error> {
+            match C::mutation(&self.configuration, &self.state, request)
+                .await
+                .and_then(JsonResponse::into_value)
+            {
+                Ok(response) => Ok(response),
+                Err(err) => Err(ndc_test::error::Error::OtherError(err.into())),
+            }
         }
     }
 
-    async fn query(
-        &self,
-        request: ndc_client::models::QueryRequest,
-    ) -> Result<ndc_client::models::QueryResponse, ndc_test::error::Error> {
-        match C::query(&self.configuration, &self.state, request)
-            .await
-            .and_then(JsonResponse::into_value)
-        {
-            Ok(response) => Ok(response),
-            Err(err) => Err(ndc_test::error::Error::OtherError(err.into())),
+    pub async fn test<Setup: super::ConnectorSetup>(
+        setup: Setup,
+        command: super::TestCommand,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let test_configuration = ndc_test::configuration::TestConfiguration {
+            seed: command.seed.map(|s| s.as_bytes().try_into()).transpose()?,
+            snapshots_dir: command.snapshots_dir,
+            gen_config: ndc_test::configuration::TestGenerationConfiguration::default(),
+        };
+
+        let connector = make_connector_adapter(setup, command.configuration).await?;
+        let mut reporter = (ConsoleReporter::new(), TestResults::default());
+
+        ndc_test::test_connector(&test_configuration, &connector, &mut reporter).await;
+
+        if !reporter.1.failures.is_empty() {
+            println!();
+            println!("{}", reporter.1.report());
+
+            exit(1)
         }
+
+        Ok(())
     }
 
-    async fn mutation(
-        &self,
-        request: ndc_client::models::MutationRequest,
-    ) -> Result<ndc_client::models::MutationResponse, ndc_test::error::Error> {
-        match C::mutation(&self.configuration, &self.state, request)
-            .await
-            .and_then(JsonResponse::into_value)
-        {
-            Ok(response) => Ok(response),
-            Err(err) => Err(ndc_test::error::Error::OtherError(err.into())),
+    pub async fn replay<Setup: super::ConnectorSetup>(
+        setup: Setup,
+        command: super::ReplayCommand,
+    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+        let connector = make_connector_adapter(setup, command.configuration).await?;
+        let mut reporter = (ConsoleReporter::new(), TestResults::default());
+
+        ndc_test::test_snapshots_in_directory(&connector, &mut reporter, command.snapshots_dir)
+            .await;
+
+        if !reporter.1.failures.is_empty() {
+            println!();
+            println!("{}", reporter.1.report());
+
+            exit(1)
         }
+
+        Ok(())
     }
-}
 
-async fn test<Setup: ConnectorSetup>(
-    setup: Setup,
-    command: TestCommand,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let test_configuration = ndc_test::configuration::TestConfiguration {
-        seed: command.seed.map(|s| s.as_bytes().try_into()).transpose()?,
-        snapshots_dir: command.snapshots_dir,
-        gen_config: ndc_test::configuration::TestGenerationConfiguration::default(),
-    };
+    pub async fn bench<Setup: ConnectorSetup>(
+        setup: Setup,
+        command: BenchCommand,
+    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+        let configuration = ndc_test::ReportConfiguration {
+            samples: command.samples,
+            tolerance: command.tolerance,
+        };
 
-    let connector = make_connector_adapter(setup, command.configuration).await?;
-    let mut reporter = (ConsoleReporter::new(), TestResults::default());
+        let connector = make_connector_adapter(setup, command.configuration).await?;
+        let mut reporter = (ConsoleReporter::new(), TestResults::default());
 
-    ndc_test::test_connector(&test_configuration, &connector, &mut reporter).await;
+        let reports = ndc_test::bench_snapshots_in_directory(
+            &configuration,
+            &connector,
+            &mut reporter,
+            command.snapshots_dir,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
 
-    if !reporter.1.failures.is_empty() {
         println!();
-        println!("{}", reporter.1.report());
+        println!("{}", ndc_test::benchmark_report(&configuration, reports));
 
-        exit(1)
+        if !reporter.1.failures.is_empty() {
+            exit(1);
+        }
+
+        Ok(())
     }
 
-    Ok(())
-}
-
-async fn replay<Setup: ConnectorSetup>(
-    setup: Setup,
-    command: ReplayCommand,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let connector = make_connector_adapter(setup, command.configuration).await?;
-    let mut reporter = (ConsoleReporter::new(), TestResults::default());
-
-    ndc_test::test_snapshots_in_directory(&connector, &mut reporter, command.snapshots_dir).await;
-
-    if !reporter.1.failures.is_empty() {
-        println!();
-        println!("{}", reporter.1.report());
-
-        exit(1)
+    async fn make_connector_adapter<Setup: ConnectorSetup>(
+        setup: Setup,
+        configuration_path: PathBuf,
+    ) -> Result<ConnectorAdapter<Setup::Connector>, Box<dyn Error + Send + Sync>> {
+        let mut metrics = Registry::new();
+        let configuration = setup.parse_configuration(configuration_path).await?;
+        let state = setup.try_init_state(&configuration, &mut metrics).await?;
+        Ok(ConnectorAdapter {
+            configuration,
+            state,
+        })
     }
-
-    Ok(())
-}
-async fn bench<Setup: ConnectorSetup>(
-    setup: Setup,
-    command: BenchCommand,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let configuration = ndc_test::ReportConfiguration {
-        samples: command.samples,
-        tolerance: command.tolerance,
-    };
-
-    let connector = make_connector_adapter(setup, command.configuration).await?;
-    let mut reporter = (ConsoleReporter::new(), TestResults::default());
-
-    let reports = ndc_test::bench_snapshots_in_directory(
-        &configuration,
-        &connector,
-        &mut reporter,
-        command.snapshots_dir,
-    )
-    .await
-    .map_err(|e| e.to_string())?;
-
-    println!();
-    println!("{}", ndc_test::benchmark_report(&configuration, reports));
-
-    if !reporter.1.failures.is_empty() {
-        exit(1);
-    }
-
-    Ok(())
-}
-
-async fn make_connector_adapter<Setup: ConnectorSetup>(
-    setup: Setup,
-    configuration_path: PathBuf,
-) -> Result<ConnectorAdapter<Setup::Connector>, Box<dyn Error + Send + Sync>> {
-    let mut metrics = Registry::new();
-    let configuration = setup.parse_configuration(configuration_path).await?;
-    let state = setup.try_init_state(&configuration, &mut metrics).await?;
-    Ok(ConnectorAdapter {
-        configuration,
-        state,
-    })
 }
 
 async fn check_health(
