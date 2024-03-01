@@ -608,7 +608,7 @@ async fn bench<Setup: ConnectorSetup>(
     let connector = make_connector_adapter(setup, command.configuration).await?;
     let mut reporter = (ConsoleReporter::new(), TestResults::default());
 
-    ndc_test::bench_snapshots_in_directory(
+    let reports = ndc_test::bench_snapshots_in_directory(
         &configuration,
         &connector,
         &mut reporter,
@@ -617,11 +617,11 @@ async fn bench<Setup: ConnectorSetup>(
     .await
     .map_err(|e| e.to_string())?;
 
-    if !reporter.1.failures.is_empty() {
-        println!();
-        println!("{}", reporter.1.report());
+    println!();
+    println!("{}", ndc_test::benchmark_report(&configuration, reports));
 
-        exit(1)
+    if !reporter.1.failures.is_empty() {
+        exit(1);
     }
 
     Ok(())
