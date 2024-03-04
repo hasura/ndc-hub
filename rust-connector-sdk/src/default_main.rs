@@ -567,7 +567,7 @@ mod ndc_test_commands {
         }
     }
 
-    pub async fn test<Setup: super::ConnectorSetup>(
+    pub(super) async fn test<Setup: super::ConnectorSetup>(
         setup: Setup,
         command: super::TestCommand,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -592,7 +592,7 @@ mod ndc_test_commands {
         Ok(())
     }
 
-    pub async fn replay<Setup: super::ConnectorSetup>(
+    pub(super) async fn replay<Setup: super::ConnectorSetup>(
         setup: Setup,
         command: super::ReplayCommand,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -612,7 +612,7 @@ mod ndc_test_commands {
         Ok(())
     }
 
-    pub async fn bench<Setup: ConnectorSetup>(
+    pub(super) async fn bench<Setup: ConnectorSetup>(
         setup: Setup,
         command: BenchCommand,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
