@@ -1,0 +1,30 @@
+{
+  "overview": {
+    "namespace":"hasura",
+    "description": "Connect to a PostgreSQL database and expose them to Hasura v3 Project",
+    "title": "(Neon) PostgreSQL Native Data Connector",
+    "logo": "logo.svg",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.2.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-postgres",
+    "version": [
+      {
+        "tag": "v0.2.0",
+        "hash": "98801634b0e1396c933188eef88178952f412a8c",
+        "is_verified": true
+      }
+    ]
+  }
+}
