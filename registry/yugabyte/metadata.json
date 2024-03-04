@@ -2,8 +2,8 @@
   "overview": {
     "namespace":"hasura",
     "description": "Connect to a PostgreSQL database and expose them to Hasura v3 Project",
-    "title": "(Yugabyte) PostgreSQL Native Data Connector",
-    "logo": "logo.png",
+    "title": "(YugabyteDB) PostgreSQL Native Data Connector",
+    "logo": "logo.svg",
     "tags": [
       "database"
     ],

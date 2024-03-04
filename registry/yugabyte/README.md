@@ -13,7 +13,7 @@ Visit the
 [Hasura v3 Documentation](https://hasura.io/docs/3.0/native-data-connectors/postgresql) 
 for more information.
 
-The connector supports the [Yugabyte](https://www.yugabyte.com) PostgreSQL database offering.
+The connector supports the [YugabyteDB](https://www.yugabyte.com) PostgreSQL database offering.
 
 ## Deployment
 
