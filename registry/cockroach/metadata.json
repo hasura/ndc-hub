@@ -2,12 +2,12 @@
   "overview": {
     "namespace": "hasura",
     "description": "Connect to a PostgreSQL database and expose them to Hasura v3 Project",
-    "title": "PostgreSQL Native Data Connector",
+    "title": "(CockroachDB) PostgreSQL Native Data Connector",
     "logo": "logo.png",
     "tags": [
       "database"
     ],
-    "latest_version": "v0.2.0"
+    "latest_version": "v0.4.0"
   },
   "author": {
     "support_email": "support@hasura.io",

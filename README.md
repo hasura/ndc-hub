@@ -18,13 +18,7 @@ authorization out of the box on any data-source (DBs, APIs).
 
 ## Registry
 
-There are some connectors you can start trying out today, and we'll gradually add more to this list:
-
-1. [hasura/ndc-clickhouse](https://github.com/hasura/ndc-clickhouse)
-1. [hasura/ndc-postgres](https://github.com/hasura/ndc-postgres)
-2. [hasura/ndc-qdrant](https://github.com/hasura/ndc-qdrant)
-3. [hasura/ndc-sendgrid](https://github.com/hasura/ndc-sendgrid)
-4. [hasura/ndc-typescript-deno](https://github.com/hasura/ndc-typescript-deno)
+The connectors currently supported all have an entry in the [registry](/registry) folder.
 
 ## SDK & Guides
 
