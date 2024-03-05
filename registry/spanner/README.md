@@ -7,7 +7,7 @@ which can expose and run GraphQL queries via the Hasura v3 Project.
 - [GitHub repository](https://github.com/hasura/ndc-postgres)
 
 The connector implements the [NDC Specification](https://hasura.github.io/ndc-spec/overview.html),
-but does not currently support mutations, column relationship arguments in queries, functions or procedures.
+but does not currently support column relationship arguments in queries, or functions.
 
 Visit the
 [Hasura v3 Documentation](https://hasura.io/docs/3.0/native-data-connectors/postgresql) 
