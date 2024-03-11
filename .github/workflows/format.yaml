@@ -1,11 +1,11 @@
-name: test
+name: format
 
 on:
   push:
 
 jobs:
-  cargo-test:
-    name: run cargo test
+  cargo-fmt:
+    name: check formatting with cargo fmt
     runs-on: ubuntu-latest
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
@@ -17,9 +17,6 @@ jobs:
         run: |
           rustup show
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "build" # share the cache across jobs
-
-      - name: run tests
-        run: cargo test --release --all-targets --all-features
+      - name: check formatting
+        run: |
+          cargo fmt --all --check
