@@ -16,6 +16,7 @@ ndc-test = ["dep:ndc-test"]
 default = ["ndc-test"]
 
 [dependencies]
+gdc_rust_types = { git = "https://github.com/hasura/gdc_rust_types.git", rev = "3273434" }
 ndc-client = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0" }
 ndc-test = { git = "http://github.com/hasura/ndc-spec.git", tag = "v0.1.0", optional = true }
 
@@ -25,6 +26,7 @@ axum-extra = "^0.8.0"
 bytes = "1.5.0"
 clap = { version = "^4.4.7", features = ["derive", "env"] }
 http = "^0.2"
+indexmap = "2"
 mime = "0.3.17"
 opentelemetry = { version = "^0.20", default-features = false, features = ["rt-tokio", "trace"] }
 opentelemetry-http = "0.9.0"

@@ -1,3 +1,5 @@
+mod v2_compat;
+
 use std::error::Error;
 use std::net;
 use std::path::{Path, PathBuf};
@@ -233,6 +235,13 @@ where
         serve_command.service_token_secret.clone(),
     );
 
+    let router = if serve_command.enable_v2_compatibility {
+        let v2_router = create_v2_router(server_state, serve_command.service_token_secret.clone());
+        Router::new().merge(router).nest("/v2", v2_router)
+    } else {
+        router
+    };
+
     let port = serve_command.port;
     let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
 
@@ -361,6 +370,86 @@ where
                     .into_response())
             },
         ))
+}
+
+pub fn create_v2_router<C>(state: ServerState<C>, service_token_secret: Option<String>) -> Router
+where
+    C: Connector + 'static,
+    C::Configuration: Clone,
+    C::State: Clone,
+{
+    Router::new()
+        .route("/schema", post(v2_compat::post_schema::<C>))
+        .route("/query", post(v2_compat::post_query::<C>))
+        // .route("/mutation", post(v2_compat::post_mutation::<C>))
+        // .route("/raw", post(v2_compat::post_raw::<C>))
+        .route("/query/explain", post(v2_compat::post_explain::<C>))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(make_span)
+                .on_response(on_response),
+        )
+        .layer(ValidateRequestHeaderLayer::custom(
+            move |request: &mut Request<Body>| {
+                let provided_service_token_secret = request
+                    .headers()
+                    .get("x-hasura-dataconnector-config")
+                    .and_then(|config_header| {
+                        serde_json::from_slice::<v2_compat::SourceConfig>(config_header.as_bytes())
+                            .ok()
+                    })
+                    .and_then(|config| config.service_token_secret);
+
+                if service_token_secret == provided_service_token_secret {
+                    // if token set & config header present & values match
+                    // or token not set & config header not set/does not have value for token key
+                    // allow request
+                    Ok(())
+                } else {
+                    // all other cases, block request
+                    let message = "Service Token Secret does not match.".to_string();
+
+                    tracing::error!(
+                        meta.signal_type = "log",
+                        event.domain = "ndc",
+                        event.name = "Authorization error",
+                        name = "Authorization error",
+                        body = message,
+                        error = true,
+                    );
+                    Err((
+                        StatusCode::UNAUTHORIZED,
+                        Json(ErrorResponse {
+                            message: "Internal error".into(),
+                            details: serde_json::Value::Object(serde_json::Map::from_iter([(
+                                "cause".into(),
+                                serde_json::Value::String(message),
+                            )])),
+                        }),
+                    )
+                        .into_response())
+                }
+            },
+        ))
+        // capabilities and health endpoints are exempt from auth requirements
+        .route("/capabilities", get(v2_compat::get_capabilities::<C>))
+        .route("/health", get(v2_compat::get_health))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(make_span)
+                .on_response(on_response)
+                .on_failure(|err, _dur, _span: &_| {
+                    tracing::error!(
+                        meta.signal_type = "log",
+                        event.domain = "ndc",
+                        event.name = "Request failure",
+                        name = "Request failure",
+                        body = %err,
+                        error = true,
+                    );
+                }),
+        )
+        .with_state(state)
 }
 
 async fn get_metrics<C: Connector>(
