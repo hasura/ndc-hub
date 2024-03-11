@@ -46,4 +46,3 @@ url = "2.4.1"
 
 [dev-dependencies]
 axum-test-helper = "0.3.0"
-goldenfile = "^1.6.0"

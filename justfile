@@ -21,6 +21,7 @@ format-check:
 
 lint:
   cargo clippy --all-targets --all-features
+  cargo machete --with-metadata
 
 lint-apply:
   cargo clippy --fix --all-targets --all-features
