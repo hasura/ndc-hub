@@ -35,6 +35,8 @@
           pkgs.rustPlatform.rustcSrc
           pkgs.rustc
           pkgs.rustfmt
+
+          pkgs.just
         ];
 
         buildInputs = pkgs.lib.optionals pkgs.stdenv.isDarwin [

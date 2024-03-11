@@ -1,3 +1,8 @@
+check: format-check build lint test
+
+build:
+  cargo build --all-targets --all-features
+
 # re-build on code changes, and run the reference agent each time a build is
 # successful
 dev:
@@ -7,17 +12,17 @@ dev:
     -- serve --configuration <(echo 'null') \
     --otlp-endpoint http://localhost:4317'
 
-# reformat everything
 format:
   cargo fmt --all
 
-# is everything formatted?
 format-check:
   cargo fmt --all --check
 
-# run `clippy` linter
-lint *FLAGS:
-  cargo clippy {{FLAGS}}
+lint:
+  cargo clippy --all-targets --all-features
 
-lint-apply *FLAGS:
-  cargo clippy --fix {{FLAGS}}
+lint-apply:
+  cargo clippy --fix --all-targets --all-features
+
+test:
+  cargo test --all-targets --all-features
