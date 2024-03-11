@@ -15,9 +15,11 @@ dev:
 
 format:
   cargo fmt --all
+  ! command -v nix > /dev/null || nix fmt
 
 format-check:
   cargo fmt --all --check
+  ! command -v nix > /dev/null || nix fmt -- --check .
 
 lint:
   cargo clippy --all-targets --all-features
