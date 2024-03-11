@@ -6,10 +6,11 @@ build:
 # re-build on code changes, and run the reference agent each time a build is
 # successful
 dev:
+  mkdir -p ./tmp/empty
   cargo watch \
     -x test \
     -x 'run --bin ndc_hub_example \
-    -- serve --configuration <(echo 'null') \
+    -- serve --configuration ./tmp/empty \
     --otlp-endpoint http://localhost:4317'
 
 format:

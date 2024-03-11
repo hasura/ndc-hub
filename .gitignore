@@ -3,3 +3,6 @@
 
 # direnv
 /.direnv
+
+# testing
+/tmp/empty
