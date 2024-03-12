@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v0.0.1"
+    "latest_version": "v0.0.6"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -21,8 +21,8 @@
     "repository": "https://github.com/hasura/ndc-turso",
     "version": [
       {
-        "tag": "v0.0.1",
-        "hash": "7df4a56022a3aef1bd59cb72e2f456700df70633",
+        "tag": "v0.0.6",
+        "hash": "3eeab7dbd7f0c34f7691bb93272c64871c364c4d",
         "is_verified": false
       }
     ]
