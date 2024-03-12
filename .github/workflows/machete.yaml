@@ -1,11 +1,11 @@
-name: test
+name: find unused dependencies
 
 on:
   push:
 
 jobs:
-  cargo-test:
-    name: run cargo test
+  cargo-machete:
+    name: find unused dependencies with cargo machete
     runs-on: ubuntu-latest
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
@@ -16,11 +16,13 @@ jobs:
       - name: install tools
         run: |
           rustup show
+          cargo install cargo-machete
 
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "build" # share the cache across jobs
           save-if: false
 
-      - name: run tests
-        run: cargo test --release --all-targets --all-features
+      - name: find unused dependencies
+        run: |
+          cargo machete --with-metadata
