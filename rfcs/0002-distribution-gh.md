@@ -112,8 +112,13 @@ The initial implementation of the Database will be an extension of the exiting h
 
 ### Data Format
 
-Data will be ingested from the ndc-hub/registry initially via the API, although in future it may come from other sources too.
+Data will be ingested from the ndc-hub/registry initially via the following process:
 
+* A PR will be raised against the ndc-hub/registry
+* Manual database updates will be made to mirror the PR change
+* The package definition will be included in the database for indexing purposes
+
+A user submission will look like this example:
 
 ```json
 {
@@ -134,23 +139,6 @@ Data will be ingested from the ndc-hub/registry initially via the API, although 
       "source": {
         "hash": "98801634b0e1396c933188eef88178952f412a8c",
       },
-      // Imported directly from the package definition archive - See: https://github.com/hasura/ndc-hub/pull/89
-      "definition": {
-        "packagingDefinition": {
-          "type": "PrebuiltDockerImage"
-          "dockerImage": "hasura/ndc-clickhouse:v0.1.0"
-        },
-        "supportedEnvironmentVariables": [
-          {
-             "name": "username",
-             "description": "user name to access click house DB"
-          }
-        ],
-        "cliPlugin": {
-            // fill in the blanks
-        },
-        ...
-      }
     }
   ]
   "source_code": {
@@ -177,8 +165,25 @@ Of note:
   * Specifying that it is of type sha256 initially
 * The `source` field can reference an item in the "source_code" stanza to establish provenance of the distribution
   * Any fields can be used to match the item, however `hash` is the most stable field to use
-* The `definition` field copies the definition metadata from inside the package definition archive
-  * For indexing and informational purposes
+
+The package definition in the referenced archive will be stored in the database
+for indexing purposes along with each package entry under the `packages` field:
+
+```json
+{
+  "packages": [
+    {
+      "uri": "https://foobar.com/releases/postgres-postgresql-v0.2.0-9283dh9283u...hd092ujdf2ued.tar.gz",
+      "definition": {
+        "packagingDefinition": {
+          "type": "PrebuiltDockerImage"
+          "dockerImage": "hasura/ndc-clickhouse:v0.1.0"
+        }, ...
+      } ...
+    } ...
+  ] ...
+}
+```
 
 
 ### API
