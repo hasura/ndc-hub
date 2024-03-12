@@ -58,6 +58,13 @@ struct ServeCommand {
     otlp_endpoint: Option<String>,
     #[arg(
         long,
+        value_name = "HOST IP",
+        env = "HASURA_CONNECTOR_HOST",
+        default_value_t = net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED),
+    )]
+    host: net::IpAddr,
+    #[arg(
+        long,
         value_name = "PORT",
         env = "HASURA_CONNECTOR_PORT",
         default_value_t = 8080
@@ -67,8 +74,6 @@ struct ServeCommand {
     service_token_secret: Option<String>,
     #[arg(long, value_name = "NAME", env = "OTEL_SERVICE_NAME")]
     service_name: Option<String>,
-    #[arg(long, env = "HASURA_ENABLE_V2_COMPATIBILITY")]
-    enable_v2_compatibility: bool,
 }
 
 #[derive(Clone, Parser)]
@@ -233,11 +238,8 @@ where
         serve_command.service_token_secret.clone(),
     );
 
-    let port = serve_command.port;
-    let address = net::SocketAddr::new(net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED), port);
-
+    let address = net::SocketAddr::new(serve_command.host, serve_command.port);
     println!("Starting server on {}", address);
-
     axum::Server::bind(&address)
         .serve(router.into_make_service())
         .with_graceful_shutdown(async {
