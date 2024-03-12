@@ -1,0 +1,30 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a SQLite database and expose them to Hasura v3 Project",
+    "title": "(Turso) SQLite Native Data Connector",
+    "logo": "logo.svg",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.0.1"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": false,
+  "is_hosted_by_hasura": true,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-turso",
+    "version": [
+      {
+        "tag": "v0.0.1",
+        "hash": "7df4a56022a3aef1bd59cb72e2f456700df70633",
+        "is_verified": false
+      }
+    ]
+  }
+}
