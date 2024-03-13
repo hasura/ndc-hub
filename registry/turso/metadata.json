@@ -19,10 +19,10 @@
   "packages": [
     {
       "version": "0.0.6",
-      "uri": "https://github.com/hasura/ndc-turso/archive/refs/tags/v0.0.6.tar.gz",
+      "uri": "https://github.com/hasura/ndc-turso/releases/download/v0.0.6/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "154e3cdfee932e830b6665e5b4e26fa70f9c54f4a57b954c0c2d0af2643b6308"
+        "value": "4502b2cb2ac8463a1e0e80afea7148a7b15c486fecc5db677471c710a3c22e99"
       },
       "source": {
         "hash": "3eeab7dbd7f0c34f7691bb93272c64871c364c4d"
