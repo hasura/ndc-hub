@@ -16,6 +16,19 @@
   },
   "is_verified": false,
   "is_hosted_by_hasura": true,
+  "packages": [
+    {
+      "version": "0.0.6",
+      "uri": "https://github.com/hasura/ndc-turso/archive/refs/tags/v0.0.6.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "154e3cdfee932e830b6665e5b4e26fa70f9c54f4a57b954c0c2d0af2643b6308"
+      },
+      "source": {
+        "hash": "3eeab7dbd7f0c34f7691bb93272c64871c364c4d"
+      }
+    }
+  ],
   "source_code": {
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-turso",
