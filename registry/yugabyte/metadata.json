@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v0.4.0"
+    "latest_version": "v0.5.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -21,8 +21,8 @@
     "repository": "https://github.com/hasura/ndc-postgres",
     "version": [
       {
-        "tag": "v0.4.0",
-        "hash": "8d304a83c5d41135d992132b77763d26f27803be",
+        "tag": "v0.5.0",
+        "hash": "3fa214a",
         "is_verified": true
       }
     ]
