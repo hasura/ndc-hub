@@ -31,7 +31,6 @@ opentelemetry = { version = "^0.22", default-features = false }
 opentelemetry-http = "0.11.0"
 opentelemetry-otlp = { version = "^0.15.0", features = ["reqwest-client", "gzip-tonic", "tls", "tls-roots", "http-proto"] }
 opentelemetry-semantic-conventions = "^0.14.0"
-opentelemetry_api = "^0.20.0"
 opentelemetry_sdk = { version = "^0.22.1", features = ["rt-tokio"] }
 prometheus = "^0.13.3"
 reqwest = "^0.11.22"

@@ -1019,7 +1019,6 @@ dependencies = [
  "opentelemetry-http",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
- "opentelemetry_api",
  "opentelemetry_sdk 0.22.1",
  "prometheus",
  "reqwest",
