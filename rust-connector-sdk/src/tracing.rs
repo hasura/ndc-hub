@@ -1,6 +1,6 @@
+use std::env;
 use std::error::Error;
 use std::time::Duration;
-use std::{env, str::FromStr};
 
 use axum::body::{Body, BoxBody};
 use http::{Request, Response};
@@ -15,8 +15,9 @@ use opentelemetry_sdk::{
     trace::{self, Sampler},
     Resource,
 };
-use tracing::{level_filters::LevelFilter, Level, Span};
+use tracing::{Level, Span};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
+use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub fn init_tracing(
@@ -28,9 +29,7 @@ pub fn init_tracing(
         .or(env::var(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT).ok());
     let log_level = env::var("RUST_LOG").unwrap_or(Level::INFO.to_string());
     let subscriber = tracing_subscriber::registry()
-        .with(LevelFilter::from_level(
-            Level::from_str(&log_level).map_err(|_| format!("invalid log level: {}", log_level))?,
-        ))
+        .with(EnvFilter::builder().parse(format!("{},otel::tracing=trace,otel=debug", log_level))?)
         .with(
             tracing_subscriber::fmt::layer()
                 .json()
