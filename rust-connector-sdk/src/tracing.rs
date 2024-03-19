@@ -1,69 +1,103 @@
-use std::env;
 use std::error::Error;
 use std::time::Duration;
+use std::{env, str::FromStr};
 
 use axum::body::{Body, BoxBody};
 use http::{Request, Response};
 use opentelemetry::{global, KeyValue};
 use opentelemetry_http::HeaderExtractor;
-use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
+use opentelemetry_otlp::{
+    SpanExporterBuilder, WithExportConfig, OTEL_EXPORTER_OTLP_PROTOCOL,
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+};
 use opentelemetry_sdk::{
     propagation::TraceContextPropagator,
     trace::{self, Sampler},
     Resource,
 };
-use tracing::Span;
+use tracing::{level_filters::LevelFilter, Level, Span};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub fn init_tracing(
     service_name: &Option<String>,
     otlp_endpoint: &Option<String>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    global::set_text_map_propagator(TraceContextPropagator::new());
-
-    let service_name = service_name
+    let trace_endpoint = otlp_endpoint
         .clone()
-        .unwrap_or(env!("CARGO_PKG_NAME").to_string());
-
-    let tracer = opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter().tonic().with_endpoint(
-                otlp_endpoint
-                    .clone()
-                    .unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT.into()),
-            ),
-        )
-        .with_trace_config(
-            trace::config()
-                .with_resource(Resource::new(vec![
-                    KeyValue::new(
-                        opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-                        service_name,
-                    ),
-                    KeyValue::new(
-                        opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
-                        env!("CARGO_PKG_VERSION"),
-                    ),
-                ]))
-                .with_sampler(Sampler::ParentBased(Box::new(Sampler::AlwaysOn))),
-        )
-        .install_batch(opentelemetry_sdk::runtime::Tokio)?;
-
-    tracing_subscriber::registry()
-        .with(
-            tracing_opentelemetry::layer()
-                .with_error_records_to_exceptions(true)
-                .with_tracer(tracer),
-        )
-        .with(EnvFilter::builder().parse("info,otel::tracing=trace,otel=debug")?)
+        .or(env::var(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT).ok());
+    let log_level = env::var("RUST_LOG").unwrap_or(Level::INFO.to_string());
+    let subscriber = tracing_subscriber::registry()
+        .with(LevelFilter::from_level(
+            Level::from_str(&log_level).map_err(|_| format!("invalid log level: {}", log_level))?,
+        ))
         .with(
             tracing_subscriber::fmt::layer()
                 .json()
                 .with_timer(tracing_subscriber::fmt::time::time()),
-        )
-        .init();
+        );
+
+    match trace_endpoint {
+        // disable traces exporter if the endpoint is empty
+        None => subscriber.init(),
+        Some(endpoint) => {
+            global::set_text_map_propagator(TraceContextPropagator::new());
+
+            let service_name = service_name
+                .clone()
+                .unwrap_or(env!("CARGO_PKG_NAME").to_string());
+
+            let exporter: SpanExporterBuilder = match env::var(OTEL_EXPORTER_OTLP_PROTOCOL) {
+                Ok(protocol) => match protocol.as_str() {
+                    "grpc" => Ok(opentelemetry_otlp::new_exporter()
+                        .tonic()
+                        .with_endpoint(endpoint)
+                        .into()),
+                    "http/protobuf" => Ok(opentelemetry_otlp::new_exporter()
+                        .http()
+                        .with_endpoint(endpoint)
+                        .into()),
+                    invalid => Err(format!("invalid protocol: {}", invalid)),
+                },
+                // the default exporter protocol is grpc
+                Err(env::VarError::NotPresent) => Ok(opentelemetry_otlp::new_exporter()
+                    .tonic()
+                    .with_endpoint(endpoint)
+                    .into()),
+                Err(env::VarError::NotUnicode(os_str)) => Err(format!(
+                    "invalid protocol: {}",
+                    os_str.to_str().unwrap_or("")
+                )),
+            }?;
+
+            let tracer = opentelemetry_otlp::new_pipeline()
+                .tracing()
+                .with_exporter(exporter)
+                .with_trace_config(
+                    trace::config()
+                        .with_resource(Resource::new(vec![
+                            KeyValue::new(
+                                opentelemetry_semantic_conventions::resource::SERVICE_NAME,
+                                service_name,
+                            ),
+                            KeyValue::new(
+                                opentelemetry_semantic_conventions::resource::SERVICE_VERSION,
+                                env!("CARGO_PKG_VERSION"),
+                            ),
+                        ]))
+                        .with_sampler(Sampler::ParentBased(Box::new(Sampler::AlwaysOn))),
+                )
+                .install_batch(opentelemetry_sdk::runtime::Tokio)?;
+
+            subscriber
+                .with(
+                    tracing_opentelemetry::layer()
+                        .with_error_records_to_exceptions(true)
+                        .with_tracer(tracer),
+                )
+                .init();
+        }
+    };
 
     Ok(())
 }
