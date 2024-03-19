@@ -27,12 +27,12 @@ bytes = "1.5.0"
 clap = { version = "^4.4.7", features = ["derive", "env"] }
 http = "^0.2"
 mime = "0.3.17"
-opentelemetry = { version = "^0.20", default-features = false, features = ["rt-tokio", "trace"] }
-opentelemetry-http = "0.9.0"
-opentelemetry-otlp = { version = "^0.13.0", features = ["reqwest-client"] }
-opentelemetry-semantic-conventions = "^0.12.0"
+opentelemetry = { version = "^0.22", default-features = false }
+opentelemetry-http = "0.11.0"
+opentelemetry-otlp = { version = "^0.15.0", features = ["reqwest-client", "gzip-tonic", "tls", "http-proto"] }
+opentelemetry-semantic-conventions = "^0.14.0"
 opentelemetry_api = "^0.20.0"
-opentelemetry_sdk = "^0.20.0"
+opentelemetry_sdk = { version = "^0.22.1", features = ["rt-tokio"] }
 prometheus = "^0.13.3"
 reqwest = "^0.11.22"
 serde = { version = "^1.0.192", features = ["derive"] }
@@ -41,7 +41,7 @@ thiserror = "^1.0"
 tokio = { version = "^1.34.0", features = ["fs", "signal"] }
 tower-http = { version = "^0.4.4", features = ["cors", "trace", "validate-request"] }
 tracing = "^0.1.40"
-tracing-opentelemetry = "^0.20.0"
+tracing-opentelemetry = "^0.23.0"
 tracing-subscriber = { version = "^0.3", default-features = false, features = ["ansi", "env-filter", "fmt", "json"] }
 url = "2.4.1"
 

@@ -4,11 +4,14 @@ use std::time::Duration;
 
 use axum::body::{Body, BoxBody};
 use http::{Request, Response};
-use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
-use opentelemetry_api::KeyValue;
+use opentelemetry::{global, KeyValue};
 use opentelemetry_http::HeaderExtractor;
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
-use opentelemetry_sdk::trace::Sampler;
+use opentelemetry_sdk::{
+    propagation::TraceContextPropagator,
+    trace::{self, Sampler},
+    Resource,
+};
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
@@ -33,8 +36,8 @@ pub fn init_tracing(
             ),
         )
         .with_trace_config(
-            opentelemetry::sdk::trace::config()
-                .with_resource(opentelemetry::sdk::Resource::new(vec![
+            trace::config()
+                .with_resource(Resource::new(vec![
                     KeyValue::new(
                         opentelemetry_semantic_conventions::resource::SERVICE_NAME,
                         service_name,
@@ -46,12 +49,12 @@ pub fn init_tracing(
                 ]))
                 .with_sampler(Sampler::ParentBased(Box::new(Sampler::AlwaysOn))),
         )
-        .install_batch(opentelemetry::runtime::Tokio)?;
+        .install_batch(opentelemetry_sdk::runtime::Tokio)?;
 
     tracing_subscriber::registry()
         .with(
             tracing_opentelemetry::layer()
-                .with_exception_field_propagation(true)
+                .with_error_records_to_exceptions(true)
                 .with_tracer(tracer),
         )
         .with(EnvFilter::builder().parse("info,otel::tracing=trace,otel=debug")?)
