@@ -29,7 +29,7 @@
   ],
   "source_code": {
     "is_open_source": true,
-    "repository": "https://github.com/hasura/clickhouse_ndc/",
+    "repository": "https://github.com/hasura/ndc-clickhouse/",
     "version": [
       {
         "tag": "v0.2.0",
