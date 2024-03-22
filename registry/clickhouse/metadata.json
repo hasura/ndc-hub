@@ -1,28 +1,41 @@
 {
-    "overview":{
-        "namespace":"hasura",
-        "description":"The Clickhouse Native Data Connector allows for connecting to a Clickhouse instance giving you an instant GraphQL API on top of your Clickhouse data.",
-        "title":"Clickhouse Native Data Connector",
-        "logo":"logo.png",
-        "tags":["database"],
-        "latest_version":"v0.1"
-    },
-    "author":{
-        "support_email":"support@hasura.io",
-        "homepage":"https://hasura.io",
-        "name":"Hasura"
-    },
-    "is_verified":true,
-    "is_hosted_by_hasura":false,
-    "source_code":{
-        "is_open_source":true,
-        "repository":"https://github.com/hasura/clickhouse_ndc/",
-        "version":[
-            {
-                "tag": "v0.1.0",
-                "hash": "508a0023ddae3251945fedf7f4aa2a196618ce05",
-                "is_verified": true
-            }
-        ]
+  "overview": {
+    "namespace": "hasura",
+    "description": "The Clickhouse Native Data Connector allows for connecting to a Clickhouse instance giving you an instant GraphQL API on top of your Clickhouse data.",
+    "title": "Clickhouse Native Data Connector",
+    "logo": "logo.png",
+    "tags": ["Clickhouse"],
+    "latest_version": "v0.2.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "packages": [
+    {
+      "version": "0.2.0",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.0/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "94bacc789b3c3ea5e92b324e43bf054abaef1c0b7ce87d78ea12a34b33d7d6e5"
+      },
+      "source": {
+        "hash": "4ec3b65c4fdbb37896e105ca89f8bdb1c25b277b"
+      }
     }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/clickhouse_ndc/",
+    "version": [
+      {
+        "tag": "v0.2.0",
+        "hash": "4ec3b65c4fdbb37896e105ca89f8bdb1c25b277b",
+        "is_verified": true
+      }
+    ]
+  }
 }
