@@ -5,7 +5,7 @@
         "title":"Qdrant Data Connector",
         "logo":"logo.png",
         "tags":["database"],
-        "latest_version":"v0.1.5"
+        "latest_version":"v0.1.6"
     },
     "author":{
         "support_email":"support@hasura.io",
@@ -16,14 +16,14 @@
     "is_hosted_by_hasura":false,
     "packages": [
       {
-        "version": "0.1.5",
-        "uri": "https://github.com/hasura/ndc-qdrant/releases/download/v0.1.5/connector-definition.tgz",
+        "version": "0.1.6",
+        "uri": "https://github.com/hasura/ndc-qdrant/releases/download/v0.1.6/connector-definition.tgz",
         "checksum": {
             "type": "sha256",
-            "value": "5352ad47e62712030aeb8bfa036c1e7f76dc244fac7f248bb2d0225dddc9fc6e"
+            "value": "ca618f4fa78e39cd00670db4d8f8d0ae37924807411da837163708d8e58ede39"
         },
         "source": {
-            "hash": "a6488519e79b66ce0e998c74b8d064408f2c762a"
+            "hash": "2e2de63b6c40623c4c9324126d0d9e3a78a0e15f"
         }
       }  
     ],
@@ -32,8 +32,8 @@
         "repository":"https://github.com/hasura/ndc-qdrant",
         "version":[
             {
-                "tag":"v0.1.5",
-                "hash":"a6488519e79b66ce0e998c74b8d064408f2c762a",
+                "tag":"v0.1.6",
+                "hash":"2e2de63b6c40623c4c9324126d0d9e3a78a0e15f",
                 "is_verified": false
             }
         ]
