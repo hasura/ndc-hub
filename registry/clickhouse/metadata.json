@@ -5,7 +5,7 @@
     "title": "Clickhouse Native Data Connector",
     "logo": "logo.png",
     "tags": ["Clickhouse"],
-    "latest_version": "v0.2.0"
+    "latest_version": "v0.2.1"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -15,6 +15,17 @@
   "is_verified": true,
   "is_hosted_by_hasura": false,
   "packages": [
+    {
+      "version": "0.2.1",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.1/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "5e88d1b7fb14638ceeaf5b6fac775b6cc68d62d8537fc25cd8e87cdf4dfb443e"
+      },
+      "source": {
+        "hash": "521365decd10db124c9865bd29fc4e60025a6892"
+      }
+    },
     {
       "version": "0.2.0",
       "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.0/connector-definition.tgz",
@@ -31,6 +42,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-clickhouse/",
     "version": [
+      {
+        "tag": "v0.2.1",
+        "hash": "521365decd10db124c9865bd29fc4e60025a6892",
+        "is_verified": true
+      },
       {
         "tag": "v0.2.0",
         "hash": "4ec3b65c4fdbb37896e105ca89f8bdb1c25b277b",
