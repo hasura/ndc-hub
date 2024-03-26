@@ -1,0 +1,57 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The Go connector allows you to expose Go functions as NDC functions/procedures for use in your Hasura DDN subgraphs.",
+    "title": "Go Connector",
+    "logo": "logo.svg",
+    "tags": ["Go"],
+    "latest_version": "v1.0.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "packages": [
+    {
+      "version": "v1.0.0",
+      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v1.0.0/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "906db79cf5565eaca731436180295d2d7ee81246b57cc7dcdde14585841f53a5"
+      },
+      "source": {
+        "hash": "42259e9a9c719131721f0058c552e9b8a4a36973"
+      }
+    },
+    {
+      "version": "v0.4.0",
+      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v0.4.0/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "13e6c4e970e032307cbb9edbb9d79ad555880c46d8a58d98f23ce441cef7d7b2"
+      },
+      "source": {
+        "hash": "ac27498b6dbd5e803ca97e0fc702f52e2d9b429d"
+      }
+    }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-sdk-go",
+    "version": [
+      {
+        "tag": "v1.0.0",
+        "hash": "42259e9a9c719131721f0058c552e9b8a4a36973",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.4.0",
+        "hash": "ac27498b6dbd5e803ca97e0fc702f52e2d9b429d",
+        "is_verified": true
+      }
+    ]
+  }
+}
