@@ -5,7 +5,7 @@
     "title": "MongoDB Connector",
     "logo": "logo.png",
     "tags": ["MongoDB"],
-    "latest_version": "v0.0.2"
+    "latest_version": "v0.0.3"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -15,6 +15,17 @@
   "is_verified": true,
   "is_hosted_by_hasura": false,
   "packages": [
+    {
+      "version": "0.0.3",
+      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.0.3/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5"
+      },
+      "source": {
+        "hash": "b50094a368f8fbab7c37e4b83ef5dc1249a4a5d5"
+      }
+    },
     {
       "version": "0.0.2",
       "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.0.2/connector-definition.tgz",
@@ -42,6 +53,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-mongodb/",
     "version": [
+      {
+        "tag": "v0.0.3",
+        "hash": "b50094a368f8fbab7c37e4b83ef5dc1249a4a5d5",
+        "is_verified": true
+      },
       {
         "tag": "v0.0.2",
         "hash": "90c336c4d1d949d62dd25b04742e650fb6d458e0",
