@@ -1,13 +1,11 @@
 [workspace]
 resolver = "2"
 
-package.version = "0.1.0"
+package.version = "0.1.1"
 package.edition = "2021"
 package.license = "Apache-2.0"
 
-members = [
-  "rust-connector-sdk",
-]
+members = ["rust-connector-sdk"]
 
 [profile.release]
 debug = true

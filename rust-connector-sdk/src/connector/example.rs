@@ -50,7 +50,7 @@ impl Connector for Example {
 
     async fn get_capabilities() -> JsonResponse<models::CapabilitiesResponse> {
         models::CapabilitiesResponse {
-            version: "0.1.0".into(),
+            version: "0.1.1".into(),
             capabilities: models::Capabilities {
                 relationships: None,
                 query: models::QueryCapabilities {

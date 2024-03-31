@@ -348,15 +348,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 
 [[package]]
-name = "colored"
-version = "2.0.4"
+name = "colorful"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2674ec482fbc38012cf31e6c42ba0177b431a0cb6f15fe40efa5aab1bda516f6"
-dependencies = [
- "is-terminal",
- "lazy_static",
- "windows-sys",
-]
+checksum = "97af0562545a7d7f3d9222fcf909963bec36dcb502afaacab98c6ffac8da47ce"
 
 [[package]]
 name = "core-foundation"
@@ -841,17 +836,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28b29a3cd74f0f4598934efe3aeba42bae0eb4680554128851ebbecb02af14e6"
 
 [[package]]
-name = "is-terminal"
-version = "0.4.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb0889898416213fab133e1d33a0e5858a48177452750691bde3666d0fdbaf8b"
-dependencies = [
- "hermit-abi",
- "rustix",
- "windows-sys",
-]
-
-[[package]]
 name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -986,12 +970,12 @@ dependencies = [
 
 [[package]]
 name = "ndc-client"
-version = "0.1.0"
-source = "git+http://github.com/hasura/ndc-spec.git?tag=v0.1.0#8892f0524affd37e94097c2ce43da8740fc57aca"
+version = "0.1.1"
+source = "git+http://github.com/hasura/ndc-spec.git?tag=v0.1.1#17c61946cc9a3ff6dcee1d535af33141213b639a"
 dependencies = [
  "async-trait",
  "indexmap 2.1.0",
- "opentelemetry 0.20.0",
+ "opentelemetry",
  "reqwest",
  "schemars",
  "serde",
@@ -1003,7 +987,7 @@ dependencies = [
 
 [[package]]
 name = "ndc-sdk"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "axum",
@@ -1015,11 +999,11 @@ dependencies = [
  "mime",
  "ndc-client",
  "ndc-test",
- "opentelemetry 0.22.0",
+ "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
- "opentelemetry_sdk 0.22.1",
+ "opentelemetry_sdk",
  "prometheus",
  "reqwest",
  "serde",
@@ -1035,12 +1019,12 @@ dependencies = [
 
 [[package]]
 name = "ndc-test"
-version = "0.1.0"
-source = "git+http://github.com/hasura/ndc-spec.git?tag=v0.1.0#8892f0524affd37e94097c2ce43da8740fc57aca"
+version = "0.1.1"
+source = "git+http://github.com/hasura/ndc-spec.git?tag=v0.1.1#17c61946cc9a3ff6dcee1d535af33141213b639a"
 dependencies = [
  "async-trait",
  "clap",
- "colored",
+ "colorful",
  "indexmap 2.1.0",
  "ndc-client",
  "rand",
@@ -1142,16 +1126,6 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9591d937bc0e6d2feb6f71a559540ab300ea49955229c347a517a28d27784c54"
-dependencies = [
- "opentelemetry_api",
- "opentelemetry_sdk 0.20.0",
-]
-
-[[package]]
-name = "opentelemetry"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "900d57987be3f2aeb70d385fff9b27fb74c5723cc9a52d904d4f9c807a0667bf"
@@ -1174,7 +1148,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "http",
- "opentelemetry 0.22.0",
+ "opentelemetry",
  "reqwest",
 ]
 
@@ -1187,11 +1161,11 @@ dependencies = [
  "async-trait",
  "futures-core",
  "http",
- "opentelemetry 0.22.0",
+ "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-proto",
  "opentelemetry-semantic-conventions",
- "opentelemetry_sdk 0.22.1",
+ "opentelemetry_sdk",
  "prost",
  "reqwest",
  "thiserror",
@@ -1205,8 +1179,8 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a8fddc9b68f5b80dae9d6f510b88e02396f006ad48cac349411fbecc80caae4"
 dependencies = [
- "opentelemetry 0.22.0",
- "opentelemetry_sdk 0.22.1",
+ "opentelemetry",
+ "opentelemetry_sdk",
  "prost",
  "tonic",
 ]
@@ -1216,41 +1190,6 @@ name = "opentelemetry-semantic-conventions"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9ab5bd6c42fb9349dcf28af2ba9a0667f697f9bdcca045d39f2cec5543e2910"
-
-[[package]]
-name = "opentelemetry_api"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a81f725323db1b1206ca3da8bb19874bbd3f57c3bcd59471bfb04525b265b9b"
-dependencies = [
- "futures-channel",
- "futures-util",
- "indexmap 1.9.3",
- "js-sys",
- "once_cell",
- "pin-project-lite",
- "thiserror",
- "urlencoding",
-]
-
-[[package]]
-name = "opentelemetry_sdk"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa8e705a0612d48139799fcbaba0d4a90f06277153e43dd2bdc16c6f0edd8026"
-dependencies = [
- "async-trait",
- "crossbeam-channel",
- "futures-channel",
- "futures-executor",
- "futures-util",
- "once_cell",
- "opentelemetry_api",
- "ordered-float 3.9.1",
- "percent-encoding",
- "rand",
- "thiserror",
-]
 
 [[package]]
 name = "opentelemetry_sdk"
@@ -1265,22 +1204,13 @@ dependencies = [
  "futures-util",
  "glob",
  "once_cell",
- "opentelemetry 0.22.0",
- "ordered-float 4.2.0",
+ "opentelemetry",
+ "ordered-float",
  "percent-encoding",
  "rand",
  "thiserror",
  "tokio",
  "tokio-stream",
-]
-
-[[package]]
-name = "ordered-float"
-version = "3.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a54938017eacd63036332b4ae5c8a49fc8c0c1d6d629893057e4f13609edd06"
-dependencies = [
- "num-traits",
 ]
 
 [[package]]
@@ -2257,8 +2187,8 @@ checksum = "a9be14ba1bbe4ab79e9229f7f89fab8d120b865859f10527f31c033e599d2284"
 dependencies = [
  "js-sys",
  "once_cell",
- "opentelemetry 0.22.0",
- "opentelemetry_sdk 0.22.1",
+ "opentelemetry",
+ "opentelemetry_sdk",
  "smallvec",
  "tracing",
  "tracing-core",
