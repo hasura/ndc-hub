@@ -4,7 +4,7 @@
     "description": "Connect to a MongoDB database and expose it to Hasura v3 Project",
     "title": "MongoDB Connector",
     "logo": "logo.png",
-    "tags": ["MongoDB"],
+    "tags": ["database"],
     "latest_version": "v0.0.3"
   },
   "author": {

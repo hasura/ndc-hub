@@ -4,7 +4,7 @@
     "description": "The Go connector allows you to expose Go functions as NDC functions/procedures for use in your Hasura DDN subgraphs.",
     "title": "Go Connector",
     "logo": "logo.svg",
-    "tags": ["Go"],
+    "tags": [],
     "latest_version": "v1.0.0"
   },
   "author": {
