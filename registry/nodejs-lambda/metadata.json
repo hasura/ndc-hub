@@ -4,7 +4,7 @@
     "description": "The NodeJS Lambda connector allows you to expose TypeScript functions as NDC functions/procedures for use in your Hasura DDN subgraphs.",
     "title": "NodeJS Lambda Connector",
     "logo": "logo.png",
-    "tags": ["NodeJS", "TypeScript"],
+    "tags": [],
     "latest_version": "v1.2.0"
   },
   "author": {
