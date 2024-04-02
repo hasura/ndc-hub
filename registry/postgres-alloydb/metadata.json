@@ -1,9 +1,9 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect Hasura DDN to an AWS Aurora database",
-    "title": "(AWS Aurora) PostgreSQL",
-    "logo": "logo.svg",
+    "description": "Connect Hasura DDN to an AlloyDB database",
+    "title": "(AlloyDB) PostgreSQL",
+    "logo": "logo.png",
     "tags": [
       "database"
     ],

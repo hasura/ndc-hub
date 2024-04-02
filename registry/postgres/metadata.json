@@ -1,7 +1,7 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect to a PostgreSQL database and expose them to Hasura v3 Project",
+    "description": "Connect Hasura DDN to a PostgreSQL database",
     "title": "PostgreSQL Native Data Connector",
     "logo": "logo.png",
     "tags": [
