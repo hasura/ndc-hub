@@ -1,8 +1,8 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect to a PostgreSQL database and expose them to Hasura v3 Project",
-    "title": "(CockroachDB) PostgreSQL Native Data Connector",
+    "description": "Connect Hasura DDN to a CockroachDB Postgres database",
+    "title": "CockroachDB",
     "logo": "logo.png",
     "tags": [
       "database"
