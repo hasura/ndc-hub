@@ -22,12 +22,16 @@ For connectors with these requirements (typically connectors that use the existi
   * As an end user, when I build my connector manifest, I want to see any errors that would prevent my connector from running, so that I may correct them
 
 ## Proposed Solution
-The proposed solution is to extend the connector definition so that it can capture whether or not a `ManagedDockerBuild` connector supports being run using the native toolchain.
+The proposed solution is to extend the connector definition so that it can capture whether or not a connector supports being run using the native toolchain. This support exists in parallel with the Docker-based `ManagedDockerBuild` and `PrebuiltDockerImage` packaging definitions.
 
 The following changes have been made to the `connector-metadata.yaml`:
-* `supportsNativeToolchain` has been added to `ManagedDockerBuildPackaging`. This allows the connector to declare whether or not it supports being run with a native toolchain. If this is set to `true` (defaults to `false`), the connector should also define a `Commands.init` and a `Commands.watch`. When the `ddn` CLI runs the connector during `ddn dev` it will do so using the `watch` command, rather than running a Docker container.
-* `init` has been added to `Commands`. `init` is run by the `ddn` CLI before it either builds the connector (`ddn build connector-manifest`) or runs it (`ddn watch`). The purpose of `init` is to check the user's environment to ensure the native toolchain is installed and is ready to use. This includes restoring any dependencies, if necessary.
-* A command type of `ShellScriptCommand` has been added that can be used for all `Commands`. A `ShellScriptCommand` defines a command that is executed using a shell script. There are two shells required, Bash (Mac/Linux) and PowerShell (Windows). When the specified command is run using the shell, the current working directory is set to where the contents of the `.hasura-connector` directory from the connector definition is located on disk. This enables the command to run a bundled script file. All the environment variables as specified in the CLI guidelines RFC will be set, including the `HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH`, which specifies where the build context directory is.
+* An optional `nativeToolchainDefinition` has been added to the root `ConnectorMetadataDefinition`. This allows the connector to declare whether or not it supports being run with a native toolchain. If the connector supports a native toolchain it needs to define a `NativeToolchainDefinition` object which contains some `commands` (`NativeToolchainCommands`) .
+* `NativeToolchainCommands` requires that the connector define two commands, and one optional one:
+  * `start` (required) - This command must start the connector using the configuration in the build context directory. This is used when doing a `ddn build connector-manifest` where the connector is run using native tooling.
+  * `watch` (required) - This command must start the connector using the configuration in the build context directory, but also restart the connector upon any configuration change. This is used during `ddn dev` watch mode when the connector is run using native tooling.
+  * `update` (optional) - This command is run when a configuration update like a schema introspection refresh is required when the connector is run using native tooling.
+* It is expected that the `NativeToolchainCommands` check the user's environment for the required native tooling before attempting to perform their action. If the tooling is missing, a user-friendly error should be produced, advising the user about the missing tooling.
+* A command type of `ShellScriptCommand` has been added that can be used for all commands. A `ShellScriptCommand` defines a command that is executed using a shell script. There are two shells required, Bash (Mac/Linux) and PowerShell (Windows). When the specified command is run using the shell, the current working directory is set to where the contents of the `.hasura-connector` directory from the connector definition is located on disk. This enables the command to run a bundled script file. All the environment variables as specified in the CLI guidelines RFC will be set, including the `HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH`, which specifies where the build context directory is.
   * Note that for script files to be runnable in PowerShell, it must be invoked like so: `powershell.exe -ExecutionPolicy Bypass -Command <command>`. Running scripts is disabled by default on Windows clients. (For more information see [this documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-5.1).)
 
 Here's a worked example for the NodeJS Lambda Connector:
@@ -37,17 +41,53 @@ Here's a worked example for the NodeJS Lambda Connector:
 ```yaml
 packagingDefinition:
   type: ManagedDockerBuild
-  supportsNativeToolchain: true
+nativeToolchainDefinition:
+  commands:
+    start:
+      type: ShellScript
+      bash: ./start.sh
+      powershell: ./start.ps1
+    watch: 
+      type: ShellScript
+      bash: ./watch.sh
+      powershell: ./watch.ps1
 supportedEnvironmentVariables: {}
-commands:
-  init:
-    type: ShellScript
-    bash: ./init.sh
-    powershell: ./init.ps1
-  watch: npm run watch
+commands: {}
+dockerComposeWatch:
+  # Rebuild the container if a new package restore is required because package[-lock].json changed
+  - path: package.json
+    target: /functions/package.json
+    action: rebuild
+  - path: package-lock.json
+    target: /functions/package-lock.json
+    action: rebuild
+  # For any other file change, simply copy it into the existing container and restart it
+  - path: ./
+    target: /functions
+    action: sync+restart
 ```
 
-**.hasura-connector/init.sh**
+**.hasura-connector/start.sh**
+```bash
+#!/usr/bin/env bash
+set -eu -o pipefail
+
+./check-reqs.sh
+cd $HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH
+exec npm run start
+```
+
+**.hasura-connector/watch.sh**
+```bash
+#!/usr/bin/env bash
+set -eu -o pipefail
+
+./check-reqs.sh
+cd $HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH
+exec npm run watch
+```
+
+**.hasura-connector/check-reqs.sh**
 ```bash
 #!/usr/bin/env bash
 set -eu -o pipefail
@@ -62,14 +102,32 @@ fi
 
 cd $HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH
 
-# Restore packages
 if [ ! -d "node_modules" ]
 then
-  npm ci
+  echo "node_modules not found, please ensure you have run 'npm install'."
+  exit 1
 fi
 ```
 
-**.hasura-connector/init.ps1**
+**.hasura-connector/start.ps1**
+```powershell
+$ErrorActionPreference = "Stop"
+
+& ./check-reqs.ps1
+Set-Location $env:HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH
+& npm run start
+```
+
+**.hasura-connector/watch.ps1**
+```powershell
+$ErrorActionPreference = "Stop"
+
+& ./check-reqs.ps1
+Set-Location $env:HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH
+& npm run watch
+```
+
+**.hasura-connector/check-reqs.ps1**
 ```powershell
 $ErrorActionPreference = "Stop"
 
@@ -82,17 +140,18 @@ if (-not (Get-Command "node" -ErrorAction SilentlyContinue)) {
 
 Set-Location $env:HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH
 
-# Restore packages
 if (Test-Path "./node_modules" -eq $false) {
-  & npm ci
+  Write-Host "node_modules not found, please ensure you have run 'npm install'."
+  exit 1
 }
 ```
 
-### `connector-metadata.yaml` changes
+### `connector-metadata.yaml` types
 
 ```typescript
 type ConnectorMetadataDefinition = {
   packagingDefinition: PackagingDefinition
+  nativeToolchainDefinition?: NativeToolchainDefinition // ** NEW! **
   supportedEnvironmentVariables: EnvironmentVariableDefinition[]
   commands: Commands
   cliPlugin?: CliPluginDefinition
@@ -108,7 +167,18 @@ type PrebuiltDockerImagePackaging = {
 
 type ManagedDockerBuildPackaging = {
   type: "ManagedDockerBuild"
-  supportsNativeToolchain?: boolean // *** NEW! ***
+}
+
+// ** NEW! **
+type NativeToolchainDefinition = {
+  commands: NativeToolchainCommands
+}
+
+// ** NEW! **
+type NativeToolchainCommands = {
+  start: string | DockerizedCommand | ShellScriptCommand // Compulsory
+  update?: string | DockerizedCommand | ShellScriptCommand
+  watch: string | DockerizedCommand | ShellScriptCommand // Compulsory
 }
 
 type EnvironmentVariableDefinition = {
@@ -118,11 +188,11 @@ type EnvironmentVariableDefinition = {
 }
 
 type Commands = {
-  init?: string | DockerizedCommand | ShellScriptCommand // *** NEW! ***
   update?: string | DockerizedCommand | ShellScriptCommand // *** Supports ShellScriptCommand now ***
   watch?: string | DockerizedCommand | ShellScriptCommand // *** Supports ShellScriptCommand now ***
 }
 
+// From https://github.com/hasura/ndc-hub/pull/129 (outside of this RFC)
 type DockerizedCommand = {
   type: "Dockerized"
   dockerImage: string // eg "hasura/postgres-data-connector:1.0.0"
@@ -166,8 +236,3 @@ type ShellScriptCommand = {
   goInterp: string
 }
 ```
-
-## Open Questions
-* What happens if the user runs `ddn build connector-manifest`?
-* Is the proposed solution workable for the Go functions connector?
-* Are there other things we'd rather do with an "init" command in the future? For example, delegate some of `ddn quickstart` process to the individual connectors so they can better validate user inputs such as connection strings etc? If so, how does that affect this?
