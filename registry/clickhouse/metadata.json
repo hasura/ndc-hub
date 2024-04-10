@@ -4,8 +4,10 @@
     "description": "The Clickhouse Native Data Connector allows for connecting to a Clickhouse instance giving you an instant GraphQL API on top of your Clickhouse data.",
     "title": "Clickhouse Native Data Connector",
     "logo": "logo.png",
-    "tags": ["database"],
-    "latest_version": "v0.2.1"
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.2.2"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -15,6 +17,17 @@
   "is_verified": true,
   "is_hosted_by_hasura": false,
   "packages": [
+    {
+      "version": "0.2.2",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.2/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "5e88d1b7fb14638ceeaf5b6fac775b6cc68d62d8537fc25cd8e87cdf4dfb443e"
+      },
+      "source": {
+        "hash": "6b349d7f0e8449611a24d6b8cad34aeb3162b583"
+      }
+    },
     {
       "version": "0.2.1",
       "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.1/connector-definition.tgz",
@@ -42,6 +55,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-clickhouse/",
     "version": [
+      {
+        "tag": "v0.2.2",
+        "hash": "6b349d7f0e8449611a24d6b8cad34aeb3162b583",
+        "is_verified": true
+      },
       {
         "tag": "v0.2.1",
         "hash": "521365decd10db124c9865bd29fc4e60025a6892",
