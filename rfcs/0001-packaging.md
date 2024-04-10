@@ -1,5 +1,8 @@
 # Connector Packaging and Hub Connector Definition
 
+> [!NOTE]
+> This RFC has since been extended by the [Native Packaging RFC](./0004-native-packaging.md)
+
 ## Purpose
 
 Connector behavior is specified by the [NDC specification](http://hasura.github.io/ndc-spec/), and the deployment API is specified in the [deployment RFC](./0000-deployment.md). This document specifies how the Hasura CLI and Hasura Connector Hub can work together to facilitate connector development, packaging and deployment via the API.
