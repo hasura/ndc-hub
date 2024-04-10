@@ -67,8 +67,14 @@ type EnvironmentVariableDefinition = {
 }
 
 type Commands = {
-  update?: string
-  watch?: string
+  update?: string | DockerizedCommand
+  watch?: string | DockerizedCommand
+}
+
+type DockerizedCommand = {
+  type: "Dockerized"
+  dockerImage: string // eg "hasura/postgres-data-connector:1.0.0"
+  commandArgs: string[]
 }
 
 type CliPluginDefinition = {
@@ -93,7 +99,10 @@ The `connector-metadata.yaml` contains YAML that describes:
 - The packaging definition, which can be either `PrebuiltDockerImagePackaging` (a connector that does not require a build step), or  `ManagedDockerBuildPackaging` (a connector that requires a build step).
   - `PrebuiltDockerImagePackaging` defines the prebuilt `dockerImage` used to run the connector (`dockerImage`)
   - If `ManagedDockerBuildPackaging` is used, a Dockerfile must be in the `.hasura3` directory (and optionally, a `.dockerignore`). It will be used to build the connector.
-- A `commands` structure that optionally defines what shell commands to run for an "update" (eg. refresh schema introspection details) and "watch" (eh. watch and refresh schema introspection details periodically) scenario.
+- A `commands` structure that optionally defines what commands to run for an "update" (eg. refresh schema introspection details) and "watch" (eg. watch and refresh schema introspection details periodically) scenario. 
+  - A string value is a shell command to be executed
+  - A `DockerizedCommand` object defines a particular Docker image that should be run, passing the specified command arguments to. They can expect to have the build context directory mounted as a volume.
+  - Both the shell command and Docker container can expect to have the connector's environment variables set, as well as the environment variables defined in the [CLI plugin spec](https://github.com/hasura/ndc-hub/blob/cli-guidelines/rfcs/0002-cli-guidelines.md).
 - An optional `CLIPluginDefinition` that describes where to acquire the CLI plugin for this connector that can be used by the `commands` structure. If provided, the CLI plugin executable will be made available on the `PATH` for the commands and some configuration environment variables will be set (see the [CLI plugin RFC](https://github.com/hasura/ndc-hub/blob/cli-guidelines/rfcs/0002-cli-guidelines.md) for more details).
 - A `dockerComposeWatch` that defines how to rebuild/restart the container if the user modifies their connector configuration in their project (see below)
 
