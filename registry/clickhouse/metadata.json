@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v0.2.2"
+    "latest_version": "v0.2.3"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -18,11 +18,22 @@
   "is_hosted_by_hasura": false,
   "packages": [
     {
+      "version": "0.2.3",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.3/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "f1b1020e57fdb969b545f0e5ad37f1000c2e5084041695cc2e885e4cb634b35c"
+      },
+      "source": {
+        "hash": "97175685b51a31a5ac99672746901d0df6d4eb35"
+      }
+    },
+    {
       "version": "0.2.2",
       "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.2/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "5e88d1b7fb14638ceeaf5b6fac775b6cc68d62d8537fc25cd8e87cdf4dfb443e"
+        "value": "198ed9a830a403cf855d449b3d99313ad01de4df21663c0648ab95fa25b58325"
       },
       "source": {
         "hash": "6b349d7f0e8449611a24d6b8cad34aeb3162b583"
@@ -55,6 +66,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-clickhouse/",
     "version": [
+      {
+        "tag": "v0.2.3",
+        "hash": "97175685b51a31a5ac99672746901d0df6d4eb35",
+        "is_verified": true
+      },
       {
         "tag": "v0.2.2",
         "hash": "6b349d7f0e8449611a24d6b8cad34aeb3162b583",
