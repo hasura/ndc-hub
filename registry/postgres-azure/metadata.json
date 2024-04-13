@@ -2,7 +2,7 @@
   "overview": {
     "namespace": "hasura",
     "description": "Connect Hasura DDN to an Azure Postgres database",
-    "title": "(Azure) Postgres",
+    "title": "Azure Database for PostgreSQL",
     "logo": "logo.png",
     "tags": [
       "database"

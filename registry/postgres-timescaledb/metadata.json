@@ -2,7 +2,7 @@
   "overview": {
     "namespace": "hasura",
     "description": "Connect Hasura DDN to a TimescaleDB database",
-    "title": "(TimescaleDB) Postgres",
+    "title": "TimescaleDB",
     "logo": "logo.png",
     "tags": [
       "database"
