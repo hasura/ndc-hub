@@ -1,0 +1,23 @@
+name: Update Hub DB from GH Registry
+
+on:
+  push:
+    branches:
+      - lyndon/registry-automation # TODO: Remove the branch response
+
+  pull_request:
+    types: [closed]
+
+jobs:
+  upload_to_s3:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: List changed files
+        id: list_files
+        run: |
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} > changed_files.txt
+
