@@ -1,8 +1,8 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect to a PostgreSQL database and expose them to Hasura v3 Project",
-    "title": "(Neon) PostgreSQL Native Data Connector",
+    "description": "Connect Hasura DDN to a Neon Postgres database",
+    "title": "Neon",
     "logo": "logo.svg",
     "tags": [
       "database"

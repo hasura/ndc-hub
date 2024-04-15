@@ -1,8 +1,8 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect Hasura DDN to an AWS Aurora database",
-    "title": "(AWS Aurora) PostgreSQL",
+    "description": "Connect Hasura DDN to an AWS Aurora Postgres database",
+    "title": "AWS Aurora Postgres",
     "logo": "logo.svg",
     "tags": [
       "database"
