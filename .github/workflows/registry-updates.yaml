@@ -16,21 +16,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Check if it's the first commit on branch
-        id: check_first_commit
-        run: |
-          if [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
-            echo "::set-output name=first_commit::true"
-          else
-            echo "::set-output name=first_commit::false"
-          fi
-
       - name: List changed files
         id: list_files
         run: |
-          if [ "${{ steps.check_first_commit.outputs.first_commit }}" == "true" ]; then
-            git log --pretty=format:'' --name-only --max-parents=0 ${{ github.sha }} > changed_files.txt
+          if [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
+            git diff --name-only ${{ github.sha }} > changed_files.txt
           else
             git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
           fi
+
+          cat changed_files.txt
 
