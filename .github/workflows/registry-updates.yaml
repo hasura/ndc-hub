@@ -29,7 +29,8 @@ jobs:
         id: list_files
         run: |
           if [ "${{ steps.check_first_commit.outputs.first_commit }}" == "true" ]; then
-            git ls-tree --name-only -r ${{ github.sha }} > changed_files.txt
+            git log --pretty=format:'' --name-only --max-parents=0 ${{ github.sha }} > changed_files.txt
           else
             git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
           fi
+
