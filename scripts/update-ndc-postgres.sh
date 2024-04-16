@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -e
+set -u
+set -o pipefail
 
 # Update ndc-postgres related entries with a new version.
 
