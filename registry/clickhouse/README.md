@@ -65,7 +65,7 @@ Note: You can also use environment variables for these values. Please refer to o
 
 ### Update Connector, Track Models and Build
 
-At this point you can either run the <code>[dev](https://hasura.io/docs/3.0/cli/commands/dev/)</code> mode to watch your project and create new builds as changes are made to your metadata using [Hasura’s LSP](https://hasura.io/docs/3.0/glossary/#lsp-language-server-protocol) and [VSCode extension](https://marketplace.visualstudio.com/items?itemName=HasuraHQ.hasura).
+At this point you can either run the [dev](https://hasura.io/docs/3.0/cli/commands/dev/) mode to watch your project and create new builds as changes are made to your metadata using [Hasura’s LSP](https://hasura.io/docs/3.0/glossary/#lsp-language-server-protocol) and [VSCode extension](https://marketplace.visualstudio.com/items?itemName=HasuraHQ.hasura).
 
 ```
 ddn dev
