@@ -9,8 +9,7 @@ fi
 TAG="$1"
 HASH="$2"
 
-
-
+# Update each ndc-postgres variant
 for variant in \
     'aurora' \
     'citus' \
@@ -24,11 +23,20 @@ for variant in \
     'postgres-timescaledb' ; do
 
 # add new version
-cat registry/$variant/metadata.json | jq --arg tag $TAG --arg hash $HASH '.source_code.version += [{"tag": $tag, "hash": $hash, "is_verified": true}]' > registry/$variant/metadata.json2
-mv registry/$variant/metadata.json2 registry/$variant/metadata.json
+cat registry/"${variant}"/metadata.json | jq \
+    --arg tag "${TAG}" \
+    --arg hash "${HASH}" \
+    '.source_code.version += [{"tag": $tag, "hash": $hash, "is_verified": true}]' \
+    > registry/"${variant}"/metadata.json2
+
+mv registry/"${variant}"/metadata.json2 registry/"${variant}"/metadata.json
 
 # set latest version
-cat registry/$variant/metadata.json | jq --arg tag $TAG '.overview.latest_version |= $tag' > registry/$variant/metadata.json2
-mv registry/$variant/metadata.json2 registry/$variant/metadata.json
+cat registry/"${variant}"/metadata.json | jq \
+    --arg tag "${TAG}" \
+    '.overview.latest_version |= $tag' \
+    > registry/"${variant}"/metadata.json2
+
+mv registry/"${variant}"/metadata.json2 registry/"${variant}"/metadata.json
 
 done
