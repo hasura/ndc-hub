@@ -18,7 +18,6 @@ jobs:
         with:
           fetch-depth: 0
 
-
       - name: List changed files
         id: list_files
         run: |
@@ -30,3 +29,11 @@ jobs:
 
           cat changed_files.txt
 
+      - name: Pseudocode for Next steps
+        id: next_steps
+        run: |
+          echo Download tgz
+          echo Extract
+          echo Re-upload tgz
+          echo Build payload for API
+          echo PUT to API (gql)
