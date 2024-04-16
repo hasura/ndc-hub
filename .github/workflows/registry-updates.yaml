@@ -14,7 +14,7 @@ on:
       - registry/**
 
 jobs:
-  upload_to_s3:
+  update_registry_db:
     runs-on: ubuntu-latest
 
     steps:
