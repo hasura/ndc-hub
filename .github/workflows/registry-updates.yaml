@@ -37,8 +37,12 @@ jobs:
       - name: Pseudocode for Next steps
         id: next_steps
         run: |
-          echo 'Download tgz'
-          echo 'Extract'
-          echo 'Re-upload tgz'
-          echo 'Build payload for API'
-          echo 'PUT to API (gql)'
+          echo 'Detect status - added/modified/removed files'
+          echo 'for each removed connector, remove from registry db'
+          echo 'for each added connector, create a stub in the registry db'
+          echo 'for each modified connector:'
+          echo '  * Download tgz'
+          echo '  * Re-upload tgz'
+          echo '  * Extract'
+          echo '  * Build payload for API'
+          echo '  * PUT to API (gql)'
