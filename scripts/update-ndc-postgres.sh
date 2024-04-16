@@ -1,0 +1,34 @@
+#!/bin/bash
+
+if [ "$#" != 2 ];
+then
+  echo "Usage: $0 <new-tag> <new-hash>"
+  exit 1
+fi
+
+TAG="$1"
+HASH="$2"
+
+
+
+for variant in \
+    'aurora' \
+    'citus' \
+    'cockroach' \
+    'neon' \
+    'postgres' \
+    'postgres-alloydb' \
+    'postgres-azure' \
+    'postgres-cosmos' \
+    'postgres-gcp' \
+    'postgres-timescaledb' ; do
+
+# add new version
+cat registry/$variant/metadata.json | jq --arg tag $TAG --arg hash $HASH '.source_code.version += [{"tag": $tag, "hash": $hash, "is_verified": true}]' > registry/$variant/metadata.json2
+mv registry/$variant/metadata.json2 registry/$variant/metadata.json
+
+# set latest version
+cat registry/$variant/metadata.json | jq --arg tag $TAG '.overview.latest_version |= $tag' > registry/$variant/metadata.json2
+mv registry/$variant/metadata.json2 registry/$variant/metadata.json
+
+done
