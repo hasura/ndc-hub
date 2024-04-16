@@ -32,8 +32,8 @@ jobs:
       - name: Pseudocode for Next steps
         id: next_steps
         run: |
-          echo Download tgz
-          echo Extract
-          echo Re-upload tgz
-          echo Build payload for API
-          echo PUT to API (gql)
+          echo 'Download tgz'
+          echo 'Extract'
+          echo 'Re-upload tgz'
+          echo 'Build payload for API'
+          echo 'PUT to API (gql)'
