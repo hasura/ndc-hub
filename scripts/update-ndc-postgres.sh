@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Update ndc-postgres related entries with a new version.
+
 if [ "$#" != 2 ];
 then
   echo "Usage: $0 <new-tag> <new-hash>"
