@@ -64,3 +64,4 @@ Include the connector URL in your Hasura V3 project metadata:
 
 Please [https://github.com/hasura/ndc-sendgrid/issues/new](submit a Github issue)
 if you encounter any problems!
+
