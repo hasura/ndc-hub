@@ -4,8 +4,10 @@
     "description": "The Clickhouse Native Data Connector allows for connecting to a Clickhouse instance giving you an instant GraphQL API on top of your Clickhouse data.",
     "title": "Clickhouse Native Data Connector",
     "logo": "logo.png",
-    "tags": ["database"],
-    "latest_version": "v0.2.1"
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.2.4"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -15,6 +17,50 @@
   "is_verified": true,
   "is_hosted_by_hasura": false,
   "packages": [
+    {
+      "version": "0.2.5",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.5/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "hash": "c89d9410cf885cbfe4156c9e7bf65211144018df"
+      }
+    },
+    {
+      "version": "0.2.4",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.4/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5"
+      },
+      "source": {
+        "hash": "cd1f81b98b264df1e20f7f84a664fb272fac19b1"
+      }
+    },
+    {
+      "version": "0.2.3",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.3/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "f1b1020e57fdb969b545f0e5ad37f1000c2e5084041695cc2e885e4cb634b35c"
+      },
+      "source": {
+        "hash": "97175685b51a31a5ac99672746901d0df6d4eb35"
+      }
+    },
+    {
+      "version": "0.2.2",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.2/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "198ed9a830a403cf855d449b3d99313ad01de4df21663c0648ab95fa25b58325"
+      },
+      "source": {
+        "hash": "6b349d7f0e8449611a24d6b8cad34aeb3162b583"
+      }
+    },
     {
       "version": "0.2.1",
       "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.1/connector-definition.tgz",
@@ -42,6 +88,26 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-clickhouse/",
     "version": [
+      {
+        "tag": "v0.2.5",
+        "hash": "c89d9410cf885cbfe4156c9e7bf65211144018df",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.2.4",
+        "hash": "cd1f81b98b264df1e20f7f84a664fb272fac19b1",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.2.3",
+        "hash": "97175685b51a31a5ac99672746901d0df6d4eb35",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.2.2",
+        "hash": "6b349d7f0e8449611a24d6b8cad34aeb3162b583",
+        "is_verified": true
+      },
       {
         "tag": "v0.2.1",
         "hash": "521365decd10db124c9865bd29fc4e60025a6892",
