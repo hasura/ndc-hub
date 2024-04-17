@@ -5,7 +5,7 @@
     "title": "NodeJS Lambda Connector",
     "logo": "logo.png",
     "tags": [],
-    "latest_version": "v1.2.0"
+    "latest_version": "v1.3.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -15,6 +15,17 @@
   "is_verified": true,
   "is_hosted_by_hasura": false,
   "packages": [
+    {
+      "version": "1.3.0",
+      "uri": "https://github.com/hasura/ndc-nodejs-lambda/releases/download/v1.3.0/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "29c521170a74b3cf67bff824c293af15d683651b7727d5884423fcfd2ac44777"
+      },
+      "source": {
+        "hash": "faf8cc78db442e53ca0cf6cdf79c9feb0cfc8052"
+      }
+    },
     {
       "version": "1.2.0",
       "uri": "https://github.com/hasura/ndc-nodejs-lambda/releases/download/v1.2.0/connector-definition.tgz",
@@ -53,6 +64,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-nodejs-lambda/",
     "version": [
+      {
+        "tag": "v1.3.0",
+        "hash": "faf8cc78db442e53ca0cf6cdf79c9feb0cfc8052",
+        "is_verified": true
+      },
       {
         "tag": "v1.2.0",
         "hash": "a13236051b836e4506463ff8c7e152f69c787680",
