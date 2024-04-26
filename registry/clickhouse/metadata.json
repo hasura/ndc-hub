@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v0.2.6"
+    "latest_version": "v0.2.7"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -18,11 +18,22 @@
   "is_hosted_by_hasura": false,
   "packages": [
     {
+      "version": "0.2.7",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.6/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "a6acbd32400b2a74009009933a8469892bf7781969e58aef7532121198af1e4f"
+      },
+      "source": {
+        "hash": "ece8fb0fcfcd9650dd5060f882baa94889eccf2e"
+      }
+    },
+    {
       "version": "0.2.6",
       "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.6/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        "value": "c20dd539761084f9a3a0effa68011a6d57da92dbdf4f805bac93bc825f5c40ef"
       },
       "source": {
         "hash": "7bafb9fd2b9c3288b6f7279c3d62793cc78d8fe0"
@@ -33,7 +44,7 @@
       "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.5/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        "value": "8504769a2bd8ac63f979dc5447dc106da4360cfbcdcacc9edb8765eb434e1e11"
       },
       "source": {
         "hash": "c89d9410cf885cbfe4156c9e7bf65211144018df"
@@ -44,7 +55,7 @@
       "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.4/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5"
+        "value": "8ab07763d887848a555f26aae973e34e872ec0617ccc17d2eac96d67fe223e87"
       },
       "source": {
         "hash": "cd1f81b98b264df1e20f7f84a664fb272fac19b1"
@@ -99,6 +110,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-clickhouse/",
     "version": [
+      {
+        "tag": "v0.2.7",
+        "hash": "ece8fb0fcfcd9650dd5060f882baa94889eccf2e",
+        "is_verified": true
+      },
       {
         "tag": "v0.2.6",
         "hash": "7bafb9fd2b9c3288b6f7279c3d62793cc78d8fe0",
