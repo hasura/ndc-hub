@@ -1,8 +1,8 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect Hasura DDN to a Neon Postgres database",
-    "title": "Neon",
+    "description": "Connect Hasura DDN to a Neon PostgreSQL database",
+    "title": "Neon PostgreSQL",
     "logo": "logo.svg",
     "tags": [
       "database"
