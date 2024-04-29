@@ -57,6 +57,6 @@ jobs:
 
       - name: Run registry automaion program
         run: |
-          cd registy-automation
+          cd registry-automation
           go run main.go
 
