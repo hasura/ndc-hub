@@ -1,8 +1,8 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect Hasura DDN to a Citus Postgres database",
-    "title": "Citus",
+    "description": "Connect Hasura DDN to a Citus PostgreSQL database",
+    "title": "Citus PostgreSQL",
     "logo": "logo.svg",
     "tags": [
       "database"
