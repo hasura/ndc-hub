@@ -47,16 +47,13 @@ jobs:
           echo '  * Build payload for API'
           echo '  * PUT to API (gql)'
 
-      - name: Setup Go ${{ matrix.go-version }}
+      - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: 1.21.x
 
-      - name: Display Go version
-        run: go version
-
       - name: Run registry automaion program
         run: |
           cd registry-automation
-          go run main.go
+          go run main.go ci
 
