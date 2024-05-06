@@ -1,8 +1,8 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect Hasura DDN to an AlloyDB Postgres database",
-    "title": "AlloyDB",
+    "description": "Connect Hasura DDN to an AlloyDB PostgreSQL database",
+    "title": "AlloyDB PostgreSQL",
     "logo": "logo.png",
     "tags": [
       "database"

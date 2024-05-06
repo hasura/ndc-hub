@@ -1,8 +1,8 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect Hasura DDN to a Google Cloud SQL Postgres database",
-    "title": "GCP Cloud SQL Postgres",
+    "description": "Connect Hasura DDN to a Google Cloud SQL PostgreSQL database",
+    "title": "GCP Cloud SQL PostgreSQL",
     "logo": "logo.png",
     "tags": [
       "database"
