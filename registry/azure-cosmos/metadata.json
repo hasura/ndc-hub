@@ -1,0 +1,41 @@
+{
+    "overview": {
+      "namespace": "hasura",
+      "description": "Connect to a Azure Cosmos database and expose it to Hasura v3 Project",
+      "title": "Azure Cosmos Connector",
+      "logo": "logo.png",
+      "tags": [],
+      "latest_version": "v0.1.0"
+    },
+    "author": {
+      "support_email": "support@hasura.io",
+      "homepage": "https://hasura.io",
+      "name": "Hasura"
+    },
+    "is_verified": true,
+    "is_hosted_by_hasura": false,
+    "packages": [
+      {
+        "version": "0.1.0",
+        "uri": "https://github.com/hasura/ndc-azure-cosmos-connector/releases/download/v0.1.0/connector-definition.tgz",
+        "checksum": {
+          "type": "sha256",
+          "value": "dc5bc8e8a1a7203be66b50ea1847198545d50c7e6a94249b67776a73755f2b6d"
+        },
+        "source": {
+          "hash": "a39533caf434cd2b1f70a51f1ff27252ec7863c5"
+        }
+      }
+    ],
+    "source_code": {
+      "is_open_source": true,
+      "repository": "https://github.com/hasura/ndc-azure-cosmos-connector/",
+      "version": [
+        {
+          "tag": "v0.1.0",
+          "hash": "a39533caf434cd2b1f70a51f1ff27252ec7863c5",
+          "is_verified": true
+        }
+      ]
+    }
+  }
