@@ -1,13 +1,13 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect Hasura DDN to an AWS Aurora Postgres database",
-    "title": "AWS Aurora Postgres",
+    "description": "Connect Hasura DDN to an AWS Aurora PostgreSQL database",
+    "title": "AWS Aurora PostgreSQL",
     "logo": "logo.svg",
     "tags": [
       "database"
     ],
-    "latest_version": "v0.5.2"
+    "latest_version": "v0.7.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -23,6 +23,16 @@
       {
         "tag": "v0.5.2",
         "hash": "805bc53",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.6.0",
+        "hash": "582c771",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.7.0",
+        "hash": "0c6fbadcaceb08791fe98f3e68294c739decfbec",
         "is_verified": true
       }
     ]
