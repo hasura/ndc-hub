@@ -5,7 +5,7 @@
     "title": "Open API Lambda Connector",
     "logo": "logo.png",
     "tags": [],
-    "latest_version": "v0.1.0"
+    "latest_version": "v0.1.1"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -47,6 +47,17 @@
       "source": {
         "hash": "d0c628e9206d397373f42faaf3733f6ada94b56c"
       }
+    },
+    {
+      "version": "v0.1.1",
+      "uri": "https://github.com/hasura/ndc-open-api-lambda/releases/download/v0.1.1/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "a7365a6f7780dcfae85cc787e2de83ea22d416a1d4a9fc597b68227bf978e264"
+      },
+      "source": {
+        "hash": "4b70712933de7a7ed475407ccd0be7bed1611ae8"
+      }
     }
   ],
   "source_code": {
@@ -66,6 +77,11 @@
       {
         "tag": "v0.1.0",
         "hash": "d0c628e9206d397373f42faaf3733f6ada94b56c",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.1.1",
+        "hash": "4b70712933de7a7ed475407ccd0be7bed1611ae8",
         "is_verified": true
       }
     ]
