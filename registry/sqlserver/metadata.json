@@ -13,7 +13,7 @@
     "name": "Hasura"
   },
   "is_verified": true,
-  "is_hosted_by_hasura": false,
+  "is_hosted_by_hasura": true,
   "packages": [
     {
       "version": "0.1.1",
