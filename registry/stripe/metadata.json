@@ -1,0 +1,41 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The Stripe Data Connector provides an instant adapter for Engine v3 to request Stripe resources via GraphQL",
+    "title": "Stripe Data Connector",
+    "logo": "logo.svg",
+    "tags": [],
+    "latest_version": "v0.2.1"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "packages": [
+    {
+      "version": "v0.2.1",
+      "uri": "https://github.com/hasura/ndc-stripe/releases/download/v0.2.1/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "c805f655843881bebe1056b386954df9d7d9d3b33138342a5b7ed4480b8a4c02"
+      },
+      "source": {
+        "hash": "3ae2790c8aff6bc6dd386a60809c6149158b5557"
+      }
+    }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-stripe",
+    "version": [
+      {
+        "tag": "v0.2.1",
+        "hash": "3ae2790c8aff6bc6dd386a60809c6149158b5557",
+        "is_verified": true
+      }
+    ]
+  }
+}
