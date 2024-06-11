@@ -87,8 +87,23 @@
     "repository": "https://github.com/hasura/ndc-sdk-go",
     "version": [
       {
+        "tag": "v1.2.0",
+        "hash": "3887c3d8dca54559514979ac2bc6e93954cb3a66",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.1.2",
+        "hash": "32e28e549f11b790c320b6a79ad33ad8e6df5bd7",
+        "is_verified": true
+      },
+      {
         "tag": "v1.0.0",
         "hash": "42259e9a9c719131721f0058c552e9b8a4a36973",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.5.2",
+        "hash": "79788195359a5e3cf0fc8896b61eb8f4d9196427",
         "is_verified": true
       },
       {
