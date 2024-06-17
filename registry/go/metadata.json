@@ -16,14 +16,14 @@
   "is_hosted_by_hasura": false,
   "packages": [
     {
-      "version": "v1.2.0",
-      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v1.2.0/connector-definition.tgz",
+      "version": "v1.2.1",
+      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v1.2.1/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "4876fe22d50bd739830e5378a94d176863ee6587fab6e1efcb0acedc21252864"
+        "value": "bb22374003935e31095a4a702f58a0daac15d3f9707011d97e0737ee7b7c6c7d"
       },
       "source": {
-        "hash": "3887c3d8dca54559514979ac2bc6e93954cb3a66"
+        "hash": "97a5e16019fc7923316353e238cb18ba4748030e"
       }
     },
     {
@@ -49,14 +49,14 @@
       }
     },
     {
-      "version": "v0.6.0",
-      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v0.6.0/connector-definition.tgz",
+      "version": "v0.6.1",
+      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v0.6.1/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "b616afc27b5fa50ecce28da10026e41174051d947fed1ae34c24c10452d8f2bc"
+        "value": "b67e7ed3b1b3038ffa20dc12f7e610b312f9e3101e3830c6eadd2306f797b158"
       },
       "source": {
-        "hash": "534ebf2c2fb45e395e35f6520aeadc13e920d431"
+        "hash": "4d275889c8361ae36a305f1e7f0e3d07cbd6de51"
       }
     },
     {
@@ -87,8 +87,8 @@
     "repository": "https://github.com/hasura/ndc-sdk-go",
     "version": [
       {
-        "tag": "v1.2.0",
-        "hash": "3887c3d8dca54559514979ac2bc6e93954cb3a66",
+        "tag": "v1.2.1",
+        "hash": "97a5e16019fc7923316353e238cb18ba4748030e",
         "is_verified": true
       },
       {
@@ -99,6 +99,11 @@
       {
         "tag": "v1.0.0",
         "hash": "42259e9a9c719131721f0058c552e9b8a4a36973",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.6.1",
+        "hash": "4d275889c8361ae36a305f1e7f0e3d07cbd6de51",
         "is_verified": true
       },
       {
