@@ -1,0 +1,59 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The Hasura Elasticsearch Connector allows for connecting to a Elasticsearch search engine, giving you an instant GraphQL API on top of your Elasticsearch data.",
+    "title": "Elasticsearch Native Data Connector",
+    "logo": "logo.png",
+    "tags": [
+      "search engine"
+    ],
+    "latest_version": "v0.1.1"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "packages": [
+    {
+      "version": "0.1.0",
+      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v0.1.0/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "a856e10b6b30b516db2bb38af08037ad5db32bfd4ec072270fb8685872e13d5b"
+      },
+      "source": {
+        "hash": "4c6fabedaf3a28cdd6c55a18a37e1db974a83262"
+      }
+    },
+    {
+      "version": "0.1.1",
+      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v0.1.1/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "60629c9b24467fa4ed58c87732410203eedbdee31cdd18e90c635f10d23a8e23"
+      },
+      "source": {
+        "hash": "413a2a4ddfd1910757c40c38e9a18148bc3b3bdc"
+      }
+    }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-elasticsearch/",
+    "version": [
+      {
+        "tag": "v0.1.0",
+        "hash": "4c6fabedaf3a28cdd6c55a18a37e1db974a83262",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.1.1",
+        "hash": "413a2a4ddfd1910757c40c38e9a18148bc3b3bdc",
+        "is_verified": true
+      }
+    ]
+  }
+}
