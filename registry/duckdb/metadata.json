@@ -7,7 +7,7 @@
       "tags": [
         "database"
       ],
-      "latest_version": "v0.0.9"
+      "latest_version": "v0.0.17"
     },
     "author": {
       "support_email": "support@hasura.io",
@@ -18,14 +18,14 @@
     "is_hosted_by_hasura": true,
     "packages": [
       {
-        "version": "0.0.9",
-        "uri": "https://github.com/hasura/ndc-duckdb/releases/download/v0.0.9/connector-definition.tgz",
+        "version": "0.0.17",
+        "uri": "https://github.com/hasura/ndc-duckdb/releases/download/v0.0.17/connector-definition.tgz",
         "checksum": {
           "type": "sha256",
-          "value": "1117ed3274a7cdab4ab61082cf860ad045d242e5e7ffb1ac8f76bb1053e63094"
+          "value": "3449766fff1794f0866f19505355b37d151d91682e1f784aef664b91abd57570"
         },
         "source": {
-          "hash": "5da63b6d05a87529967346b24f80d25bcf16f103"
+          "hash": "875c5fb4539febea0e5dad569fd8b64557870c1c"
         }
       }
     ],
@@ -34,8 +34,8 @@
       "repository": "https://github.com/hasura/ndc-duckdb",
       "version": [
         {
-          "tag": "v0.0.9",
-          "hash": "5da63b6d05a87529967346b24f80d25bcf16f103",
+          "tag": "v0.0.17",
+          "hash": "875c5fb4539febea0e5dad569fd8b64557870c1c",
           "is_verified": false
         }
       ]
