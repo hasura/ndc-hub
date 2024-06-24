@@ -16,14 +16,14 @@
   "is_hosted_by_hasura": false,
   "packages": [
     {
-      "version": "v1.2.2",
-      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v1.2.1/connector-definition.tgz",
+      "version": "v1.2.3",
+      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v1.2.3/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "67574ca707a3a856ba6c7ad4c694da9a4e2095f70d983bb94e3df5a595251db5"
+        "value": "9573485be49d633ab3a7b39e8777da2d3524702fafac1739e42217caf5b3ad9a"
       },
       "source": {
-        "hash": "27f4475f321aa8de92825e1c818a963e974b6d72"
+        "hash": "1fdc72d31dccae129d6d626dea6e31b5cd3b0b18"
       }
     },
     {
@@ -49,14 +49,14 @@
       }
     },
     {
-      "version": "v0.6.2",
-      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v0.6.1/connector-definition.tgz",
+      "version": "v0.6.3",
+      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v0.6.3/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "91a299527825131373cab24959eb381e853e3d460a5542bed779686cf9a30b65"
+        "value": "e6ebd14bc1a75ab384da80eae7a823dd6883af6a574b42d720358d873491f96e"
       },
       "source": {
-        "hash": "f5d5f061b884d958e7e45b3e40c613a50cfa6854"
+        "hash": "726b3fbb442fae62d18840905545f1d663baf87b"
       }
     },
     {
@@ -87,8 +87,8 @@
     "repository": "https://github.com/hasura/ndc-sdk-go",
     "version": [
       {
-        "tag": "v1.2.2",
-        "hash": "27f4475f321aa8de92825e1c818a963e974b6d72",
+        "tag": "v1.2.3",
+        "hash": "1fdc72d31dccae129d6d626dea6e31b5cd3b0b18",
         "is_verified": true
       },
       {
@@ -102,8 +102,8 @@
         "is_verified": true
       },
       {
-        "tag": "v0.6.2",
-        "hash": "f5d5f061b884d958e7e45b3e40c613a50cfa6854",
+        "tag": "v0.6.3",
+        "hash": "726b3fbb442fae62d18840905545f1d663baf87b",
         "is_verified": true
       },
       {
