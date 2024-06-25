@@ -1,6 +1,6 @@
 # Elasticsearch Connector
 
-<a href="https://hasura.io/"><img src="./docs/logo.png" align="right" width="200"></a>
+<a href="https://hasura.io/"><img src="./logo.png" align="right" width="200"></a>
 
 [![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/latest/connectors/elasticsearch/)
 [![ndc-hub](https://img.shields.io/badge/ndc--hub-elasticsearch-blue.svg?style=flat)](https://hasura.io/connectors/ndc-elasticsearch)
