@@ -1,0 +1,57 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Ory Hydra connector provides an instant adapter for Engine v3 to request Hydra API resources via GraphQL",
+    "title": "Ory Hydra Connector",
+    "logo": "logo.png",
+    "tags": [],
+    "latest_version": "v1.0.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "packages": [
+    {
+      "version": "v1.0.0",
+      "uri": "https://github.com/hasura/ndc-hydra/releases/download/v1.0.0/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "128853bbd4765025e05f0ba6763577b8a386ea0c0064ed0a251f6871d12fa617"
+      },
+      "source": {
+        "hash": "16435e6b8d2f8e1162fd2c7654411ef73974c942"
+      }
+    },
+    {
+      "version": "v0.1.1",
+      "uri": "https://github.com/hasura/ndc-hydra/releases/download/v0.1.1/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "7b095186f551be239b39bf7c03b58cb49ef9ecbf2049802f6e460de300fed820"
+      },
+      "source": {
+        "hash": "a7cf7459e5f0b5b2d77360c0a5bbca3438668d56"
+      }
+    }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-hydra",
+    "version": [
+      {
+        "tag": "v1.0.0",
+        "hash": "16435e6b8d2f8e1162fd2c7654411ef73974c942",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.1.1",
+        "hash": "a7cf7459e5f0b5b2d77360c0a5bbca3438668d56",
+        "is_verified": true
+      }
+    ]
+  }
+}
