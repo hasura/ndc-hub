@@ -36,8 +36,8 @@ This Connector implements the [Data Connector Spec](https://github.com/hasura/nd
 ## Quickstart using the DDN CLI
 
 > [!TIP]
-> The following instructions are just a quick summary of how to use the OpenAPI Lambda connector.
-> To see it in use in a wider Hasura DDN project, and to understand the underlying DDN concepts, please check out the [Hasura DDN Getting Started Guide](https://hasura.io/docs/3.0/getting-started/overview/).
+> The following instructions are intended to get you quickly started with using the OpenAPI Lambda connector.
+> For further information on DDN, please check out the [Hasura DDN Getting Started Guide](https://hasura.io/docs/3.0/getting-started/overview/).
 
 > [!NOTE]
 > This section assumes that you have already setup a Supergraph and added a Subgraph.
@@ -120,9 +120,9 @@ This connector is published as a Docker Image. The image name is `ghcr.io/hasura
 
 1. `NDC_OAS_DOCUMENT_URI` (optional): The URI to your Open API Document. If you're using a file instead of a HTTP link, please ensure that it is named `swagger.json` and is present in the root directory of the volume being mounted to `/etc/connector` (for this tutorial, the `swagger.json` file should be present at `my_subgraph/connector/my_openapi/`).
 2. `NDC_OAS_BASE_URL` (optional): The base URL of your API.
-3. `NDC_OAS_FILE_OVERWRITE` (optional): Boolean flag to allow previously generated files to be over-written. Defaults to `false`.
+3. `NDC_OAS_FILE_OVERWRITE` (optional): A Boolean flag to allow previously generated files to be over-written. Defaults to `false`.
 4. `HASURA_PLUGIN_LOG_LEVEL` (optional): The log level. Possible values: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`. Defaults to `info`
-5. `NDC_OAS_LAMBDA_PRETTY_LOGS` (optional): Boolean flag to print human readable logs instead of JSON. Defaults to `false`
+5. `NDC_OAS_LAMBDA_PRETTY_LOGS` (optional): A Boolean flag to print human readable logs instead of JSON. Defaults to `false`
 
 ### Saving User Changes
 
