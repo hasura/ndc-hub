@@ -52,7 +52,7 @@ To use the Azure Cosmos NoSQL DB connector, follow these steps in a Hasura proje
    ddn connector init my_azure_cosmos --subgraph my_subgraph --hub-connector hasura/azure-cosmos
    ```
 
-### 2. Add your Azure Cosmos NoSQL DB credentials:
+### 2. Add your Azure Cosmos NoSQL DB credentials
 
 Add you credentials to `my_subgraph/connector/my_azure_cosmos/.env.local`
 
@@ -67,7 +67,7 @@ AZURE_COSMOS_NO_OF_ROWS_TO_FETCH= <NO-OF-ROWS-TO-FETCH>
 
 Note: `AZURE_COSMOS_CONNECTOR_NO_OF_ROWS_TO_FETCH` is an optional field, with 100 rows to be fetched by default.
 
-### 3. Intropsect your indices
+### 3. Introspect your indices
 
 From the root of your project run:
 
