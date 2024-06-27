@@ -1,11 +1,11 @@
-# Azure Cosmos Connector
+# Azure Cosmos NoSQL DB Connector
 
 [![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/latest/connectors/azure-cosmos/)
 [![ndc-hub](https://img.shields.io/badge/ndc--hub-azure--cosmos-blue.svg?style=flat)](https://hasura.io/connectors/azure-cosmos)
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg?style=flat)](./readme.md)
 
-With this connector, Hasura allows you to instantly create a real-time GraphQL API on top of your data models in Azure Cosmos Database containers. This connector supports Azure Cosmos's functionalities listed in the table below, allowing for efficient and scalable data operations.
+With this connector, Hasura allows you to instantly create a real-time GraphQL API on top of your data models in Azure Cosmos NoSQL Database containers. This connector supports Azure Cosmos's functionalities listed in the table below, allowing for efficient and scalable data operations.
 
 This connector is built using the [TypeScript Data Connector SDK](https://github.com/hasura/ndc-sdk-typescript) and implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 
@@ -14,7 +14,7 @@ This connector is built using the [TypeScript Data Connector SDK](https://github
 
 ## Features
 
-Below, you'll find a matrix of all supported features for the Azure Cosmos connector:
+Below, you'll find a matrix of all supported features for the Azure Cosmos NoSQL DB connector:
 
 | Feature                         | Supported | Notes |
 | ------------------------------- | --------- | ----- |
@@ -41,7 +41,7 @@ Below, you'll find a matrix of all supported features for the Azure Cosmos conne
 
 ## Using the connector
 
-To use the Azure Cosmos connector, follow these steps in a Hasura project:
+To use the Azure Cosmos NoSQL DB connector, follow these steps in a Hasura project:
 (Note: for more information on the following steps, please refer to the Postgres connector documentation [here](https://hasura.io/docs/3.0/getting-started/connect-to-data/connect-a-source))
 
 
@@ -52,7 +52,7 @@ To use the Azure Cosmos connector, follow these steps in a Hasura project:
    ddn connector init my_azure_cosmos --subgraph my_subgraph --hub-connector hasura/azure-cosmos
    ```
 
-### 2. Add your Azure Cosmos credentials:
+### 2. Add your Azure Cosmos NoSQL DB credentials:
 
 Add you credentials to `my_subgraph/connector/my_azure_cosmos/.env.local`
 
@@ -102,8 +102,8 @@ Let's start our connector's docker compose file. Run the following from the conn
 docker compose -f docker-compose.my_azure_cosmos.yaml up
 ```
 
-This starts our Azure Cosmos connector on the specified port. We can navigate to the following address, with the port
-modified, to see the schema of our Azure Cosmos data source:
+This starts our Azure Cosmos NoSQL DB connector on the specified port. We can navigate to the following address, with the port
+modified, to see the schema of our Azure Cosmos NoSQL DB source:
 
 ```bash
 http://localhost:8081/schema
