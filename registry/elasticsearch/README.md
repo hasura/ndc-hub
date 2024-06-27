@@ -75,7 +75,7 @@ To configure the connector, the following environment variables need to be set:
 | `ELASTICSEARCH_INDEX_PATTERN` | The pattern for matching Elasticsearch indices, potentially including wildcards, used by the connector          | No       | `hasura*`                                                      |
 
 
-### 3. Intropsect your indices
+### 3. Introspect your indices
 
 ```bash title="From the root of your project run:"
 ddn connector introspect --connector my_subgraph/connector/my_elastic/connector.yaml
