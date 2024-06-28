@@ -1,4 +1,4 @@
-# Azure Cosmos NoSQL DB Connector
+# Azure Cosmos DB for NoSQL Connector
 
 [![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/latest/connectors/azure-cosmos/)
 [![ndc-hub](https://img.shields.io/badge/ndc--hub-azure--cosmos-blue.svg?style=flat)](https://hasura.io/connectors/azure-cosmos)
@@ -14,7 +14,7 @@ This connector is built using the [TypeScript Data Connector SDK](https://github
 
 ## Features
 
-Below, you'll find a matrix of all supported features for the Azure Cosmos NoSQL DB connector:
+Below, you'll find a matrix of all supported features for the Azure Cosmos DB for NoSQL connector:
 
 | Feature                         | Supported | Notes |
 | ------------------------------- | --------- | ----- |
@@ -41,7 +41,7 @@ Below, you'll find a matrix of all supported features for the Azure Cosmos NoSQL
 
 ## Using the connector
 
-To use the Azure Cosmos NoSQL DB connector, follow these steps in a Hasura project:
+To use the Azure Cosmos DB for NoSQL connector, follow these steps in a Hasura project:
 (Note: for more information on the following steps, please refer to the Postgres connector documentation [here](https://hasura.io/docs/3.0/getting-started/connect-to-data/connect-a-source))
 
 
@@ -52,7 +52,7 @@ To use the Azure Cosmos NoSQL DB connector, follow these steps in a Hasura proje
    ddn connector init my_azure_cosmos --subgraph my_subgraph --hub-connector hasura/azure-cosmos
    ```
 
-### 2. Add your Azure Cosmos NoSQL DB credentials
+### 2. Add your Azure Cosmos DB for NoSQL credentials
 
 Add you credentials to `my_subgraph/connector/my_azure_cosmos/.env.local`
 
@@ -102,8 +102,8 @@ Let's start our connector's docker compose file. Run the following from the conn
 docker compose -f docker-compose.my_azure_cosmos.yaml up
 ```
 
-This starts our Azure Cosmos NoSQL DB connector on the specified port. We can navigate to the following address, with the port
-modified, to see the schema of our Azure Cosmos NoSQL DB source:
+This starts our Azure Cosmos DB for NoSQL connector on the specified port. We can navigate to the following address, with the port
+modified, to see the schema of our Azure Cosmos DB for NoSQL source:
 
 ```bash
 http://localhost:8081/schema
