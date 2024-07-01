@@ -1,0 +1,59 @@
+name: Update Hub DB from GH Registry
+
+on:
+  push:
+    branches:
+      - lyndon/registry-automation # TODO: Remove the branch response
+    paths:
+      - registry/**
+
+
+  pull_request:
+    types: [closed]
+    paths:
+      - registry/**
+
+jobs:
+  update_registry_db:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: List changed files
+        id: list_files
+        run: |
+          if [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
+            git diff --name-only ${{ github.sha }} > changed_files.txt
+          else
+            git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
+          fi
+
+          cat changed_files.txt
+
+      - name: Pseudocode for Next steps
+        id: next_steps
+        run: |
+          echo 'Detect status - added/modified/removed files'
+          echo 'for each removed connector, remove from registry db'
+          echo 'for each added connector, create a stub in the registry db'
+          echo 'for each modified connector:'
+          echo '  * Download tgz'
+          echo '  * Re-upload tgz'
+          echo '  * Extract'
+          echo '  * Build payload for API'
+          echo '  * PUT to API (gql)'
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+
+      - name: Run registry automaion program
+        run: |
+          cd registry-automation
+          go run main.go ci
+
