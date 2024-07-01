@@ -16,11 +16,9 @@ This connector is built using the [Go Data Connector SDK](https://github.com/has
 
 Below, you'll find a matrix of all supported features for the Elasticsearch connector:
 
-<!-- DocDB matrix -->
-
 | Feature                         | Supported | Notes |
 | ------------------------------- | --------- | ----- |
-| Native Queries + Logical Models | ❌         |       |
+| Native Queries + Logical Models | ✅         |       |
 | Simple Object Query             | ✅         |       |
 | Filter / Search                 | ✅         |       |
 | Simple Aggregation              | ✅         |       |
