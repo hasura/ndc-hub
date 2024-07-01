@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg?style=flat)](./readme.md)
 
-With this connector, Hasura allows you to instantly create a real-time GraphQL API on top of your data models in Azure Cosmos NoSQL Database containers. This connector supports Azure Cosmos's functionalities listed in the table below, allowing for efficient and scalable data operations.
+With this connector, Hasura allows you to instantly create a real-time GraphQL API on top of your data models in Azure Cosmos DB for NoSQL Database containers. This connector supports Azure Cosmos DB for NoSQL's functionalities listed in the table below, allowing for efficient and scalable data operations.
 
 This connector is built using the [TypeScript Data Connector SDK](https://github.com/hasura/ndc-sdk-typescript) and implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 
@@ -75,7 +75,7 @@ From the root of your project run:
 ddn connector introspect --connector my_subgraph/connector/my_azure_cosmos/connector.yaml
 ```
 
-If you look at the `config.json` for your connector, you'll see metadata describing your Azure Cosmos mappings.
+If you look at the `config.json` for your connector, you'll see metadata describing your Azure Cosmos DB for NoSQL mappings.
 
 ### 4. Create the Hasura metadata
 
@@ -130,7 +130,7 @@ HASURA_DDN_PAT=$(ddn auth print-pat) docker compose -f docker-compose.hasura.yam
 
 ### 7. Update the new DataConnectorLink object
 
-Finally, now that our `DataConnectorLink` has the correct environment variables configured for the Azure Cosmos connector,
+Finally, now that our `DataConnectorLink` has the correct environment variables configured for the Azure Cosmos DB for NoSQL connector,
 we can run the update command to have the CLI look at the configuration JSON and transform it to reflect our database's
 schema in `hml` format. In a new terminal tab from the root of your project, run:
 
@@ -168,4 +168,4 @@ We're happy to receive any contributions from the community. Please refer to our
 
 ## License
 
-The Hasura Azure Cosmos connector is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+The Hasura Azure Cosmos DB for NoSQL connector is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
