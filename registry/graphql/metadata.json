@@ -4,9 +4,7 @@
     "description": "The GraphQL Native Data Connector allows for connecting to any GraphQL endpoint",
     "title": "GraphQL Native Data Connector",
     "logo": "logo.svg",
-    "tags": [
-      "database"
-    ],
+    "tags": [],
     "latest_version": "v0.1.0"
   },
   "author": {
@@ -22,10 +20,10 @@
       "uri": "https://github.com/hasura/ndc-graphql/releases/download/v0.1.0/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "0a23dd958f197243334dc07fcdb8c1a223c93bdbcccb3db01f814bd109e5d299"
+        "value": "30d6883c57b146812fb141feb3b4680a9ffe214cb13e04b0618a8da069d1286c"
       },
       "source": {
-        "hash": "2eb35de97cb29056bc194260064f8f242010dde5"
+        "hash": "8fb41a151b3852fadcfadbe17695605f77aaa240"
       }
     }
   ],
@@ -35,7 +33,7 @@
     "version": [
       {
         "tag": "v0.1.0",
-        "hash": "2eb35de97cb29056bc194260064f8f242010dde5",
+        "hash": "8fb41a151b3852fadcfadbe17695605f77aaa240",
         "is_verified": true
       }
     ]
