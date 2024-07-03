@@ -1,8 +1,8 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect to an Oracle database and expose it to Hasura v3 Project",
-    "title": "Oracle Connector",
+    "description": "Connect to a Snowflake database and expose it to Hasura v3 Project",
+    "title": "Snowflake Connector",
     "logo": "logo.png",
     "tags": [
       "database"
@@ -19,10 +19,10 @@
   "packages": [
     {
       "version": "0.1.0-test.2",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/v0.1.0-test.2/ndc-connector-oracle-package.tar.gz",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv0.1.0-test.2/package.tar.gz",
       "checksum": {
         "type": "sha256",
-        "value": "0d837408a213f55df34062b96a2ac7fabcf8c61891918b6b2754d90fc61dd24c"
+        "value": "564757bc44bebe56560fe21a1306507d160caf084d69556bded4a7ed392e1b41"
       },
       "source": {
         "hash": "720a1c06f18bece28e698cfbd187862e196ee68a"
