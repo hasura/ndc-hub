@@ -4,9 +4,7 @@
     "description": "The GraphQL Native Data Connector allows for connecting to any GraphQL endpoint",
     "title": "GraphQL Native Data Connector",
     "logo": "logo.svg",
-    "tags": [
-      "database"
-    ],
+    "tags": [],
     "latest_version": "v0.1.0"
   },
   "author": {
