@@ -2,7 +2,7 @@
   "overview": {
     "namespace": "hasura",
     "description": "Connect Hasura DDN to a Azure Cosmos DB for PostgreSQL database",
-    "title": "Azure CosmosDB PostgreSQL",
+    "title": "Azure Cosmos DB for PostgreSQL",
     "logo": "logo.png",
     "tags": [
       "database"
