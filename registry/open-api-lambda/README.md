@@ -30,7 +30,7 @@ This Connector implements the [Data Connector Spec](https://github.com/hasura/nd
 
 1. Create a [Hasura Cloud account](https://console.hasura.io)
 2. Install the [DDN CLI](https://hasura.io/docs/3.0/cli/installation/)
-3. Please ensure that you have Docker installed and the Docker Daemon is running.
+3. Please ensure that you have Docker installed and the Docker daemon is running.
 4. If you want to make changes to the generated Typescript files, please ensure you have Node.js v20+ installed
 
 ## Quickstart using the DDN CLI
@@ -83,10 +83,17 @@ This will create a file `my_subgraph/metadata/my_openapi.hml` that links your Op
 
 6. Update the evironment variables listed in `my_subgraph/metadata/my_openapi.hml` (here, `MY_SUBGRAPH_MY_OPENAPI_READ_URL` and `MY_SUBGRAPH_MY_OPENAPI_WRITE_URL`) in `my_subgraph/.env.my_subgraph`.
 
-7. Start the connector in a Docker container
+7. Add the connector's Docker Compose file to your project's Docker Compose file (your project's Docker Compose file is the one that's located in the root directory your project):
 
 ```
-docker compose -f my_subpgraph/connector/my_openapi/docker-compose.my_openapi.yaml up
+include:
+  - path: my_subpgraph/connector/my_openapi/docker-compose.my_openapi.yaml
+```
+
+Start the GraphQL engine, observability tools, and the connector:
+
+```
+HASURA_DDN_PAT=$(ddn auth print-pat) docker compose -f docker-compose.hasura.yaml watch
 ```
 
 The `http://localhost:${your-docker-container-port}/schema/` should return the schema of your OpenAPI Connector. All functions that wrap `GET` requests will be listed in the `functions` array, while all other functions will be listed in the `procedures` array.
