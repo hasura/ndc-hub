@@ -5,7 +5,7 @@
     "title": "Go Connector",
     "logo": "logo.svg",
     "tags": [],
-    "latest_version": "v1.2.4"
+    "latest_version": "v1.2.5"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -16,14 +16,14 @@
   "is_hosted_by_hasura": false,
   "packages": [
     {
-      "version": "v1.2.4",
-      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v1.2.4/connector-definition.tgz",
+      "version": "v1.2.5",
+      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v1.2.5/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "d12c5182d168c504accf1a3a47026ac4e50e714ea5a92e0bd9c6d1d44ee3d0f7"
+        "value": "5a5a560c4b6237f0a6f9be0698122975bb911ff5e6d0e6cbc871e383efaa9e12"
       },
       "source": {
-        "hash": "9b0a890d9671e1b1b9768a2b1f17e7b32c16410b"
+        "hash": "53706fbf16bab34ee7a375b8f502016725a4928c"
       }
     },
     {
@@ -60,14 +60,14 @@
       }
     },
     {
-      "version": "v0.6.4",
-      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v0.6.4/connector-definition.tgz",
+      "version": "v0.6.5",
+      "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v0.6.5/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
-        "value": "03c53f927d443eba4d83acd00313b2b1057e4dc9e71649aa4131839c3675fd9f"
+        "value": "3740c3044a5dab4decdd586add32bd8e7fe4dd5c9dd59cfb4d2ad6cde317844c"
       },
       "source": {
-        "hash": "959a33e0dec841b371ef5ab0c39b3747eb290acf"
+        "hash": "c9e64bdf5972aca5f9c350ff6e6b05eff32af7c9"
       }
     },
     {
@@ -109,8 +109,8 @@
     "repository": "https://github.com/hasura/ndc-sdk-go",
     "version": [
       {
-        "tag": "v1.2.4",
-        "hash": "9b0a890d9671e1b1b9768a2b1f17e7b32c16410b",
+        "tag": "v1.2.5",
+        "hash": "53706fbf16bab34ee7a375b8f502016725a4928c",
         "is_verified": true
       },
       {
@@ -129,8 +129,8 @@
         "is_verified": true
       },
       {
-        "tag": "v0.6.4",
-        "hash": "959a33e0dec841b371ef5ab0c39b3747eb290acf",
+        "tag": "v0.6.5",
+        "hash": "c9e64bdf5972aca5f9c350ff6e6b05eff32af7c9",
         "is_verified": true
       },
       {
