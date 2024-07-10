@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v0.1.0"
+    "latest_version": "v1.0.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -17,6 +17,17 @@
   "is_verified": true,
   "is_hosted_by_hasura": false,
   "packages": [
+    {
+      "version": "1.0.0",
+      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v1.0.0/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "0dc038620f40911a2c5662b61d8e2ac9605876c80b3eb3cbae5cc1ebcd5b611f"
+      },
+      "source": {
+        "hash": "4beb7ddabddc3035ca5cc7bd85493a71a2e34147"
+      }
+    },
     {
       "version": "0.1.0",
       "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.1.0/connector-definition.tgz",
@@ -99,6 +110,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-mongodb/",
     "version": [
+      {
+        "tag": "v1.0.0",
+        "hash": "4beb7ddabddc3035ca5cc7bd85493a71a2e34147",
+        "is_verified": true
+      },
       {
         "tag": "v0.1.0",
         "hash": "175272912b86a11359a9b6b7fd72c7a6e2326bf1",
