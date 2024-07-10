@@ -1,0 +1,57 @@
+{
+    "overview": {
+      "namespace": "hasura",
+      "description": "Connect to a Azure Cosmos DB for NoSQL and expose it to Hasura v3 Project",
+      "title": "Azure Cosmos DB for NoSQL Connector",
+      "logo": "logo.png",
+      "tags": [],
+      "latest_version": "v0.1.3"
+    },
+    "author": {
+      "support_email": "support@hasura.io",
+      "homepage": "https://hasura.io",
+      "name": "Hasura"
+    },
+    "is_verified": true,
+    "is_hosted_by_hasura": true,
+    "packages": [
+      {
+        "version": "0.1.3",
+        "uri": "https://github.com/hasura/ndc-azure-cosmos-connector/releases/download/v0.1.3/connector-definition.tgz",
+        "checksum": {
+          "type": "sha256",
+          "value": "34655ff615be0d5738ffe1811972776808e9880a6fa3ec673123844c648154d7"
+        },
+        "source": {
+          "hash": "97032d1a41fd932d637b5ba24ca6611d9e1f4905"
+        }
+      },
+      {
+        "version": "0.1.2",
+        "uri": "https://github.com/hasura/ndc-azure-cosmos-connector/releases/download/v0.1.2/connector-definition.tgz",
+        "checksum": {
+          "type": "sha256",
+          "value": "09ce246a9039d2aaf799a7e0402b243fb3763ba802535348a9fee243de1bf1b7"
+        },
+        "source": {
+          "hash": "f67b2f80d64175a055a9489d4e59f30d5d3870a0"
+        }
+      }
+    ],
+    "source_code": {
+      "is_open_source": true,
+      "repository": "https://github.com/hasura/ndc-azure-cosmos-connector/",
+      "version": [
+        {
+          "tag": "v0.1.3",
+          "hash": "97032d1a41fd932d637b5ba24ca6611d9e1f4905",
+          "is_verified": true
+        },
+        {
+          "tag": "v0.1.2",
+          "hash": "f67b2f80d64175a055a9489d4e59f30d5d3870a0",
+          "is_verified": true
+        }
+      ]
+    }
+  }
