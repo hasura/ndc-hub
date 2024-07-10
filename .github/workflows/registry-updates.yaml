@@ -9,7 +9,7 @@ on:
 
 
   pull_request:
-    types: [closed]
+    types: [opened, synchronize, reopened, closed]
     paths:
       - registry/**
 
@@ -23,37 +23,87 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: List changed files
-        id: list_files
-        run: |
-          if [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
-            git diff --name-only ${{ github.sha }} > changed_files.txt
-          else
-            git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
-          fi
-
-          cat changed_files.txt
-
-      - name: Pseudocode for Next steps
-        id: next_steps
-        run: |
-          echo 'Detect status - added/modified/removed files'
-          echo 'for each removed connector, remove from registry db'
-          echo 'for each added connector, create a stub in the registry db'
-          echo 'for each modified connector:'
-          echo '  * Download tgz'
-          echo '  * Re-upload tgz'
-          echo '  * Extract'
-          echo '  * Build payload for API'
-          echo '  * PUT to API (gql)'
-
-      - name: Setup Go
-        uses: actions/setup-go@v4
+      - name: Get changed files and write the outputs to a JSON file
+        id: changed-files-write-output-files-json
+        uses: tj-actions/changed-files@v44
         with:
-          go-version: 1.21.x
+          write_output_files: true
+          json: true
+          files: |
+            registry/**
 
-      - name: Run registry automaion program
+
+      - name: Verify the contents of the .github/outputs/added_files.json file
         run: |
-          cd registry-automation
-          go run main.go ci
+          cat "**** OUTPUT ******************"
+          cat .github/outputs/added_files.json
 
+      # - name: Get the list of changed files
+      #   id: changed-files
+      #   run: |
+      #     echo "Fetching list of changed files..."
+      #     CHANGED_FILES=$(jq -r '.pull_request | .head.sha as $head | .base.sha as $base | [.head.repo.full_name, $head, $base] | @sh' <<< "$GITHUB_EVENT")
+      #     IFS=' ' read -r REPO HEAD_SHA BASE_SHA <<< "$CHANGED_FILES"
+      #     git diff --name-only $BASE_SHA $HEAD_SHA > changed_files.txt
+      #     cat changed_files.txt
+      #   env:
+      #     GITHUB_EVENT: ${{ toJson(github.event) }}
+
+      # - name: Display changed files
+      #   run: cat changed_files.txt
+
+      # - name: Get the actual changes in the files
+      #   run: |
+      #     echo "Fetching actual changes..."
+      #     while read -r FILE; do
+      #       echo "Changes in $FILE:"
+      #       git diff $BASE_SHA $HEAD_SHA -- "$FILE"
+      #     done < changed_files.txt
+      #   env:
+      #     BASE_SHA: ${{ steps.changed-files.outputs.base }}
+      #     HEAD_SHA: ${{ steps.changed-files.outputs.head }}
+
+      # - name: List changed files
+      #   id: list_files
+      #   run: |
+      #     if [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
+      #       git diff --name-only ${{ github.sha }} > changed_files.txt
+      #     else
+      #       git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
+      #     fi
+
+      #     cat changed_files.txt
+
+      # - name: Get the actual changes in the files
+      #   run: |
+      #     echo "Fetching actual changes ..."
+      #     while read -r FILE; do
+      #       echo "Changes in $FILE: "
+      #       git diff $BASE_SHA $HEAD_SHA -- "$FILE"
+      #     done < changed_files.txt
+      #   env:
+      #     BASE_SHA: ${{ steps.list_files.outputs.base }}
+      #     HEAD_SHA: ${{ steps.list_files.outputs.head }}
+
+      # - name: Pseudocode for Next steps
+      #   id: next_steps
+      #   run: |
+      #     echo 'Detect status - added/modified/removed files'
+      #     echo 'for each removed connector, remove from registry db'
+      #     echo 'for each added connector, create a stub in the registry db'
+      #     echo 'for each modified connector:'
+      #     echo '  * Download tgz'
+      #     echo '  * Re-upload tgz'
+      #     echo '  * Extract'
+      #     echo '  * Build payload for API'
+      #     echo '  * PUT to API (gql)'
+
+      # - name: Setup Go
+      #   uses: actions/setup-go@v4
+      #   with:
+      #     go-version: 1.21.x
+
+      # - name: Run registry automaion program
+      #   run: |
+      #     cd registry-automation
+      #     go run main.go ci
