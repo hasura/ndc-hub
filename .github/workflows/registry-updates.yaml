@@ -40,7 +40,7 @@ jobs:
           OUTPUT: ${{ toJson(steps.changed-files.outputs) }}
         run: |
           echo "**************"
-          echo "$OUTPUT" | jq -R 'fromjson'
+          echo "$OUTPUT" | jq .
 
 
       # - name: List changed files
