@@ -40,11 +40,7 @@ jobs:
           OUTPUT: ${{ toJson(steps.changed-files.outputs) }}
         run: |
           echo "**************"
-          echo "added files are  $ADDED_FILES"
-          echo "modified files are $MODIFIED_FILES"
-          echo "deleted files are $DELETED_FILES"
-          echo "OUPTUT is $OUTPUT"
-          echo '{"added": "$ADDED_FILES", "modified": "$MODIFIED_FILES", "deleted": "$DELETED_FILES"}' | envsubst | jq .
+          echo "$OUTPUT" | jq -R 'fromjson'
 
 
       # - name: List changed files
