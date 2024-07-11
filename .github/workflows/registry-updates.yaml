@@ -34,7 +34,7 @@ jobs:
 
       - name: Print out all the changed files
         env:
-          ALL_CHANGED_FILES: ${{ toJson(steps.changed-files.outputs) }}
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs }}
         run: |
           echo "**************"
           echo "$ALL_CHANGED_FILES" | jq .
