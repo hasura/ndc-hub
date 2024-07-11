@@ -41,7 +41,7 @@ jobs:
           echo "**************"
           echo "added files are  $ADDED_FILES"
           echo "modified files are $MODIFIED_FILES"
-          echo "modified files are $DELETED_FILES"
+          echo "deleted files are $DELETED_FILES"
 
 
       # - name: List changed files
