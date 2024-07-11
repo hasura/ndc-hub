@@ -27,7 +27,6 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v44
         with:
-          json: true
           files: |
             registry/**
 
@@ -41,30 +40,6 @@ jobs:
           echo "added files are $ADDED_FILES"
           echo "modified files are $MODIFIED_FILES"
 
-      # - name: Get the list of changed files
-      #   id: changed-files
-      #   run: |
-      #     echo "Fetching list of changed files..."
-      #     CHANGED_FILES=$(jq -r '.pull_request | .head.sha as $head | .base.sha as $base | [.head.repo.full_name, $head, $base] | @sh' <<< "$GITHUB_EVENT")
-      #     IFS=' ' read -r REPO HEAD_SHA BASE_SHA <<< "$CHANGED_FILES"
-      #     git diff --name-only $BASE_SHA $HEAD_SHA > changed_files.txt
-      #     cat changed_files.txt
-      #   env:
-      #     GITHUB_EVENT: ${{ toJson(github.event) }}
-
-      # - name: Display changed files
-      #   run: cat changed_files.txt
-
-      # - name: Get the actual changes in the files
-      #   run: |
-      #     echo "Fetching actual changes..."
-      #     while read -r FILE; do
-      #       echo "Changes in $FILE:"
-      #       git diff $BASE_SHA $HEAD_SHA -- "$FILE"
-      #     done < changed_files.txt
-      #   env:
-      #     BASE_SHA: ${{ steps.changed-files.outputs.base }}
-      #     HEAD_SHA: ${{ steps.changed-files.outputs.head }}
 
       # - name: List changed files
       #   id: list_files
