@@ -20,23 +20,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
-      - name: Get changed files and write the outputs to a JSON file
-        id: changed-files-write-output-files-json
+      - name: Get all changed files and use a comma separator in the output
+        id: changed-files
         uses: tj-actions/changed-files@v44
         with:
-          write_output_files: true
           json: true
-          files: |
-            registry/**
 
-
-      - name: Verify the contents of the .github/outputs/added_files.json file
+      - name: Print all the files that have been modified
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
-          cat "**** OUTPUT ******************"
-          cat .github/outputs/added_files.json
+          echo "**************"
+          echo "added files are $CHANGED_FILES"
 
       # - name: Get the list of changed files
       #   id: changed-files
