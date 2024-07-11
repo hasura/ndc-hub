@@ -3,7 +3,7 @@
     "namespace": "hasura",
     "description": "Connect to a MySQL database and expose it to Hasura v3 Project",
     "title": "MySQL Connector",
-    "logo": "logo.png",
+    "logo": "logo.svg",
     "tags": [
       "database"
     ],
