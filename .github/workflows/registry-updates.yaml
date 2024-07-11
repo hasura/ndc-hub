@@ -42,7 +42,11 @@ jobs:
           echo "added files are  $ADDED_FILES"
           echo "modified files are $MODIFIED_FILES"
           echo "deleted files are $DELETED_FILES"
-          jq -n '{added: $ADDED_FILES, modified: $MODIFIED_FILES, deleted: $DELETED_FILES}'
+          jq -n
+             --arg added "$ADDED_FILES" \
+             --arg modified "$MODIFIED_FILES" \
+             --arg deleted "$DELETED_FILES" \
+            '{added: $added, modified: $modified, deleted: $deleted}'
 
 
       # - name: List changed files
