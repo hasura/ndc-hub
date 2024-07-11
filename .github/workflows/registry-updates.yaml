@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch_depth: 1
 
       - name: Get all changed files and use a comma separator in the output
         id: changed-files
