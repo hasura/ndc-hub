@@ -27,7 +27,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v44
         with:
-          separator: "\n"
+          json: true
           files: |
             registry/**
 
@@ -42,6 +42,7 @@ jobs:
           echo "added files are  $ADDED_FILES"
           echo "modified files are $MODIFIED_FILES"
           echo "deleted files are $DELETED_FILES"
+          jq -n '{added: $ADDED_FILES, modified: $MODIFIED_FILES, deleted: $DELETED_FILES}'
 
 
       # - name: List changed files
