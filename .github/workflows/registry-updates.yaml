@@ -34,10 +34,12 @@ jobs:
 
       - name: Print out all the changed files
         env:
-          ALL_CHANGED_FILES: ${{ toJson(steps.changed-files.outputs) }}
+          ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
+          MODIFIED_FILES: ${{ steps.changed-files.outputs.modified_files }}
         run: |
           echo "**************"
-          echo "$ALL_CHANGED_FILES"
+          echo "added files are $ADDED_FILES"
+          echo "modified files are $MODIFIED_FILES"
 
       # - name: Get the list of changed files
       #   id: changed-files
