@@ -28,13 +28,13 @@ jobs:
         uses: tj-actions/changed-files@v44
         with:
           json: true
+          write_output_files: true
 
-      - name: Print all the files that have been modified
-        env:
-          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+
+      - name: Print out all the changed files
         run: |
           echo "**************"
-          echo "added files are $CHANGED_FILES"
+          cat .github/outputs/added_files.json
 
       # - name: Get the list of changed files
       #   id: changed-files
