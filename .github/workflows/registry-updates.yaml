@@ -37,11 +37,13 @@ jobs:
           ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
           MODIFIED_FILES: ${{ steps.changed-files.outputs.modified_files }}
           DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
+          OUTPUT: ${{ toJson(steps.changed-files.outputs) }}
         run: |
           echo "**************"
           echo "added files are  $ADDED_FILES"
           echo "modified files are $MODIFIED_FILES"
           echo "deleted files are $DELETED_FILES"
+          echo "OUPTUT is $OUTPUT"
           echo '{"added": "$ADDED_FILES", "modified": "$MODIFIED_FILES", "deleted": "$DELETED_FILES"}' | envsubst | jq .
 
 
