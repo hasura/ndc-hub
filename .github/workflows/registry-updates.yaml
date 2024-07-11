@@ -28,15 +28,16 @@ jobs:
         uses: tj-actions/changed-files@v44
         with:
           json: true
-          write_output_files: true
           files: |
-            registry/*
+            registry/**
 
 
       - name: Print out all the changed files
+        env:
+          ALL_CHANGED_FILES: ${{ toJson(steps.changed-files.outputs) }}
         run: |
           echo "**************"
-          cat .github/outputs/added_files.json
+          echo "$ALL_CHANGED_FILES" | jq .
 
       # - name: Get the list of changed files
       #   id: changed-files
