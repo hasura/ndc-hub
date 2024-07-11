@@ -30,7 +30,7 @@ jobs:
           json: true
           write_output_files: true
           files: |
-            registry/**
+            registry/*
 
 
       - name: Print out all the changed files
