@@ -36,10 +36,12 @@ jobs:
         env:
           ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
           MODIFIED_FILES: ${{ steps.changed-files.outputs.modified_files }}
+          DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
         run: |
           echo "**************"
-          echo "added files are $ADDED_FILES"
+          echo "added files are  $ADDED_FILES"
           echo "modified files are $MODIFIED_FILES"
+          echo "modified files are $DELETED_FILES"
 
 
       # - name: List changed files
