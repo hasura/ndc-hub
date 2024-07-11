@@ -40,7 +40,18 @@ jobs:
           OUTPUT: ${{ toJson(steps.changed-files.outputs) }}
         run: |
           echo "**************"
-          echo "$OUTPUT" | jq .
+          echo "$OUTPUT" | jq -R '
+            def recurse_fromjson:
+               fromjson? // . |
+               if type == "object" then
+                 map_values(recurse_fromjson)
+               elif type == "array" then
+                 map(recurse_fromjson)
+               else
+                 .
+               end;
+             recurse_fromjson
+          '
 
 
       # - name: List changed files
