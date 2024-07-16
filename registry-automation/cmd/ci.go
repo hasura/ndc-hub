@@ -46,11 +46,11 @@ func init() {
 	}
 
 	// Location of the registry files
-	var rfpE = os.Getenv(`CONNECTOR_HUB_DIRECTORY`)
-	ciCmd.PersistentFlags().String("connector-hub-directory", rfpE, "path to the connector hub checkout directory")
-	if rfpE == "" {
-		ciCmd.MarkPersistentFlagRequired("connector-hub-directory")
-	}
+	// var rfpE = os.Getenv(`CONNECTOR_HUB_DIRECTORY`)
+	// ciCmd.PersistentFlags().String("connector-hub-directory", rfpE, "path to the connector hub checkout directory")
+	// if rfpE == "" {
+	// 	ciCmd.MarkPersistentFlagRequired("connector-hub-directory")
+	// }
 
 	// TODO: Check
 	rand.Seed(time.Now().UnixNano())
