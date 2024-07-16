@@ -93,10 +93,12 @@ func runCI(cmd *cobra.Command, args []string) {
 	defer changedFilesContent.Close()
 
 	// Read the file's contents
-	changedFilesByteValue, err := ioutil.ReadAll(changedFilesContent)
+	changedFilesByteValue, err := io.ReadAll(changedFilesContent)
 	if err != nil {
 		log.Fatalf("Failed to read JSON file: %v", err)
 	}
+
+
 
 	var changedFiles ChangedFiles
 	err = json.Unmarshal(changedFilesByteValue, &changedFiles)
