@@ -39,27 +39,15 @@ jobs:
           DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
           OUTPUT: ${{ toJson(steps.changed-files.outputs) }}
         run: |
-          echo "**************"
-          echo $ADDED_FILES | jq .
-          echo "**************"
-          echo $MODIFIED_FILES | jq .
-          echo "**************"
-          echo $DELETED_FILES | jq .
-          echo "**************"
+          echo $OUTPUT > changed_files.txt
 
 
 
 
-      # - name: List changed files
-      #   id: list_files
-      #   run: |
-      #     if [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
-      #       git diff --name-only ${{ github.sha }} > changed_files.txt
-      #     else
-      #       git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
-      #     fi
-
-      #     cat changed_files.txt
+      - name: List changed files
+        id: list_files
+        run: |
+          cat changed_files.txt
 
       # - name: Get the actual changes in the files
       #   run: |
