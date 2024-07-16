@@ -98,7 +98,7 @@ func runCI(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to read JSON file: %v", err)
 	}
 
-
+	fmt.Printf("Changed files byt value %v", changedFilesByteValue)
 
 	var changedFiles ChangedFiles
 	err = json.Unmarshal(changedFilesByteValue, &changedFiles)
