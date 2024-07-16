@@ -67,5 +67,6 @@ jobs:
         env:
           CHANGED_FILES_PATH: "changed_files.json"
         run: |
+          mv changed_files.json registry-automation/changed_files.json
           cd registry-automation
           go run main.go ci
