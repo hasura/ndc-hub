@@ -37,15 +37,13 @@ jobs:
           ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
           MODIFIED_FILES: ${{ steps.changed-files.outputs.modified_files }}
           DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
-          OUTPUT: ${{ toJson(steps.changed-files.outputs) }}
         run: |
-          echo $OUTPUT > changed_files.txt
-
+          echo "{\"added_files\": \"$ADDED_FILES\", \"modified_files\": \"$MODIFIED_FILES\", \"deleted_files\": \"$DELETED_FILES\"}" > changed_files.txt
 
       - name: List changed files
         id: list_files
         run: |
-          cat changed_files.txt
+          cat changed_files.txt > jq .
 
       # - name: Get the actual changes in the files
       #   run: |
