@@ -4,7 +4,6 @@ Copyright © 2024 Hasura
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -30,13 +29,19 @@ var ciCmd = &cobra.Command{
 	Run:   runCI,
 }
 
+type ChangedFiles struct {
+	Added []string `json:"added_files"`
+	Modified []string `json:"modified_files"`
+	Deleted []string `json:"deleted_files"`
+}
+
 func init() {
 	rootCmd.AddCommand(ciCmd)
 
 	// Path for the changed files in the PR
-	var cfpE = os.Getenv(`CHANGED_FILES_PATH`)
-	ciCmd.PersistentFlags().String("changed-files-path", cfpE, "path to a line-separated list of changed files in the PR")
-	if cfpE == "" {
+	var changedFilesPathEnv = os.Getenv(`CHANGED_FILES_PATH`)
+	ciCmd.PersistentFlags().String("changed-files-path", changedFilesPathEnv, "path to a line-separated list of changed files in the PR")
+	if changedFilesPathEnv == "" {
 		ciCmd.MarkPersistentFlagRequired("changed-files-path")
 	}
 
@@ -55,28 +60,53 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	// For each connector where a change is detected...
 
-	var changed_files = map[string]bool{}
+	// var changed_files = map[string]bool{}
+	// var changed_files_path = cmd.PersistentFlags().Lookup("changed-files-path").Value.String()
+	// file, err := os.Open(changed_files_path)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer file.Close()
+
+	// scanner := bufio.NewScanner(file)
+	// for scanner.Scan() {
+	// 	changed_files[filepath.Dir(scanner.Text())] = true // Just assume we'll treat each connector as if everything has changed.
+	// }
+
+	// if err := scanner.Err(); err != nil {
+	// 	panic(err)
+	// }
+
+	// var hub_directory = cmd.PersistentFlags().Lookup("connector-hub-directory").Value.String()
+
+	// for k := range changed_files {
+	// 	respondToChangedConnector(path.Join(hub_directory, k))
+	// }
+
 	var changed_files_path = cmd.PersistentFlags().Lookup("changed-files-path").Value.String()
-	file, err := os.Open(changed_files_path)
+	changedFilesContent, err := os.Open(changed_files_path)
+
+	if err!= nil {
+		log.Fatalf("Failed to open the file: %v, err: %v", changed_files_path, err)
+	}
+
+	defer changedFilesContent.Close()
+
+	// Read the file's contents
+	changedFilesByteValue, err := ioutil.ReadAll(changedFilesContent)
 	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		changed_files[filepath.Dir(scanner.Text())] = true // Just assume we'll treat each connector as if everything has changed.
+		log.Fatalf("Failed to read JSON file: %v", err)
 	}
 
-	if err := scanner.Err(); err != nil {
-		panic(err)
+	var changedFiles ChangedFiles
+	err = json.Unmarshal(changedFilesByteValue, &changedFiles)
+	if err != nil {
+		log.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
 
-	var hub_directory = cmd.PersistentFlags().Lookup("connector-hub-directory").Value.String()
+	fmt.Printf("Parsed JSON: \n%+v\n", changedFiles)
 
-	for k := range changed_files {
-		respondToChangedConnector(path.Join(hub_directory, k))
-	}
+
 
 }
 
