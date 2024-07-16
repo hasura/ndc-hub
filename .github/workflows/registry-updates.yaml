@@ -40,11 +40,11 @@ jobs:
           OUTPUT: ${{ toJson(steps.changed-files.outputs) }}
         run: |
           echo "**************"
-          echo "$ADDED_FILES" | jq .
+          echo $ADDED_FILES | jq .
           echo "**************"
-          echo $MODIFIED_FILES" | jq .
+          echo $MODIFIED_FILES | jq .
           echo "**************"
-          echo "$DELETED_FILES" | jq .
+          echo $DELETED_FILES | jq .
           echo "**************"
 
 
