@@ -43,7 +43,7 @@ jobs:
       - name: List changed files
         id: list_files
         run: |
-          cat changed_files.txt | jq .
+          cat changed_files.txt
 
       # - name: Get the actual changes in the files
       #   run: |
