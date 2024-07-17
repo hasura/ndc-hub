@@ -53,11 +53,10 @@ jobs:
           json: true
           escape_json: false
           files: |
-            registry:
-              - 'logo.png'
-              - 'logo.svg'
-              - 'README.md'
-              - 'metadata.json'
+            registry/**/logo.png
+            registry/**/logo.svg
+            registry/**/README.md
+            registry/**/metadata.json
 
       - name: Print out all the changed filse
         env:
