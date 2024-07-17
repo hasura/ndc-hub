@@ -44,7 +44,7 @@ jobs:
       - name: List changed files
         id: list_files
         run: |
-          jq . connector_version_changes.json
+          cat connector_version_changes.json
 
       - name: Get all connector metadata changes
         id: connector-metadata-changed-files
