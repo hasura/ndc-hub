@@ -44,7 +44,7 @@ jobs:
       - name: List changed files
         id: list_files
         run: |
-          cat connector_version_changes.json
+          jq . connector_version_changes.json
 
       # - name: Pseudocode for Next steps
       #   id: next_steps
