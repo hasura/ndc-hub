@@ -52,11 +52,12 @@ jobs:
         with:
           json: true
           escape_json: false
-          files: |
-            registry/**/logo.png
-            registry/**/logo.svg
-            registry/**/README.md
-            registry/**/metadata.json
+          files_yaml: |
+            registry:
+              - registry/**/logo.png
+              - registry/**/logo.svg
+              - registry/**/README.md
+              - registry/**/metadata.json
 
       - name: Print out all the changed filse
         env:
