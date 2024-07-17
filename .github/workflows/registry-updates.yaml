@@ -24,7 +24,7 @@ jobs:
           fetch_depth: 1
 
       - name: Get all connector version package changes
-        id: changed-files
+        id: connector-version-changed-files
         uses: tj-actions/changed-files@v44
         with:
           json: true
@@ -35,9 +35,9 @@ jobs:
 
       - name: Print out all the changed filse
         env:
-          ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
-          MODIFIED_FILES: ${{ steps.changed-files.outputs.modified_files }}
-          DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
+          ADDED_FILES: ${{ steps.connector-version-changed-files.outputs.added_files }}
+          MODIFIED_FILES: ${{ steps.connector-version-changed-files.outputs.modified_files }}
+          DELETED_FILES: ${{ steps.connector-version-changed-files.outputs.deleted_files }}
         run: |
           echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > connector_version_changes.json
 
@@ -45,6 +45,33 @@ jobs:
         id: list_files
         run: |
           jq . connector_version_changes.json
+
+      - name: Get all connector metadata changes
+        id: connector-metadata-changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          json: true
+          escape_json: false
+          files: |
+            registry:
+              - 'logo.png'
+              - 'logo.svg'
+              - 'README.md'
+              - 'metadata.json'
+
+      - name: Print out all the changed filse
+        env:
+          ADDED_FILES: ${{ steps.connector-metadata-changed-files.outputs.added_files }}
+          MODIFIED_FILES: ${{ steps.connector-metadata-changed-files.outputs.modified_files }}
+          DELETED_FILES: ${{ steps.connector-metadata-changed-files.outputs.deleted_files }}
+        run: |
+          echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > connector_metadata_changes.json
+
+      - name: List changed files
+        id: list_files_1
+        run: |
+          jq . connector_metadata_changes.json
+
 
       # - name: Pseudocode for Next steps
       #   id: next_steps
