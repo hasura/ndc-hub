@@ -29,6 +29,8 @@ jobs:
         with:
           json: true
           escape_json: false
+          files: |
+            registry/**
 
 
       - name: Print out all the changed filse

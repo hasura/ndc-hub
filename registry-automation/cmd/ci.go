@@ -109,15 +109,13 @@ func runCI(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to read JSON file: %v", err)
 	}
 
-	fmt.Printf("Changed files byt value %v", changedFilesByteValue)
-
 	var changedFiles ChangedFiles
 	err = json.Unmarshal(changedFilesByteValue, &changedFiles)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
 
-	const connectorVersionPackageRegex = `^registry/([^/]+)/releases/([^/]+)//connector-packaging\.json$`
+	const connectorVersionPackageRegex = `^registry/([^/]+)/releases/([^/]+)/connector-packaging\.json$`
 
 	re := regexp.MustCompile(connectorVersionPackageRegex);
 
