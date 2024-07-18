@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -16,8 +15,8 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"time"
-
 
 	"github.com/machinebox/graphql"
 	"github.com/spf13/cobra"
@@ -34,6 +33,17 @@ type ChangedFiles struct {
 	Added []string `json:"added_files"`
 	Modified []string `json:"modified_files"`
 	Deleted []string `json:"deleted_files"`
+}
+
+type ReleasePackageChecksum struct {
+	Type string `json:"type"`
+	Value string `json:"value"`
+}
+
+type ReleasePackage struct {
+	Version string `json: "version"`
+	Uri string `json: "uri"`
+	Checksum ReleasePackageChecksum `json:"checksum"`
 }
 
 func init() {
@@ -107,6 +117,19 @@ func runCI(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
 
+	const connectorVersionPackageRegex = `^registry/([^/]+)/([^/]+)/releases/connector-packaging\.json$`
+
+	re := regexp.MustCompile(connectorVersionPackageRegex);
+
+	for _, addedFile := range changedFiles.Added {
+
+		matches := re.FindStringSubmatch(addedFile);
+
+		if len(matches) == 3 {
+			fmt.Printf("regex matches are %+v", matches)
+		}
+	}
+
 	fmt.Printf("Parsed JSON: \n%+v\n", changedFiles)
 
 
@@ -115,7 +138,6 @@ func runCI(cmd *cobra.Command, args []string) {
 
 func respondToChangedConnector(changed_connector_path string) {
 	// Detect status - added/modified/removed files
-	// for each removed connector, remove from registry db
 	// for each added connector, create a stub in the registry db
 	// for each modified connector:
 	//   * Download tgz
@@ -233,9 +255,10 @@ func downloadFile(sourceURL, destination string, headers map[string]string) erro
 	return nil
 }
 
+
 func readJSONFile(location string) map[string]interface{} {
 	// Read the file
-	fileBytes, err := ioutil.ReadFile(location)
+	fileBytes, err := os.ReadFile(location)
 	if err != nil {
 		panic(fmt.Errorf("error reading file: %v", err))
 	}

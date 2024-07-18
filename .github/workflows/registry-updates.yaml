@@ -29,8 +29,6 @@ jobs:
         with:
           json: true
           escape_json: false
-          files: |
-            registry/**/releases/**/package.json
 
 
       - name: Print out all the changed filse
@@ -39,39 +37,12 @@ jobs:
           MODIFIED_FILES: ${{ steps.connector-version-changed-files.outputs.modified_files }}
           DELETED_FILES: ${{ steps.connector-version-changed-files.outputs.deleted_files }}
         run: |
-          echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > connector_version_changes.json
+          echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > changed_files.json
 
       - name: List changed files
         id: list_files
         run: |
-          cat connector_version_changes.json
-
-      - name: Get all connector metadata changes
-        id: connector-metadata-changed-files
-        uses: tj-actions/changed-files@v44
-        with:
-          json: true
-          escape_json: false
-          files_yaml: |
-            registry:
-              - registry/**/logo.png
-              - registry/**/logo.svg
-              - registry/**/README.md
-              - registry/**/metadata.json
-
-      - name: Print out all the changed filse
-        env:
-          ADDED_FILES: ${{ steps.connector-metadata-changed-files.outputs.added_files }}
-          MODIFIED_FILES: ${{ steps.connector-metadata-changed-files.outputs.modified_files }}
-          DELETED_FILES: ${{ steps.connector-metadata-changed-files.outputs.deleted_files }}
-        run: |
-          echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > connector_metadata_changes.json
-
-      - name: List changed files
-        id: list_files_1
-        run: |
-          jq . connector_metadata_changes.json
-
+          cat changed_files.json
 
       # - name: Pseudocode for Next steps
       #   id: next_steps
@@ -86,15 +57,15 @@ jobs:
       #     echo '  * Build payload for API'
       #     echo '  * PUT to API (gql)'
 
-      # - name: Setup Go
-      #   uses: actions/setup-go@v4
-      #   with:
-      #     go-version: 1.21.x
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
 
-      # - name: Run registry automation program
-      #   env:
-      #     CHANGED_FILES_PATH: "changed_files.json"
-      #   run: |
-      #     mv changed_files.json registry-automation/changed_files.json
-      #     cd registry-automation
-      #     go run main.go ci
+      - name: Run registry automation program
+        env:
+          CHANGED_FILES_PATH: "changed_files.json"
+        run: |
+          mv changed_files.json registry-automation/changed_files.json
+          cd registry-automation
+          go run main.go ci
