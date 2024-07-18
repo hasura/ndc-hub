@@ -13,7 +13,7 @@ type EnvJSON = {
 type EnvMap = {
     [key: string]: Val
 }
-type Val = string | ValFromEnv
+type Val = { value: string } | ValFromEnv
 type ValFromEnv = {
     valueFromEnv: string
 }
