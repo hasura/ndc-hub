@@ -117,7 +117,7 @@ func runCI(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
 
-	const connectorVersionPackageRegex = `^registry/([^/]+)/([^/]+)/releases/connector-packaging\.json$`
+	const connectorVersionPackageRegex = `^registry/([^/]+)/releases/([^/]+)//connector-packaging\.json$`
 
 	re := regexp.MustCompile(connectorVersionPackageRegex);
 
