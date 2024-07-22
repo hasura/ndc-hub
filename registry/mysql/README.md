@@ -59,7 +59,7 @@ documentation [here](https://hasura.io/docs/3.0/getting-started/connect-to-data/
 (Note: here and following we are naming the subgraph "my_subgraph" and the connector "my_mysql")
 
    ```bash
-   ddn connector init my_mysql --subgraph my_subgraph --hub-connector hasura/MySQL
+   ddn connector init my_mysql --subgraph my_subgraph --hub-connector hasura/mysql
    ```
 
 ### 2. Add your MySQL credentials:
