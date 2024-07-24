@@ -1,30 +1,79 @@
-## Overview
+# Hasura PostgreSQL (Neon) Connector
 
-`ndc-postgres` provides a Hasura Data Connector to the PostgreSQL database,
-which can expose and run GraphQL queries via the Hasura v3 Project.
+<a href="https://hasura.io/"><img src="https://github.com/hasura/ndc-postgres/blob/main/docs/logo.png" align="right" width="200"></a>
 
-- [PostgreSQL Connector information in the Hasura Connectors directory](https://hasura.io/connectors/postgres)
-- [GitHub repository](https://github.com/hasura/ndc-postgres)
+[![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/connectors/postgresql)
+[![Latest release](https://img.shields.io/github/v/release/hasura/ndc-postgres)](https://github.com/hasura/ndc-postgres/releases/latest)
+[![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
+[![ndc-hub](https://img.shields.io/badge/ndc--hub-postgres-blue.svg?style=flat)](https://hasura.io/connectors/postgres)
 
-The connector implements the [NDC Specification](https://hasura.github.io/ndc-spec/overview.html),
-but does not currently support column relationship arguments in queries, or functions.
-
-Visit the
-[Hasura v3 Documentation](https://hasura.io/docs/3.0/native-data-connectors/postgresql) 
-for more information.
+The Hasura PostgreSQL Connector allows for connecting to a PostgreSQL database giving you an instant
+GraphQL API on top of your PostgreSQL data.
 
 The connector supports the [Neon](https://neon.tech/) PostgreSQL database offering.
 
-## Deployment
+This connector is built using the [Rust Data Connector SDK](https://github.com/hasura/ndc-sdk-rs)
+and implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 
-The connector is hosted by Hasura and can be used from the [Hasura v3 Console](https://console.hasura.io).
+- [Connector information in the Hasura Hub](https://hasura.io/connectors/postgres)
+- [Hasura V3 Documentation](https://hasura.io/docs/3.0)
 
-## Usage
+## Features
 
-Follow the [Quick Start Guide](https://hasura.io/docs/3.0/quickstart/) 
-To use the PostgreSQL data connector from the [Hasura v3 Console](https://console.hasura.io).
+Below, you'll find a matrix of all supported features for the PostgreSQL connector:
 
-## Troubleshooting
+| Feature                | Supported |
+| ---------------------- | --------- |
+| Native Queries         | ✅        |
+| Native Mutations       | ✅        |
+| Simple Object Query    | ✅        |
+| Filter / Search        | ✅        |
+| Simple Aggregation     | ✅        |
+| Sort                   | ✅        |
+| Paginate               | ✅        |
+| Table Relationships    | ✅        |
+| Views                  | ✅        |
+| Mutations              | ✅        |
+| Distinct               | ✅        |
+| Enums                  | ✅        |
+| Default Values         | ✅        |
+| User-defined Functions | ❌        |
 
-Please [submit a Github issue](https://github.com/hasura/graphql-engine/issues/new)
-if you encounter any problems!
+## Using the PostgreSQL connector
+
+Hasura DDN's [Getting Started](https://hasura.io/docs/3.0/getting-started/build/connect-to-data/connect-a-source?db=PostgreSQL)
+guide contains information about how to use the PostgreSQL connector as part of a Hasura DDN project.
+
+## Support & Troubleshooting
+
+The documentation and community will help you troubleshoot most issues.
+If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+
+- Support & feedback: [Discord](https://discord.gg/hasura)
+- Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
+- Follow product updates: [@HasuraHQ](https://twitter.com/hasurahq)
+- Talk to us on our [website chat](https://hasura.io)
+
+We are committed to fostering an open and welcoming environment in the community.
+Please see the [Code of Conduct](https://github.com/hasura/ndc-postgres/blob/main/docs/code-of-conduct.md).
+If you want to report a security issue, please [read this](https://github.com/hasura/ndc-postgres/blob/main/docs/security.md).
+
+## Documentation
+
+View the full documentation for the connector [here](https://github.com/hasura/ndc-postgres/blob/main/docs/readme.md).
+
+### Production
+
+See the [production guide](https://github.com/hasura/ndc-postgres/blob/main/docs/production.md) for details about production setup.
+
+### Development
+
+See the [development guide](https://github.com/hasura/ndc-postgres/blob/main/docs/development.md) for details about development workflows, tooling, and code structure.
+
+## Contributing
+
+`ndc-postgres` is still in early stages of development and we are currently not accepting contributions.
+
+## License
+
+The Hasura PostgreSQL Connector is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
