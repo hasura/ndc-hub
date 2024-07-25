@@ -199,14 +199,9 @@ func respondToAddedOrModifiedConnectorVersion(connectorName string, connectorVer
 		return fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connectorName, connectorVersion, err)
 	}
 
-	connectorMetadataType, ok := connectorVersionMetadata["type"].(string)
-	if !ok && (connectorMetadataType == ManagedDockerBuild || connectorMetadataType == PrebuiltDockerImage) {
-		return fmt.Errorf("invalid or undefined connector type: %v", connectorMetadataType)
-	}
-
 	// // Build payload for registry upsert
 	// var logo_new_url = reuploadLogo(logo_path) // Is the logo hosted somewhere?
-	registryPayload, err := buildRegistryPayload(connectorName, connectorVersion, connectorMetadataType, connectorMetadata, uploadedTgzUrl)
+	registryPayload, err := buildRegistryPayload(connectorName, connectorVersion, connectorVersionMetadata, connectorMetadata, uploadedTgzUrl)
 
 	if err != nil {
 		return fmt.Errorf("failed to build registry payload	: %v", err)
@@ -307,22 +302,45 @@ func readYAMLFile(filePath string) (map[string]interface{}, error) {
 func buildRegistryPayload(
 	connectorName string,
 	version string,
-	packagingType string,
+	connectorVersionMetadata map[string]interface{},
 	connectorMetadata map[string]interface{},
 	uploadedConnectorDefinitionTgzUrl string,
 ) (ConnectorVersion, error) {
 	var connectorVersion ConnectorVersion
+	var connectorVersionDockerImage string
+
 	connectorOverview, ok := connectorMetadata["overview"].(map[string]interface{})
 	if !ok {
-		return connectorVersion, fmt.Errorf("Could not find connector overview in the connector's metadata")
+		return connectorVersion, fmt.Errorf("could not find connector overview in the connector's metadata")
 	}
 	connectorNamespace, ok := connectorOverview["namespace"].(string)
 	if !ok {
-		return connectorVersion, fmt.Errorf("Could not find the 'namespace' of the connector in the connector's overview in the connector's metadata.json")
+		return connectorVersion, fmt.Errorf("could not find the 'namespace' of the connector in the connector's overview in the connector's metadata.json")
 	}
-	connectorVersion.Namespace = connectorNamespace
-	connectorVersion.Name = connectorName
-	connectorVersion.Version = version
+
+	connectorVersionPackagingDefinition, ok := connectorVersionMetadata["packagingDefinition"].(map[interface{}]interface{})
+	if !ok {
+		return connectorVersion, fmt.Errorf("could not find the 'packagingDefinition' of the connector %s version %s in the connector's metadata", connectorName, version)
+	}
+	connectorVersionPackagingType, ok := connectorVersionPackagingDefinition["type"].(string)
+	if !ok && (connectorVersionPackagingType == ManagedDockerBuild || connectorVersionPackagingType == PrebuiltDockerImage) {
+		return connectorVersion, fmt.Errorf("invalid or undefined connector type: %v", connectorVersionPackagingDefinition)
+	} else if connectorVersionPackagingType == PrebuiltDockerImage {
+		connectorVersionDockerImage, ok = connectorVersionPackagingDefinition["dockerImage"].(string)
+		if !ok {
+			return connectorVersion, fmt.Errorf("could not find the 'dockerImage' of the PrebuiltDockerImage connector %s version %s in the connector's metadata", connectorName, version)
+		}
+	}
+
+	connectorVersion = ConnectorVersion{
+		Namespace:            connectorNamespace,
+		Name:                 connectorName,
+		Version:              version,
+		Image:                connectorVersionDockerImage,
+		PackageDefinitionURL: uploadedConnectorDefinitionTgzUrl,
+		IsMultitenant:        false, // TODO(KC): Figure this out.
+		Type:                 connectorVersionPackagingType,
+	}
 
 	return connectorVersion, nil
 }
@@ -391,16 +409,6 @@ func downloadFile(sourceURL, destination string, headers map[string]string) erro
 	}
 
 	return nil
-}
-
-// parseJSON accepts a JSON byte slice and returns the parsed value as the specified type.
-func parseJSON[T any](data []byte) (T, error) {
-	var result T
-	err := json.Unmarshal(data, &result)
-	if err != nil {
-		return result, fmt.Errorf("failed to unmarshal JSON: %w", err)
-	}
-	return result, nil
 }
 
 // Reads a JSON file and attempts to parse the content of the file
@@ -527,8 +535,6 @@ func extractTarGz(src, dest string) (string, error) {
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("error extracting tar.gz file: %v", err)
 	}
-
-	log.Println("***** File path: ", filepath)
 
 	return fmt.Sprintf("%s/.hasura-connector/connector-metadata.yaml", filepath), nil
 }
