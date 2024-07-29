@@ -40,13 +40,13 @@ type ChangedFiles struct {
 // used to insert a new version of a connector in the registry.
 type ConnectorVersion struct {
 	// Namespace of the connector, e.g. "hasura"
-	Namespace string `graphql:"namespace"`
+	Namespace string `json:"namespace"`
 	// Name of the connector
-	Name string `graphql:"name"`
+	Name string `json:"name"`
 	// Semantic version of the connector
-	Version string `graphql:"version"`
+	Version string `json:"version"`
 	// Docker image of the connector version
-	Image string `graphql:"image"`
+	Image *string `json:"image,omitempty"`
 	// URL to the connector's metadata
 	PackageDefinitionURL string `graphql:"package_definition_url"`
 	// Is the connector version multitenant?
@@ -55,9 +55,12 @@ type ConnectorVersion struct {
 	Type string `graphql:"type"`
 }
 
+// Create a struct with the following fields:
+// type string
+// image *string (optional)
 type ConnectionVersionMetadata struct {
-	Type  string `yaml:"type"`
-	Image string `yaml: "image", omitempty`
+	Type  string  `yaml:"type"`
+	Image *string `yaml:"image,omitempty"`
 }
 
 const (
@@ -87,6 +90,8 @@ func init() {
 // processAddedOrModifiedConnectorVersions processes the files in the PR and extracts the connector name and version
 func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConnectorVersions map[string]map[string]string, re *regexp.Regexp) {
 	for _, file := range files {
+		// Extract the connector name and version from the file path
+
 		matches := re.FindStringSubmatch(file)
 		if len(matches) == 3 {
 			connectorName := matches[1]
@@ -104,6 +109,7 @@ func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConn
 
 // runCI is the main function that runs the CI workflow
 func runCI(cmd *cobra.Command, args []string) {
+	ctx := context.Background()
 	var changed_files_path = cmd.PersistentFlags().Lookup("changed-files-path").Value.String()
 	changedFilesContent, err := os.Open(changed_files_path)
 
@@ -112,6 +118,12 @@ func runCI(cmd *cobra.Command, args []string) {
 	}
 
 	defer changedFilesContent.Close()
+
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile("gcp-service-account-detail.json"))
+	if err != nil {
+		log.Fatalf("Failed to create Google bucket client: %v", err)
+	}
+	defer client.Close()
 
 	// Read the changed file's contents. This file contains all the changed files in the PR
 	changedFilesByteValue, err := io.ReadAll(changedFilesContent)
@@ -126,21 +138,33 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	}
 
-	log.Printf("Changed files: %+v", changedFiles)
-
 	// Collect the added or modified connectors
 	addedOrModifiedConnectorVersions := collectAddedOrModifiedConnectors(changedFiles)
 
+	// iterate over the addedOrModifiedConnectorVersions and respond to each connector
+	// by traversing the map and calling the respondToAddedOrModifiedConnectorVersion function
+	// for each connector, collect the result of respondToAddedOrModifiedConnectorVersion in an array
+	// and return the array of results
+
+	var connectorVersions []ConnectorVersion
 	for connectorName, versions := range addedOrModifiedConnectorVersions {
 		for version, connectorVersionPath := range versions {
-			err := respondToAddedOrModifiedConnectorVersion(connectorName, version, connectorVersionPath)
+			connectorVersion, err := respondToAddedOrModifiedConnectorVersion(client, connectorName, version, connectorVersionPath)
 			if err != nil {
 				log.Fatalf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, err)
 			}
+			connectorVersions = append(connectorVersions, connectorVersion)
 		}
 	}
 
-	fmt.Printf("new connector versions: \n%+v\n", addedOrModifiedConnectorVersions)
+	// Serialize connectorVersions to JSON and the
+	// print the JSON to the console
+	connectorVersionsJSON, err := json.Marshal(connectorVersions)
+	if err != nil {
+		log.Fatalf("Failed to marshal the connector versions: %v", err)
+	} else {
+		fmt.Printf("Connector Versions: %s", connectorVersionsJSON)
+	}
 
 }
 
@@ -156,7 +180,7 @@ func collectAddedOrModifiedConnectors(changedFiles ChangedFiles) map[string]map[
 	return addedOrModifiedConnectorVersions
 }
 
-func respondToAddedOrModifiedConnectorVersion(connectorName string, connectorVersion string, changedConnectorVersionPath string) error {
+func respondToAddedOrModifiedConnectorVersion(client *storage.Client, connectorName string, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
 	// // Detect status - added/modified/removed files
 	// // for each added connector, create a stub in the registry db
 	// // for each modified connector:
@@ -167,73 +191,59 @@ func respondToAddedOrModifiedConnectorVersion(connectorName string, connectorVer
 	// //   * PUT to API (gql)
 
 	// Read the connector packaging file
-	ctx := context.Background()
+	var connectorVersion ConnectorVersion
 
 	// connector's `metadata.json`, `registry/mongodb/metadata.json`
 	connectorMetadata, err := readJSONFile[map[string]interface{}](fmt.Sprintf("registry/%s/metadata.json", connectorName))
 	if err != nil {
-		return fmt.Errorf("failed to read the connector metadata file: %v", err)
+		return connectorVersion, fmt.Errorf("failed to read the connector metadata file: %v", err)
 	}
 
 	// connector version's metadata, `registry/mongodb/releases/v1.0.0/connector-packaging.json`
 	connectorVersionPackagingInfo, err := readJSONFile[map[string]interface{}](changedConnectorVersionPath) // Read metadata file
 	if err != nil {
-		return fmt.Errorf("failed to read the connector packaging file: %v", err)
+		return connectorVersion, fmt.Errorf("failed to read the connector packaging file: %v", err)
 	}
-
 	// Fetch, parse, and reupload the TGZ
 	tgzUrl, ok := connectorVersionPackagingInfo["uri"].(string)
 
 	// Check if the TGZ URL is valid
 	if !ok || tgzUrl == "" {
-		return fmt.Errorf("invalid or undefined TGZ URL: %v", tgzUrl)
+		return connectorVersion, fmt.Errorf("invalid or undefined TGZ URL: %v", tgzUrl)
 	}
 
-	connectorVersionMetadata, connectorMetadataTgzPath, err := getConnectorVersionMetadata(err, tgzUrl, connectorName, connectorVersion)
+	connectorVersionMetadata, connectorMetadataTgzPath, err := getConnectorVersionMetadata(err, tgzUrl, connectorName, version)
 	if err != nil {
-		return fmt.Errorf("failed to get connector version metadata: %v", err)
+		return connectorVersion, fmt.Errorf("failed to get connector version metadata: %v", err)
 	}
 
-	uploadedTgzUrl, err := uploadConnectorVersionDefinition(ctx, connectorName, connectorVersion, connectorMetadataTgzPath)
+	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connectorName, version, connectorMetadataTgzPath)
 	if err != nil {
-		return fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connectorName, connectorVersion, err)
+		return connectorVersion, fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connectorName, version, err)
 	}
 
 	// // Build payload for registry upsert
 	// var logo_new_url = reuploadLogo(logo_path) // Is the logo hosted somewhere?
-	registryPayload, err := buildRegistryPayload(connectorName, connectorVersion, connectorVersionMetadata, connectorMetadata, uploadedTgzUrl)
-
-	if err != nil {
-		return fmt.Errorf("failed to build registry payload	: %v", err)
-	}
-
-	fmt.Printf("\n\n ************************ Registry payload: %+v", registryPayload)
+	return buildRegistryPayload(connectorName, version, connectorVersionMetadata, connectorMetadata, uploadedTgzUrl)
 
 	// // Upsert
-	// updateRegistryGQL(registry_payload)
-	return nil
+	// success, err := updateRegistryGQL(registryPayload)
+	// if err != nil {
+	// 	return connectorVersion, fmt.Errorf("failed to update the registry: %v", err)
+	// } else {
+	// 	fmt.Printf("Successfully updated the registry: %v", success)
+
+	// }
+	// return nil
 }
 
-func uploadConnectorVersionDefinition(ctx context.Context, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
-	client, err := storage.NewClient(ctx, option.WithCredentialsFile("gcp-service-account-detail.json"))
-	if err != nil {
-
-		return "", fmt.Errorf("failed to create client: %v", err)
-	}
-	defer client.Close()
-
+func uploadConnectorVersionDefinition(client *storage.Client, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
 	bucketName := "dev-connector-platform-registry"
-
-	var uploadedTgzUrl string
-
 	objectName := fmt.Sprintf("packages/%s/%s/package.tgz", connectorName, connectorVersion)
-	uploadedTgzUrl, err = uploadFile(ctx, client, bucketName, objectName, connectorMetadataTgzPath)
+	uploadedTgzUrl, err := uploadFile(client, bucketName, objectName, connectorMetadataTgzPath)
 
 	if err != nil {
-		log.Fatalf("Failed to upload file: %v", err)
-	} else {
-		fmt.Println("Uploaded file to GCS:", uploadedTgzUrl)
-
+		return "", err
 	}
 	return uploadedTgzUrl, nil
 }
@@ -299,6 +309,7 @@ func readYAMLFile(filePath string) (map[string]interface{}, error) {
 	return result, nil
 }
 
+// buildRegistryPayload builds the payload for the registry upsert API
 func buildRegistryPayload(
 	connectorName string,
 	version string,
@@ -336,7 +347,7 @@ func buildRegistryPayload(
 		Namespace:            connectorNamespace,
 		Name:                 connectorName,
 		Version:              version,
-		Image:                connectorVersionDockerImage,
+		Image:                &connectorVersionDockerImage,
 		PackageDefinitionURL: uploadedConnectorDefinitionTgzUrl,
 		IsMultitenant:        false, // TODO(KC): Figure this out.
 		Type:                 connectorVersionPackagingType,
@@ -345,31 +356,43 @@ func buildRegistryPayload(
 	return connectorVersion, nil
 }
 
-func updateRegistryGQL(payload map[string]interface{}) {
+func updateRegistryGQL(payload []ConnectorVersion) (bool, error) {
 	// Example: https://stackoverflow.com/questions/66931228/http-requests-golang-with-graphql
 
-	client := graphql.NewClient("https://<GRAPHQL_API_HERE>")
+	client := graphql.NewClient("https://conn-deploy-stg.hasura.app/v1/graphql")
 	ctx := context.Background()
 
 	req := graphql.NewRequest(`
-    query ($key: String!) {
-			items (id:$key) {
-				field1
-				field2
-				field3
-			}
+mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_version_insert_input!]!) {
+  insert_hub_registry_connector_version(objects: $connectorVersion, on_conflict: {constraint: connector_version_namespace_name_version_key, update_columns: [image, package_definition_url]})) {
+    affected_rows
+    returning {
+      image
+      namespace
+      is_multitenant
+      package_definition_url
     }
+  }
+}
 	`)
 
-	req.Var("key", "value")
+	req.Var("connectorVersion", interface{}(payload))
 
 	// add a new key value to req
 
 	var respData map[string]interface{}
 
+	req.Header.Set("x-connector-publication-key", "") // TODO: The value of the header should be fetched from the environment variable CONNECTOR_PUBLICATION_KEY
+
+	// Execute the GraphQL query and check the response.
 	if err := client.Run(ctx, req, &respData); err != nil {
-		panic(err)
+		return false, err
 	}
+
+	// print the respData
+	fmt.Println("Response from the API: ", respData)
+
+	return true, nil
 
 }
 
@@ -429,32 +452,6 @@ func readJSONFile[T any](location string) (T, error) {
 	return result, nil
 }
 
-func getStringFromPath(path []string, m map[string]interface{}) string {
-	var current interface{} = m
-
-	// Traverse the path
-	for _, key := range path {
-		// Check if current element is a map
-		if currentMap, ok := current.(map[string]interface{}); ok {
-			// Check if key exists in the current map
-			if val, found := currentMap[key]; found {
-				current = val
-			} else {
-				return "" // Key not found, return empty string
-			}
-		} else {
-			return "" // Current element is not a map, return empty string
-		}
-	}
-
-	// Check if the final value is a string
-	if value, ok := current.(string); ok {
-		return value
-	}
-
-	return "" // Final value is not a string, return empty string
-}
-
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 // generateRandomFileName generates a random file name based on the current time.
@@ -494,10 +491,11 @@ func getTempFilePath(directory string, fileExtension string) string {
 
 // uploadFile uploads a file to Google Cloud Storage
 // document this function with comments
-func uploadFile(ctx context.Context, client *storage.Client, bucketName, objectName, filePath string) (string, error) {
+func uploadFile(client *storage.Client, bucketName, objectName, filePath string) (string, error) {
 	bucket := client.Bucket(bucketName)
 	object := bucket.Object(objectName)
-	wc := object.NewWriter(ctx)
+	newCtx := context.Background()
+	wc := object.NewWriter(newCtx)
 
 	file, err := os.Open(filePath)
 	if err != nil {
