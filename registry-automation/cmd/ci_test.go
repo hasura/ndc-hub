@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"regexp"
 	"testing"
 )
 
@@ -55,10 +54,6 @@ func TestProcessAddedOrModifiedConnectorVersions(t *testing.T) {
 		},
 	}
 
-	// Define the regular expression pattern
-	connectorVersionPackageRegex := `^registry/([^/]+)/releases/([^/]+)/connector-packaging\.json$`
-	re := regexp.MustCompile(connectorVersionPackageRegex)
-
 	// Run the test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -66,7 +61,7 @@ func TestProcessAddedOrModifiedConnectorVersions(t *testing.T) {
 			addedOrModifiedConnectorVersions := make(map[string]map[string]string)
 
 			// Call the function under test
-			processAddedOrModifiedConnectorVersions(tc.files, addedOrModifiedConnectorVersions, re)
+			processAddedOrModifiedConnectorVersions(tc.files, addedOrModifiedConnectorVersions)
 
 			// Compare the actual result with the expected result
 			if len(addedOrModifiedConnectorVersions) != len(tc.expectedAddedOrModifiedConnectors) {
