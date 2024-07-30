@@ -177,7 +177,6 @@ func runCI(cmd *cobra.Command, args []string) {
 		}
 
 	}
-
 }
 
 // collectAddedOrModifiedConnectors collects the added or modified connectors from the changed files
@@ -329,6 +328,7 @@ func buildRegistryPayload(
 		return connectorVersion, fmt.Errorf("could not find the 'packagingDefinition' of the connector %s version %s in the connector's metadata", connectorName, version)
 	}
 	connectorVersionPackagingType, ok := connectorVersionPackagingDefinition["type"].(string)
+
 	if !ok && (connectorVersionPackagingType == ManagedDockerBuild || connectorVersionPackagingType == PrebuiltDockerImage) {
 		return connectorVersion, fmt.Errorf("invalid or undefined connector type: %v", connectorVersionPackagingDefinition)
 	} else if connectorVersionPackagingType == PrebuiltDockerImage {
@@ -363,10 +363,6 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
     affected_rows
     returning {
       id
-      image
-      namespace
-      is_multitenant
-      package_definition_url
     }
   }
 }
