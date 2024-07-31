@@ -228,8 +228,8 @@ func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions 
 	// from the google bucket
 
 	for _, connectorVersion := range connectorVersions {
-		objectName := generateGCPObjectName(connectorVersion.Name, connectorVersion.Version)
-		err := deleteFile(client, "dev-connector-platform-registry", objectName)
+		objectName := generateGCPObjectName(connectorVersion.Namespace, connectorVersion.Name, connectorVersion.Version)
+		err := deleteFile(client, cmdArgs.GCPBucketName, objectName)
 		if err != nil {
 			return err
 		}
@@ -280,10 +280,15 @@ func uploadConnectorVersionPackage(client *storage.Client, connectorName string,
 
 	connectorVersionMetadata, connectorMetadataTgzPath, err := getConnectorVersionMetadata(err, tgzUrl, connectorName, version)
 	if err != nil {
-		return connectorVersion, fmt.Errorf("failed to get connector version metadata: %v", err)
+		return connectorVersion, err
 	}
 
-	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connectorName, version, connectorMetadataTgzPath)
+	connectorNamespace, err := getConnectorNamespace(connectorMetadata)
+	if err != nil {
+		return connectorVersion, fmt.Errorf("failed to get the connector namespace: %v", err)
+	}
+
+	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connectorNamespace, connectorName, version, connectorMetadataTgzPath)
 	if err != nil {
 		return connectorVersion, fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connectorName, version, err)
 	} else {
@@ -292,12 +297,12 @@ func uploadConnectorVersionPackage(client *storage.Client, connectorName string,
 	}
 
 	// Build payload for registry upsert
-	return buildRegistryPayload(connectorName, version, connectorVersionMetadata, connectorMetadata, uploadedTgzUrl)
+	return buildRegistryPayload(connectorNamespace, connectorName, version, connectorVersionMetadata, uploadedTgzUrl)
 }
 
-func uploadConnectorVersionDefinition(client *storage.Client, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
-	bucketName := "dev-connector-platform-registry"
-	objectName := generateGCPObjectName(connectorName, connectorVersion)
+func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
+	bucketName := cmdArgs.GCPBucketName
+	objectName := generateGCPObjectName(connectorNamespace, connectorName, connectorVersion)
 	uploadedTgzUrl, err := uploadFile(client, bucketName, objectName, connectorMetadataTgzPath)
 
 	if err != nil {
@@ -367,26 +372,28 @@ func readYAMLFile(filePath string) (map[string]interface{}, error) {
 	return result, nil
 }
 
+func getConnectorNamespace(connectorMetadata map[string]interface{}) (string, error) {
+	connectorOverview, ok := connectorMetadata["overview"].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("could not find connector overview in the connector's metadata")
+	}
+	connectorNamespace, ok := connectorOverview["namespace"].(string)
+	if !ok {
+		return "", fmt.Errorf("could not find the 'namespace' of the connector in the connector's overview in the connector's metadata.json")
+	}
+	return connectorNamespace, nil
+}
+
 // buildRegistryPayload builds the payload for the registry upsert API
 func buildRegistryPayload(
+	connectorNamespace string,
 	connectorName string,
 	version string,
 	connectorVersionMetadata map[string]interface{},
-	connectorMetadata map[string]interface{},
 	uploadedConnectorDefinitionTgzUrl string,
 ) (ConnectorVersion, error) {
 	var connectorVersion ConnectorVersion
 	var connectorVersionDockerImage string
-
-	connectorOverview, ok := connectorMetadata["overview"].(map[string]interface{})
-	if !ok {
-		return connectorVersion, fmt.Errorf("could not find connector overview in the connector's metadata")
-	}
-	connectorNamespace, ok := connectorOverview["namespace"].(string)
-	if !ok {
-		return connectorVersion, fmt.Errorf("could not find the 'namespace' of the connector in the connector's overview in the connector's metadata.json")
-	}
-
 	connectorVersionPackagingDefinition, ok := connectorVersionMetadata["packagingDefinition"].(map[interface{}]interface{})
 	if !ok {
 		return connectorVersion, fmt.Errorf("could not find the 'packagingDefinition' of the connector %s version %s in the connector's metadata", connectorName, version)
