@@ -16,6 +16,7 @@ on:
 jobs:
   update_registry_db:
     runs-on: ubuntu-latest
+    environment: staging
 
     steps:
       - name: Checkout repository
@@ -46,19 +47,6 @@ jobs:
         run: |
           cat changed_files.json
 
-      # - name: Pseudocode for Next steps
-      #   id: next_steps
-      #   run: |
-      #     echo 'Detect status - added/modified/removed files'
-      #     echo 'for each removed connector, remove from registry db'
-      #     echo 'for each added connector, create a stub in the registry db'
-      #     echo 'for each modified connector:'
-      #     echo '  * Download tgz'
-      #     echo '  * Re-upload tgz'
-      #     echo '  * Extract'
-      #     echo '  * Build payload for API'
-      #     echo '  * PUT to API (gql)'
-
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
@@ -67,7 +55,13 @@ jobs:
       - name: Run registry automation program
         env:
           CHANGED_FILES_PATH: "changed_files.json"
+          PUBLICATION_ENV: "staging"
+          CONNECTOR_REGISTRY_GQL_URL: ${{ secrets.CONNECTOR_REGISTRY_GQL_URL }}
+          GCP_BUCKET_NAME: dev-connector-platform-registry
+          GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
+          CONNECTOR_PUBICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
         run: |
+          echo "connector registry GQL URL is $CONNECTOR_REGISTRY_GQL_URL"
           mv changed_files.json registry-automation/changed_files.json
           cd registry-automation
           go run main.go ci
