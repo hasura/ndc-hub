@@ -59,7 +59,7 @@ jobs:
           CONNECTOR_REGISTRY_GQL_URL: ${{ secrets.CONNECTOR_REGISTRY_GQL_URL }}
           GCP_BUCKET_NAME: dev-connector-platform-registry
           GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
-          CONNECTOR_PUBICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
+          CONNECTOR_PUBLICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
         run: |
           echo "connector registry GQL URL is $CONNECTOR_REGISTRY_GQL_URL"
           mv changed_files.json registry-automation/changed_files.json
