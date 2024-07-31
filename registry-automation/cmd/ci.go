@@ -162,7 +162,7 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	defer changedFilesContent.Close()
 
-	client, err := storage.NewClient(ctx, option.WithCredentialsFile("gcp-service-account-detail.json"))
+	client, err := storage.NewClient(ctx, option.WithCredentialsJSON([]byte(cmdArgs.GCPServiceAccountDetails)))
 	if err != nil {
 		log.Fatalf("Failed to create Google bucket client: %v", err)
 	}
