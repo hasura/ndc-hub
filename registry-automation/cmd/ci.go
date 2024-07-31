@@ -217,7 +217,6 @@ func runCI(cmd *cobra.Command, args []string) {
 		if err != nil {
 			// attempt to cleanup the uploaded connector versions
 			_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
-
 			log.Fatalf("Failed to update the registry: %v", err)
 		}
 	}
@@ -226,6 +225,7 @@ func runCI(cmd *cobra.Command, args []string) {
 func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions []ConnectorVersion) error {
 	// Iterate over the connector versions and delete the uploaded files
 	// from the google bucket
+	fmt.Println("Cleaning up the uploaded connector versions")
 
 	for _, connectorVersion := range connectorVersions {
 		objectName := generateGCPObjectName(connectorVersion.Namespace, connectorVersion.Name, connectorVersion.Version)
