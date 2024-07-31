@@ -61,7 +61,6 @@ jobs:
           GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
           CONNECTOR_PUBLICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
         run: |
-          echo "connector registry GQL URL is $CONNECTOR_REGISTRY_GQL_URL"
           mv changed_files.json registry-automation/changed_files.json
           cd registry-automation
-          go run main.go ci --connector-publication-key $CONNECTOR_PUBLICATION_KEY
+          go run main.go ci

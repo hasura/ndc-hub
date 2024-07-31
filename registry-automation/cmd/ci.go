@@ -72,7 +72,7 @@ const (
 type ConnectorRegistryArgs struct {
 	ChangedFilesPath         string
 	PublicationEnv           string
-	ConnectorRegistryGQL     string
+	ConnectorRegistryGQLUrl  string
 	ConnectorPublicationKey  string
 	GCPServiceAccountDetails string
 	GCPBucketName            string
@@ -98,34 +98,40 @@ func init() {
 		ciCmd.PersistentFlags().Set("publication-env", "staging")
 	}
 
+}
+
+func buildContext() {
 	// Connector registry Hasura GraphQL URL
 	registryGQLURL := os.Getenv("CONNECTOR_REGISTRY_GQL_URL")
-	ciCmd.PersistentFlags().StringVar(&cmdArgs.ConnectorRegistryGQL, "connector-registry-gql-url", registryGQLURL, "Hasura GraphQL URL for the connector registry")
 	if registryGQLURL == "" {
-		ciCmd.MarkPersistentFlagRequired("connector-registry-gql-url")
+		log.Fatalf("CONNECTOR_REGISTRY_GQL_URL is not set")
+	} else {
+		cmdArgs.ConnectorRegistryGQLUrl = registryGQLURL
 	}
 
 	// Connector publication key
 	connectorPublicationKey := os.Getenv("CONNECTOR_PUBLICATION_KEY")
-	ciCmd.PersistentFlags().StringVar(&cmdArgs.ConnectorPublicationKey, "connector-publication-key", connectorPublicationKey, "Connector publication key used for authentication with the registry GraphQL API")
 	if connectorPublicationKey == "" {
-		ciCmd.MarkPersistentFlagRequired("connector-publication-key")
+		log.Fatalf("CONNECTOR_PUBLICATION_KEY is not set")
+	} else {
+		cmdArgs.ConnectorPublicationKey = connectorPublicationKey
 	}
 
 	// GCP service account details
 	gcpServiceAccountDetails := os.Getenv("GCP_SERVICE_ACCOUNT_DETAILS")
-	ciCmd.PersistentFlags().StringVar(&cmdArgs.GCPServiceAccountDetails, "gcp-service-account-details", gcpServiceAccountDetails, "GCP service account details file path")
 	if gcpServiceAccountDetails == "" {
-		ciCmd.MarkPersistentFlagRequired("gcp-service-account-details")
+		log.Fatalf("GCP_SERVICE_ACCOUNT_DETAILS is not set")
+	} else {
+		cmdArgs.GCPServiceAccountDetails = gcpServiceAccountDetails
 	}
 
 	// GCP bucket name
 	gcpBucketName := os.Getenv("GCP_BUCKET_NAME")
-	ciCmd.PersistentFlags().StringVar(&cmdArgs.GCPBucketName, "gcp-bucket-name", gcpBucketName, "GCP bucket name")
 	if gcpBucketName == "" {
-		ciCmd.MarkPersistentFlagRequired("gcp-bucket-name")
+		log.Fatalf("GCP_BUCKET_NAME is not set")
+	} else {
+		cmdArgs.GCPBucketName = gcpBucketName
 	}
-
 }
 
 // processAddedOrModifiedConnectorVersions processes the files in the PR and extracts the connector name and version
@@ -154,6 +160,7 @@ func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConn
 // runCI is the main function that runs the CI workflow
 func runCI(cmd *cobra.Command, args []string) {
 	ctx := context.Background()
+	buildContext()
 	changedFilesContent, err := os.Open(cmdArgs.ChangedFilesPath)
 
 	if err != nil {
@@ -426,7 +433,7 @@ func buildRegistryPayload(
 
 func updateRegistryGQL(payload []ConnectorVersion) error {
 	var respData map[string]interface{}
-	client := graphql.NewClient(cmdArgs.ConnectorRegistryGQL)
+	client := graphql.NewClient(cmdArgs.ConnectorRegistryGQLUrl)
 	ctx := context.Background()
 
 	req := graphql.NewRequest(`
