@@ -68,23 +68,64 @@ const (
 	PrebuiltDockerImage = "PrebuiltDockerImage"
 )
 
+// Make a struct with the fields expected in the command line arguments
+type ConnectorRegistryArgs struct {
+	ChangedFilesPath         string
+	PublicationEnv           string
+	ConnectorRegistryGQL     string
+	ConnectorPublicationKey  string
+	GCPServiceAccountDetails string
+	GCPBucketName            string
+}
+
+var cmdArgs ConnectorRegistryArgs
+
 func init() {
 	rootCmd.AddCommand(ciCmd)
 
 	// Path for the changed files in the PR
 	var changedFilesPathEnv = os.Getenv("CHANGED_FILES_PATH")
-	ciCmd.PersistentFlags().String("changed-files-path", changedFilesPathEnv, "path to a line-separated list of changed files in the PR")
+	ciCmd.PersistentFlags().StringVar(&cmdArgs.ChangedFilesPath, "changed-files-path", changedFilesPathEnv, "path to a line-separated list of changed files in the PR")
 	if changedFilesPathEnv == "" {
 		ciCmd.MarkPersistentFlagRequired("changed-files-path")
 	}
 
 	// Publication environment
 	var publicationEnv = os.Getenv("PUBLICATION_ENV")
-	ciCmd.PersistentFlags().String("publication-env", publicationEnv, "publication environment (staging/prod). Default: staging")
+	ciCmd.PersistentFlags().StringVar(&cmdArgs.PublicationEnv, "publication-env", publicationEnv, "publication environment (staging/prod). Default: staging")
 	// default publicationEnv to "staging"
 	if publicationEnv == "" {
 		ciCmd.PersistentFlags().Set("publication-env", "staging")
 	}
+
+	// Connector registry Hasura GraphQL URL
+	registryGQLURL := os.Getenv("CONNECTOR_REGISTRY_GQL_URL")
+	ciCmd.PersistentFlags().StringVar(&cmdArgs.ConnectorRegistryGQL, "connector-registry-gql-url", registryGQLURL, "Hasura GraphQL URL for the connector registry")
+	if registryGQLURL == "" {
+		ciCmd.MarkPersistentFlagRequired("connector-registry-gql-url")
+	}
+
+	// Connector publication key
+	connectorPublicationKey := os.Getenv("CONNECTOR_PUBLICATION_KEY")
+	ciCmd.PersistentFlags().StringVar(&cmdArgs.ConnectorPublicationKey, "connector-publication-key", connectorPublicationKey, "Connector publication key used for authentication with the registry GraphQL API")
+	if connectorPublicationKey == "" {
+		ciCmd.MarkPersistentFlagRequired("connector-publication-key")
+	}
+
+	// GCP service account details
+	gcpServiceAccountDetails := os.Getenv("GCP_SERVICE_ACCOUNT_DETAILS")
+	ciCmd.PersistentFlags().StringVar(&cmdArgs.GCPServiceAccountDetails, "gcp-service-account-details", gcpServiceAccountDetails, "GCP service account details file path")
+	if gcpServiceAccountDetails == "" {
+		ciCmd.MarkPersistentFlagRequired("gcp-service-account-details")
+	}
+
+	// GCP bucket name
+	gcpBucketName := os.Getenv("GCP_BUCKET_NAME")
+	ciCmd.PersistentFlags().StringVar(&cmdArgs.GCPBucketName, "gcp-bucket-name", gcpBucketName, "GCP bucket name")
+	if gcpBucketName == "" {
+		ciCmd.MarkPersistentFlagRequired("gcp-bucket-name")
+	}
+
 }
 
 // processAddedOrModifiedConnectorVersions processes the files in the PR and extracts the connector name and version
@@ -113,11 +154,10 @@ func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConn
 // runCI is the main function that runs the CI workflow
 func runCI(cmd *cobra.Command, args []string) {
 	ctx := context.Background()
-	var changed_files_path = cmd.PersistentFlags().Lookup("changed-files-path").Value.String()
-	changedFilesContent, err := os.Open(changed_files_path)
+	changedFilesContent, err := os.Open(cmdArgs.ChangedFilesPath)
 
 	if err != nil {
-		log.Fatalf("Failed to open the file: %v, err: %v", changed_files_path, err)
+		log.Fatalf("Failed to open the file: %v, err: %v", cmdArgs.ChangedFilesPath, err)
 	}
 
 	defer changedFilesContent.Close()
@@ -398,7 +438,6 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
 
 	var respData map[string]interface{}
 
-	req.Header.Set("x-hasura-admin-secret", "myadminsecretkey")
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
 	req.Header.Set("x-connector-publication-key", "usnEu*pYp8wiUjbzv3g4iruemTzDgfi@") // TODO: The value of the header should be fetched from the environment variable CONNECTOR_PUBLICATION_KEY
 
