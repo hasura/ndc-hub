@@ -147,6 +147,7 @@ func runCI(cmd *cobra.Command, args []string) {
 	var connectorVersions []ConnectorVersion
 	var uploadConnectorVersionErr error
 	encounteredError := false
+
 	for connectorName, versions := range addedOrModifiedConnectorVersions {
 		for version, connectorVersionPath := range versions {
 			var connectorVersion ConnectorVersion
@@ -164,19 +165,36 @@ func runCI(cmd *cobra.Command, args []string) {
 	}
 
 	if encounteredError {
+		// attempt to cleanup the uploaded connector versions
+		_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
 		// delete the uploaded connector versions from the registry
 		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
 		// TODO: Delete the uploaded connector versions from the registry
 
 	} else {
 		fmt.Println("Successfully uploaded the connector versions to the registry")
-
 		err = updateRegistryGQL(connectorVersions)
 		if err != nil {
+			// attempt to cleanup the uploaded connector versions
+			_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
+
 			log.Fatalf("Failed to update the registry: %v", err)
 		}
-
 	}
+}
+
+func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions []ConnectorVersion) error {
+	// Iterate over the connector versions and delete the uploaded files
+	// from the google bucket
+
+	for _, connectorVersion := range connectorVersions {
+		objectName := generateGCPObjectName(connectorVersion.Name, connectorVersion.Version)
+		err := deleteFile(client, "dev-connector-platform-registry", objectName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // collectAddedOrModifiedConnectors collects the added or modified connectors from the changed files
@@ -185,7 +203,11 @@ func collectAddedOrModifiedConnectors(changedFiles ChangedFiles) map[string]map[
 	addedOrModifiedConnectorVersions := make(map[string]map[string]string)
 
 	processAddedOrModifiedConnectorVersions(changedFiles.Added, addedOrModifiedConnectorVersions)
-	processAddedOrModifiedConnectorVersions(changedFiles.Modified, addedOrModifiedConnectorVersions)
+
+	// Not sure if we need to process the modified files as well, because it is very unlikely
+	// that an existing connector version will be modified.
+
+	// processAddedOrModifiedConnectorVersions(changedFiles.Modified, addedOrModifiedConnectorVersions)
 
 	return addedOrModifiedConnectorVersions
 }
@@ -224,16 +246,18 @@ func uploadConnectorVersionPackage(client *storage.Client, connectorName string,
 	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connectorName, version, connectorMetadataTgzPath)
 	if err != nil {
 		return connectorVersion, fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connectorName, version, err)
+	} else {
+		// print success message with the name of the connector and the version
+		fmt.Printf("Successfully uploaded the connector version definition in google cloud registry for the connector: %v version: %v\n", connectorName, version)
 	}
 
 	// Build payload for registry upsert
 	return buildRegistryPayload(connectorName, version, connectorVersionMetadata, connectorMetadata, uploadedTgzUrl)
-
 }
 
 func uploadConnectorVersionDefinition(client *storage.Client, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
 	bucketName := "dev-connector-platform-registry"
-	objectName := fmt.Sprintf("packages/%s/%s/package.tgz", connectorName, connectorVersion)
+	objectName := generateGCPObjectName(connectorName, connectorVersion)
 	uploadedTgzUrl, err := uploadFile(client, bucketName, objectName, connectorMetadataTgzPath)
 
 	if err != nil {
@@ -338,6 +362,9 @@ func buildRegistryPayload(
 		}
 	}
 
+	// TODO: Make a query to the registry to check if the connector already exists,
+	// if not, insert the connector first and then insert the connector version.
+	// Also, fetch the is_multitenant value from the registry.
 	connectorVersion = ConnectorVersion{
 		Namespace:            connectorNamespace,
 		Name:                 connectorName,
@@ -352,8 +379,6 @@ func buildRegistryPayload(
 }
 
 func updateRegistryGQL(payload []ConnectorVersion) error {
-	// Example: https://stackoverflow.com/questions/66931228/http-requests-golang-with-graphql
-
 	client := graphql.NewClient("http://localhost:8081/v1/graphql")
 	ctx := context.Background()
 
@@ -365,8 +390,7 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
       id
     }
   }
-}
-	`)
+}`)
 	// add the payload to the request
 	req.Var("connectorVersion", payload)
 
