@@ -5,7 +5,7 @@
     "title": "GraphQL Native Data Connector",
     "logo": "logo.svg",
     "tags": [],
-    "latest_version": "v0.1.1"
+    "latest_version": "v0.1.2"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -15,6 +15,17 @@
   "is_verified": true,
   "is_hosted_by_hasura": false,
   "packages": [
+    {
+      "version": "0.1.2",
+      "uri": "https://github.com/hasura/ndc-graphql/releases/download/v0.1.2/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "85aa0294a4a13da85c2932254878814f60f8e9b61621232675b5dfa551248a77"
+      },
+      "source": {
+        "hash": "1cfb5d3e52d914acf4e5e96edd54d7fc744ec304"
+      }
+    },
     {
       "version": "0.1.1",
       "uri": "https://github.com/hasura/ndc-graphql/releases/download/v0.1.1/connector-definition.tgz",
@@ -42,6 +53,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-graphql/",
     "version": [
+      {
+        "tag": "v0.1.2",
+        "hash": "1cfb5d3e52d914acf4e5e96edd54d7fc744ec304",
+        "is_verified": true
+      },
       {
         "tag": "v0.1.1",
         "hash": "85b80185e28eb7f6721fc50ecd2552f96633e5db",
