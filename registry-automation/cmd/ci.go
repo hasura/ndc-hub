@@ -425,7 +425,8 @@ func buildRegistryPayload(
 }
 
 func updateRegistryGQL(payload []ConnectorVersion) error {
-	client := graphql.NewClient("http://localhost:8081/v1/graphql")
+	var respData map[string]interface{}
+	client := graphql.NewClient(cmdArgs.ConnectorRegistryGQL)
 	ctx := context.Background()
 
 	req := graphql.NewRequest(`
@@ -440,12 +441,8 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
 	// add the payload to the request
 	req.Var("connectorVersion", payload)
 
-	// add a new key value to req
-
-	var respData map[string]interface{}
-
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
-	req.Header.Set("x-connector-publication-key", "usnEu*pYp8wiUjbzv3g4iruemTzDgfi@") // TODO: The value of the header should be fetched from the environment variable CONNECTOR_PUBLICATION_KEY
+	req.Header.Set("x-connector-publication-key", cmdArgs.ConnectorPublicationKey)
 
 	// Execute the GraphQL query and check the response.
 	if err := client.Run(ctx, req, &respData); err != nil {
