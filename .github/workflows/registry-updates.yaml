@@ -64,4 +64,4 @@ jobs:
           echo "connector registry GQL URL is $CONNECTOR_REGISTRY_GQL_URL"
           mv changed_files.json registry-automation/changed_files.json
           cd registry-automation
-          go run main.go ci
+          go run main.go ci --connector-publication-key $CONNECTOR_PUBLICATION_KEY
