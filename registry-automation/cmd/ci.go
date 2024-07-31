@@ -209,7 +209,6 @@ func runCI(cmd *cobra.Command, args []string) {
 		_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
 		// delete the uploaded connector versions from the registry
 		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
-		// TODO: Delete the uploaded connector versions from the registry
 
 	} else {
 		fmt.Println("Successfully uploaded the connector versions to the registry")
