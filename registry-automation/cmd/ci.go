@@ -456,5 +456,4 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
 	fmt.Println("Response from the API: ", respData)
 
 	return nil
-
 }
