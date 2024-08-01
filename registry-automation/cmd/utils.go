@@ -74,16 +74,16 @@ func readJSONFile[T any](location string) (T, error) {
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 // generateRandomFileName generates a random file name based on the current time.
-func generateRandomFileName(fileExtension string) string {
+func generateRandomFileName() string {
 	b := make([]byte, 10)
 	for i := range b {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
-	return string(b) + fileExtension
+	return string(b) + ".tar.gz"
 }
 
 // getTempFilePath generates a random file name in the specified directory.
-func getTempFilePath(directory string, fileExtension string) string {
+func getTempFilePath(directory string) string {
 	// Ensure the directory exists
 	err := os.MkdirAll(directory, os.ModePerm)
 	if err != nil {
@@ -91,7 +91,7 @@ func getTempFilePath(directory string, fileExtension string) string {
 	}
 
 	// Generate a random file name
-	fileName := generateRandomFileName(fileExtension)
+	fileName := generateRandomFileName()
 
 	// Create the file path
 	filePath := filepath.Join(directory, fileName)
@@ -100,7 +100,7 @@ func getTempFilePath(directory string, fileExtension string) string {
 	_, err = os.Stat(filePath)
 	if !os.IsNotExist(err) {
 		// File exists, generate a new name
-		fileName = generateRandomFileName(fileExtension)
+		fileName = generateRandomFileName()
 		filePath = filepath.Join(directory, fileName)
 	}
 	return filePath

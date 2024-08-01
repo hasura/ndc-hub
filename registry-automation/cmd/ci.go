@@ -37,17 +37,18 @@ type ChangedFiles struct {
 type ConnectorVersion struct {
 	// Namespace of the connector, e.g. "hasura"
 	Namespace string `json:"namespace"`
-	// Name of the connector
+	// Name of the connector, e.g. "mongodb"
 	Name string `json:"name"`
-	// Semantic version of the connector
+	// Semantic version of the connector version, e.g. "v1.0.0"
 	Version string `json:"version"`
-	// Docker image of the connector version
+	// Docker image of the connector version (optional)
+	// This field is only required if the connector version is of type `PrebuiltDockerImage`
 	Image *string `json:"image,omitempty"`
 	// URL to the connector's metadata
 	PackageDefinitionURL string `json:"package_definition_url"`
 	// Is the connector version multitenant?
 	IsMultitenant bool `json:"is_multitenant"`
-	// Type of the connector packaing `PreBuiltDockerImage`/`ManagedDockerBuild`
+	// Type of the connector packaging `PreBuiltDockerImage`/`ManagedDockerBuild`
 	Type string `json:"type"`
 }
 
@@ -187,43 +188,51 @@ func runCI(cmd *cobra.Command, args []string) {
 	// Collect the added or modified connectors
 	addedOrModifiedConnectorVersions := collectAddedOrModifiedConnectors(changedFiles)
 
-	var connectorVersions []ConnectorVersion
-	var uploadConnectorVersionErr error
-	encounteredError := false
+	// check if the map is empty
+	if len(addedOrModifiedConnectorVersions) == 0 {
+		fmt.Println("No connector versions found in the changed files.")
+		return
+	} else {
+		// Iterate over the added or modified connectors and upload the connector versions
+		var connectorVersions []ConnectorVersion
+		var uploadConnectorVersionErr error
+		encounteredError := false
 
-	for connectorName, versions := range addedOrModifiedConnectorVersions {
-		for version, connectorVersionPath := range versions {
-			var connectorVersion ConnectorVersion
-			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
-			if err != nil {
-				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, err)
-				encounteredError = true
+		for connectorName, versions := range addedOrModifiedConnectorVersions {
+			for version, connectorVersionPath := range versions {
+				var connectorVersion ConnectorVersion
+				connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
+
+				if uploadConnectorVersionErr != nil {
+					fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, err)
+					encounteredError = true
+					break
+				}
+				connectorVersions = append(connectorVersions, connectorVersion)
+			}
+			if encounteredError {
 				break
 			}
-			connectorVersions = append(connectorVersions, connectorVersion)
 		}
+
 		if encounteredError {
-			break
-		}
-	}
-
-	if encounteredError {
-		// attempt to cleanup the uploaded connector versions
-		_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
-		// delete the uploaded connector versions from the registry
-		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
-
-	} else {
-		fmt.Println("Successfully uploaded the connector versions to the registry")
-		err = updateRegistryGQL(connectorVersions)
-		if err != nil {
 			// attempt to cleanup the uploaded connector versions
 			_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
-			log.Fatalf("Failed to update the registry: %v", err)
-		}
-	}
+			// delete the uploaded connector versions from the registry
+			log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
 
-	fmt.Println("Successfully added connector versions to the registry.")
+		} else {
+			fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
+			err = updateRegistryGQL(connectorVersions)
+			if err != nil {
+				// attempt to cleanup the uploaded connector versions
+				_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
+				log.Fatalf("Failed to update the registry: %v", err)
+			}
+		}
+
+		fmt.Println("Successfully added connector versions to the registry.")
+	}
 }
 
 func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions []ConnectorVersion) error {
@@ -319,7 +328,7 @@ func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace
 // connector-definition.yaml present in the .hasura-connector folder.
 func getConnectorVersionMetadata(err error, tgzUrl string, connectorName string, connectorVersion string) (map[string]interface{}, string, error) {
 	var connectorVersionMetadata map[string]interface{}
-	tgzPath := getTempFilePath("extracted_tgz", ".tgz")
+	tgzPath := getTempFilePath("extracted_tgz")
 
 	err = downloadFile(tgzUrl, tgzPath, map[string]string{})
 	if err != nil {
@@ -388,6 +397,48 @@ func getConnectorNamespace(connectorMetadata map[string]interface{}) (string, er
 	return connectorNamespace, nil
 }
 
+// struct to store the response of teh GetConnectorInfo query
+type GetConnectorInfoResponse struct {
+	HubRegistryConnector []struct {
+		Name                 string `json:"name"`
+		MultitenantConnector *struct {
+			ID string `json:"id"`
+		} `json:"multitenant_connector"`
+	} `json:"hub_registry_connector"`
+}
+
+func getConnectorInfoFromRegistry(connectorNamespace string, connectorName string) (GetConnectorInfoResponse, error) {
+	var respData GetConnectorInfoResponse
+	client := graphql.NewClient(cmdArgs.ConnectorRegistryGQLUrl)
+	ctx := context.Background()
+
+	req := graphql.NewRequest(`
+query GetConnectorInfo ($name: String!, $namespace: String!) {
+  hub_registry_connector(where: {_and: [{name: {_eq: $name}}, {namespace: {_eq: $namespace}}]}) {
+    name
+    multitenant_connector {
+      id
+    }
+  }
+}`)
+	req.Var("name", connectorName)
+	req.Var("namespace", connectorNamespace)
+
+	req.Header.Set("x-hasura-role", "connector_publishing_automation")
+	req.Header.Set("x-connector-publication-key", cmdArgs.ConnectorPublicationKey)
+
+	// Execute the GraphQL query and check the response.
+	if err := client.Run(ctx, req, &respData); err != nil {
+		return respData, err
+	} else {
+		if len(respData.HubRegistryConnector) == 0 {
+			return respData, nil
+		}
+	}
+
+	return respData, nil
+}
+
 // buildRegistryPayload builds the payload for the registry upsert API
 func buildRegistryPayload(
 	connectorNamespace string,
@@ -411,18 +462,40 @@ func buildRegistryPayload(
 		if !ok {
 			return connectorVersion, fmt.Errorf("could not find the 'dockerImage' of the PrebuiltDockerImage connector %s version %s in the connector's metadata", connectorName, version)
 		}
+
 	}
 
 	// TODO: Make a query to the registry to check if the connector already exists,
 	// if not, insert the connector first and then insert the connector version.
 	// Also, fetch the is_multitenant value from the registry.
+
+	// query GetConnectorInfo ($name: String!, $namespace: String!) {
+	// 	hub_registry_connector(where: {_and: [{name: {_eq: $name}}, {namespace: {_eq: $namespace}}]}) {
+	// 		name
+	// 		multitenant_connector {
+	// 			id
+	// 		}
+	// 	}
+	// }
+
+	connectorInfo, err := getConnectorInfoFromRegistry(connectorNamespace, connectorName)
+
+	if err != nil {
+		return connectorVersion, err
+	}
+
+	// Check if the connector exists in the registry first
+	if len(connectorInfo.HubRegistryConnector) == 0 {
+		return connectorVersion, fmt.Errorf("Inserting a new connector is not supported yet")
+	}
+
 	connectorVersion = ConnectorVersion{
 		Namespace:            connectorNamespace,
 		Name:                 connectorName,
 		Version:              version,
 		Image:                &connectorVersionDockerImage,
 		PackageDefinitionURL: uploadedConnectorDefinitionTgzUrl,
-		IsMultitenant:        false, // TODO(KC): Figure this out.
+		IsMultitenant:        connectorInfo.HubRegistryConnector[0].MultitenantConnector != nil,
 		Type:                 connectorVersionPackagingType,
 	}
 
