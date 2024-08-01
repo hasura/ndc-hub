@@ -222,6 +222,8 @@ func runCI(cmd *cobra.Command, args []string) {
 			log.Fatalf("Failed to update the registry: %v", err)
 		}
 	}
+
+	fmt.Println("Successfully added connector versions to the registry.")
 }
 
 func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions []ConnectorVersion) error {
@@ -451,9 +453,6 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
 	if err := client.Run(ctx, req, &respData); err != nil {
 		return err
 	}
-
-	// print the respData
-	fmt.Println("Response from the API: ", respData)
 
 	return nil
 }
