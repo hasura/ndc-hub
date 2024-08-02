@@ -49,7 +49,6 @@ func downloadFile(sourceURL, destination string, headers map[string]string) erro
 	if err != nil {
 		return fmt.Errorf("error writing to file: %v", err)
 	}
-
 	return nil
 }
 
