@@ -1,9 +1,10 @@
 name: Update Hub DB from GH Registry
 
 on:
-  push:
+  pull_request:
     branches:
-      - lyndon/registry-automation # TODO: Remove the branch response
+      - main
+    types: [opened, synchronize, reopened]
     paths:
       - registry/**
 
