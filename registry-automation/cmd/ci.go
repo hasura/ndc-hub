@@ -465,19 +465,6 @@ func buildRegistryPayload(
 
 	}
 
-	// TODO: Make a query to the registry to check if the connector already exists,
-	// if not, insert the connector first and then insert the connector version.
-	// Also, fetch the is_multitenant value from the registry.
-
-	// query GetConnectorInfo ($name: String!, $namespace: String!) {
-	// 	hub_registry_connector(where: {_and: [{name: {_eq: $name}}, {namespace: {_eq: $namespace}}]}) {
-	// 		name
-	// 		multitenant_connector {
-	// 			id
-	// 		}
-	// 	}
-	// }
-
 	connectorInfo, err := getConnectorInfoFromRegistry(connectorNamespace, connectorName)
 
 	if err != nil {
