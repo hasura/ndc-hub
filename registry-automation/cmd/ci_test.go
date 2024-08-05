@@ -61,7 +61,7 @@ func TestProcessAddedOrModifiedConnectorVersions(t *testing.T) {
 			addedOrModifiedConnectorVersions := make(map[string]map[string]string)
 
 			// Call the function under test
-			processAddedOrModifiedConnectorVersions(tc.files, addedOrModifiedConnectorVersions)
+			processAddedOrModifiedConnectorVersions(tc.files)
 
 			// Compare the actual result with the expected result
 			if len(addedOrModifiedConnectorVersions) != len(tc.expectedAddedOrModifiedConnectors) {

@@ -129,19 +129,17 @@ func buildContext() {
 }
 
 // processAddedOrModifiedConnectorVersions processes the files in the PR and extracts the connector name and version
-func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConnectorVersions map[string]map[string]string) {
+func processAddedOrModifiedConnectorVersions(files []string) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
+	newlyAddedConnectorVersions := make(map[string]map[string]string)
+	modifiedLogos := make(map[string]string)
+	modifiedReadmes := make(map[string]string)
 
 	var connectorVersionPackageRegex = regexp.MustCompile(`^registry/([^/]+)/releases/([^/]+)/connector-packaging\.json$`)
 	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/logo\.png$`)
 	var readmeMdRegex = regexp.MustCompile(`^registry/([^/]+)/README\.md$`)
 
-	// Iterate over files and first check if the file is a connector version package, then a logo, and then a README
-
-	// re := regexp.MustCompile(connectorVersionPackageRegex)
-
 	for _, file := range files {
-		// Extract the connector name and version from the file path
-
+		// Check if the file is a connector version package
 		if connectorVersionPackageRegex.MatchString(file) {
 
 			matches := connectorVersionPackageRegex.FindStringSubmatch(file)
@@ -149,18 +147,20 @@ func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConn
 				connectorName := matches[1]
 				connectorVersion := matches[2]
 
-				if _, exists := addedOrModifiedConnectorVersions[connectorName]; !exists {
-					addedOrModifiedConnectorVersions[connectorName] = make(map[string]string)
+				if _, exists := newlyAddedConnectorVersions[connectorName]; !exists {
+					newlyAddedConnectorVersions[connectorName] = make(map[string]string)
 				}
 
-				addedOrModifiedConnectorVersions[connectorName][connectorVersion] = file
+				newlyAddedConnectorVersions[connectorName][connectorVersion] = file
 			}
+
 		} else if logoPngRegex.MatchString(file) {
 			// Process the logo file
 			// print the name of the connector and the version
 			matches := logoPngRegex.FindStringSubmatch(file)
 			if len(matches) == 2 {
 				connectorName := matches[1]
+				modifiedLogos[connectorName] = file
 				fmt.Printf("Processing logo file for connector: %s\n", connectorName)
 			}
 
@@ -170,6 +170,7 @@ func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConn
 			matches := readmeMdRegex.FindStringSubmatch(file)
 			if len(matches) == 2 {
 				connectorName := matches[1]
+				modifiedReadmes[connectorName] = file
 				fmt.Printf("Processing README file for connector: %s\n", connectorName)
 			}
 
@@ -178,6 +179,8 @@ func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConn
 		}
 
 	}
+
+	return newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes
 
 }
 
@@ -209,8 +212,14 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	}
 
+	// Separate the modified files according to the type of file
+
 	// Collect the added or modified connectors
-	addedOrModifiedConnectorVersions := collectAddedOrModifiedConnectors(changedFiles)
+	addedOrModifiedConnectorVersions, modifiedLogos, modifiedReadmes := collectAddedOrModifiedConnectors(changedFiles)
+
+	// print out the modified logos and readmes
+	fmt.Printf("Modified logos and modified readmes: %+v %+v\n", modifiedLogos, modifiedReadmes)
+
 	// check if the map is empty
 	if len(addedOrModifiedConnectorVersions) == 0 {
 		fmt.Println("No connector versions found in the changed files.")
@@ -273,19 +282,25 @@ func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions 
 	return nil
 }
 
+type NewConnectorVersions map[string]map[string]string
+
+// ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
+type ModifiedLogos map[string]string
+
+// ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
+type ModifiedReadmes map[string]string
+
 // collectAddedOrModifiedConnectors collects the added or modified connectors from the changed files
-func collectAddedOrModifiedConnectors(changedFiles ChangedFiles) map[string]map[string]string {
+func collectAddedOrModifiedConnectors(changedFiles ChangedFiles) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
 
-	addedOrModifiedConnectorVersions := make(map[string]map[string]string)
-
-	processAddedOrModifiedConnectorVersions(changedFiles.Added, addedOrModifiedConnectorVersions)
+	newConnectorVersions, modifiedLogos, modifiedReadmes := processAddedOrModifiedConnectorVersions(changedFiles.Added)
 
 	// Not sure if we need to process the modified files as well, because it is very unlikely
 	// that an existing connector version will be modified.
 
 	// processAddedOrModifiedConnectorVersions(changedFiles.Modified, addedOrModifiedConnectorVersions)
 
-	return addedOrModifiedConnectorVersions
+	return newConnectorVersions, modifiedLogos, modifiedReadmes
 }
 
 // uploadConnectorVersionPackage uploads the connector version package to the registry
