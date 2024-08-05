@@ -174,7 +174,7 @@ func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConn
 			}
 
 		} else {
-			// fmt.Println("Skipping file: ", file)
+			fmt.Println("Skipping file: ", file)
 		}
 
 	}
