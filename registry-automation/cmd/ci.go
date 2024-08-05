@@ -130,23 +130,53 @@ func buildContext() {
 
 // processAddedOrModifiedConnectorVersions processes the files in the PR and extracts the connector name and version
 func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConnectorVersions map[string]map[string]string) {
-	const connectorVersionPackageRegex = `^registry/([^/]+)/releases/([^/]+)/connector-packaging\.json$`
-	re := regexp.MustCompile(connectorVersionPackageRegex)
+
+	var connectorVersionPackageRegex = regexp.MustCompile(`^registry/([^/]+)/releases/([^/]+)/connector-packaging\.json$`)
+	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/logo\.png$`)
+	var readmeMdRegex = regexp.MustCompile(`^registry/([^/]+)/README\.md$`)
+
+	// Iterate over files and first check if the file is a connector version package, then a logo, and then a README
+
+	// re := regexp.MustCompile(connectorVersionPackageRegex)
 
 	for _, file := range files {
 		// Extract the connector name and version from the file path
 
-		matches := re.FindStringSubmatch(file)
-		if len(matches) == 3 {
-			connectorName := matches[1]
-			connectorVersion := matches[2]
+		if connectorVersionPackageRegex.MatchString(file) {
 
-			if _, exists := addedOrModifiedConnectorVersions[connectorName]; !exists {
-				addedOrModifiedConnectorVersions[connectorName] = make(map[string]string)
+			matches := connectorVersionPackageRegex.FindStringSubmatch(file)
+			if len(matches) == 3 {
+				connectorName := matches[1]
+				connectorVersion := matches[2]
+
+				if _, exists := addedOrModifiedConnectorVersions[connectorName]; !exists {
+					addedOrModifiedConnectorVersions[connectorName] = make(map[string]string)
+				}
+
+				addedOrModifiedConnectorVersions[connectorName][connectorVersion] = file
+			}
+		} else if logoPngRegex.MatchString(file) {
+			// Process the logo file
+			// print the name of the connector and the version
+			matches := logoPngRegex.FindStringSubmatch(file)
+			if len(matches) == 2 {
+				connectorName := matches[1]
+				fmt.Printf("Processing logo file for connector: %s\n", connectorName)
 			}
 
-			addedOrModifiedConnectorVersions[connectorName][connectorVersion] = file
+		} else if readmeMdRegex.MatchString(file) {
+			// Process the README file
+			// print the name of the connector and the version
+			matches := readmeMdRegex.FindStringSubmatch(file)
+			if len(matches) == 2 {
+				connectorName := matches[1]
+				fmt.Printf("Processing README file for connector: %s\n", connectorName)
+			}
+
+		} else {
+			// fmt.Println("Skipping file: ", file)
 		}
+
 	}
 
 }
