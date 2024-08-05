@@ -27,6 +27,9 @@
       "source": {
         "hash": "6bae967daf7b9aa718d62103e077a739c41d5a6d"
       }
+    },
+    {
+      "version": "0.0.20"
     }
   ],
   "source_code": {
@@ -37,6 +40,9 @@
         "tag": "v0.0.15",
         "hash": "6bae967daf7b9aa718d62103e077a739c41d5a6d",
         "is_verified": false
+      },
+      {
+        "tag": "v0.0.20"
       }
     ]
   }
