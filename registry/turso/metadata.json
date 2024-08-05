@@ -27,6 +27,17 @@
       "source": {
         "hash": "6bae967daf7b9aa718d62103e077a739c41d5a6d"
       }
+    },
+    {
+      "version": "0.0.22",
+      "uri": "https://github.com/hasura/ndc-turso/releases/download/v0.0.22/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": ""
+      },
+      "source": {
+        "hash": ""
+      }
     }
   ],
   "source_code": {
@@ -37,7 +48,13 @@
         "tag": "v0.0.15",
         "hash": "6bae967daf7b9aa718d62103e077a739c41d5a6d",
         "is_verified": false
+      },
+      {
+        "tag": "v0.0.22",
+        "hash": "",
+        "is_verified": false
       }
     ]
-  }
+  },
+  "latest_version": "v0.0.22"
 }
