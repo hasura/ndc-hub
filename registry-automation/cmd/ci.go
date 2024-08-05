@@ -1,6 +1,3 @@
-/*
-Copyright © 2024 Hasura
-*/
 package cmd
 
 import (
