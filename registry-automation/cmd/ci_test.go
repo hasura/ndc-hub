@@ -65,7 +65,7 @@ func TestProcessAddedOrModifiedConnectorVersions(t *testing.T) {
 			changedFiles.Added = tc.files
 
 			// Call the function under test
-			processAddedOrModifiedConnectorVersions(changedFiles)
+			processChangedFiles(changedFiles)
 
 			// Compare the actual result with the expected result
 			if len(addedOrModifiedConnectorVersions) != len(tc.expectedAddedOrModifiedConnectors) {

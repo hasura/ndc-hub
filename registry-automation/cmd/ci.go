@@ -128,8 +128,12 @@ func buildContext() {
 	}
 }
 
-// processAddedOrModifiedConnectorVersions processes the files in the PR and extracts the connector name and version
-func processAddedOrModifiedConnectorVersions(changedFiles ChangedFiles) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
+// processChangedFiles processes the files in the PR and extracts the connector name and version
+// This function checks for the following things:
+// 1. If a new connector version is added, it adds the connector version to the `newlyAddedConnectorVersions` map.
+// 2. If the logo file is modified, it adds the connector name and the path to the modified logo to the `modifiedLogos` map.
+// 3. If the README file is modified, it adds the connector name and the path to the modified README to the `modifiedReadmes` map.
+func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
 	newlyAddedConnectorVersions := make(map[string]map[string]string)
 	modifiedLogos := make(map[string]string)
 	modifiedReadmes := make(map[string]string)
@@ -217,7 +221,7 @@ func runCI(cmd *cobra.Command, args []string) {
 	// Separate the modified files according to the type of file
 
 	// Collect the added or modified connectors
-	addedOrModifiedConnectorVersions, modifiedLogos, modifiedReadmes := processAddedOrModifiedConnectorVersions(changedFiles)
+	addedOrModifiedConnectorVersions, modifiedLogos, modifiedReadmes := processChangedFiles(changedFiles)
 
 	// print out the modified logos and readmes
 	fmt.Printf("Modified logos and modified readmes: %+v %+v\n", modifiedLogos, modifiedReadmes)
