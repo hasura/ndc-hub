@@ -72,21 +72,21 @@ type ConnectorRegistryArgs struct {
 	GCPBucketName            string
 }
 
-var cmdArgs ConnectorRegistryArgs
+var ciCmdArgs ConnectorRegistryArgs
 
 func init() {
 	rootCmd.AddCommand(ciCmd)
 
 	// Path for the changed files in the PR
 	var changedFilesPathEnv = os.Getenv("CHANGED_FILES_PATH")
-	ciCmd.PersistentFlags().StringVar(&cmdArgs.ChangedFilesPath, "changed-files-path", changedFilesPathEnv, "path to a line-separated list of changed files in the PR")
+	ciCmd.PersistentFlags().StringVar(&ciCmdArgs.ChangedFilesPath, "changed-files-path", changedFilesPathEnv, "path to a line-separated list of changed files in the PR")
 	if changedFilesPathEnv == "" {
 		ciCmd.MarkPersistentFlagRequired("changed-files-path")
 	}
 
 	// Publication environment
 	var publicationEnv = os.Getenv("PUBLICATION_ENV")
-	ciCmd.PersistentFlags().StringVar(&cmdArgs.PublicationEnv, "publication-env", publicationEnv, "publication environment (staging/prod). Default: staging")
+	ciCmd.PersistentFlags().StringVar(&ciCmdArgs.PublicationEnv, "publication-env", publicationEnv, "publication environment (staging/prod). Default: staging")
 	// default publicationEnv to "staging"
 	if publicationEnv == "" {
 		ciCmd.PersistentFlags().Set("publication-env", "staging")
@@ -100,7 +100,7 @@ func buildContext() {
 	if registryGQLURL == "" {
 		log.Fatalf("CONNECTOR_REGISTRY_GQL_URL is not set")
 	} else {
-		cmdArgs.ConnectorRegistryGQLUrl = registryGQLURL
+		ciCmdArgs.ConnectorRegistryGQLUrl = registryGQLURL
 	}
 
 	// Connector publication key
@@ -108,7 +108,7 @@ func buildContext() {
 	if connectorPublicationKey == "" {
 		log.Fatalf("CONNECTOR_PUBLICATION_KEY is not set")
 	} else {
-		cmdArgs.ConnectorPublicationKey = connectorPublicationKey
+		ciCmdArgs.ConnectorPublicationKey = connectorPublicationKey
 	}
 
 	// GCP service account details
@@ -116,7 +116,7 @@ func buildContext() {
 	if gcpServiceAccountDetails == "" {
 		log.Fatalf("GCP_SERVICE_ACCOUNT_DETAILS is not set")
 	} else {
-		cmdArgs.GCPServiceAccountDetails = gcpServiceAccountDetails
+		ciCmdArgs.GCPServiceAccountDetails = gcpServiceAccountDetails
 	}
 
 	// GCP bucket name
@@ -124,7 +124,7 @@ func buildContext() {
 	if gcpBucketName == "" {
 		log.Fatalf("GCP_BUCKET_NAME is not set")
 	} else {
-		cmdArgs.GCPBucketName = gcpBucketName
+		ciCmdArgs.GCPBucketName = gcpBucketName
 	}
 }
 
@@ -153,17 +153,14 @@ func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConn
 
 // runCI is the main function that runs the CI workflow
 func runCI(cmd *cobra.Command, args []string) {
-	ctx := context.Background()
 	buildContext()
-	changedFilesContent, err := os.Open(cmdArgs.ChangedFilesPath)
-
+	changedFilesContent, err := os.Open(ciCmdArgs.ChangedFilesPath)
 	if err != nil {
-		log.Fatalf("Failed to open the file: %v, err: %v", cmdArgs.ChangedFilesPath, err)
+		log.Fatalf("Failed to open the file: %v, err: %v", ciCmdArgs.ChangedFilesPath, err)
 	}
-
 	defer changedFilesContent.Close()
 
-	client, err := storage.NewClient(ctx, option.WithCredentialsJSON([]byte(cmdArgs.GCPServiceAccountDetails)))
+	client, err := storage.NewClient(context.Background(), option.WithCredentialsJSON([]byte(ciCmdArgs.GCPServiceAccountDetails)))
 	if err != nil {
 		log.Fatalf("Failed to create Google bucket client: %v", err)
 	}
@@ -184,7 +181,6 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	// Collect the added or modified connectors
 	addedOrModifiedConnectorVersions := collectAddedOrModifiedConnectors(changedFiles)
-
 	// check if the map is empty
 	if len(addedOrModifiedConnectorVersions) == 0 {
 		fmt.Println("No connector versions found in the changed files.")
@@ -239,7 +235,7 @@ func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions 
 
 	for _, connectorVersion := range connectorVersions {
 		objectName := generateGCPObjectName(connectorVersion.Namespace, connectorVersion.Name, connectorVersion.Version)
-		err := deleteFile(client, cmdArgs.GCPBucketName, objectName)
+		err := deleteFile(client, ciCmdArgs.GCPBucketName, objectName)
 		if err != nil {
 			return err
 		}
@@ -266,7 +262,6 @@ func collectAddedOrModifiedConnectors(changedFiles ChangedFiles) map[string]map[
 func uploadConnectorVersionPackage(client *storage.Client, connectorName string, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
 
 	var connectorVersion ConnectorVersion
-
 	// Read the connector's metadata and the connector version's metadata
 
 	// connector's `metadata.json`, `registry/mongodb/metadata.json`
@@ -288,7 +283,7 @@ func uploadConnectorVersionPackage(client *storage.Client, connectorName string,
 		return connectorVersion, fmt.Errorf("invalid or undefined TGZ URL: %v", tgzUrl)
 	}
 
-	connectorVersionMetadata, connectorMetadataTgzPath, err := getConnectorVersionMetadata(err, tgzUrl, connectorName, version)
+	connectorVersionMetadata, connectorMetadataTgzPath, err := getConnectorVersionMetadata(tgzUrl, connectorName, version)
 	if err != nil {
 		return connectorVersion, err
 	}
@@ -311,7 +306,7 @@ func uploadConnectorVersionPackage(client *storage.Client, connectorName string,
 }
 
 func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
-	bucketName := cmdArgs.GCPBucketName
+	bucketName := ciCmdArgs.GCPBucketName
 	objectName := generateGCPObjectName(connectorNamespace, connectorName, connectorVersion)
 	uploadedTgzUrl, err := uploadFile(client, bucketName, objectName, connectorMetadataTgzPath)
 
@@ -323,11 +318,11 @@ func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace
 
 // Downloads the TGZ File from the URL specified by `tgzUrl`, extracts the TGZ file and returns the content of the
 // connector-definition.yaml present in the .hasura-connector folder.
-func getConnectorVersionMetadata(err error, tgzUrl string, connectorName string, connectorVersion string) (map[string]interface{}, string, error) {
+func getConnectorVersionMetadata(tgzUrl string, connectorName string, connectorVersion string) (map[string]interface{}, string, error) {
 	var connectorVersionMetadata map[string]interface{}
 	tgzPath := getTempFilePath("extracted_tgz")
 
-	err = downloadFile(tgzUrl, tgzPath, map[string]string{})
+	err := downloadFile(tgzUrl, tgzPath, map[string]string{})
 	if err != nil {
 		return connectorVersionMetadata, "", fmt.Errorf("failed to download the connector version metadata file from the URL: %v - err: %v", tgzUrl, err)
 	}
@@ -406,7 +401,7 @@ type GetConnectorInfoResponse struct {
 
 func getConnectorInfoFromRegistry(connectorNamespace string, connectorName string) (GetConnectorInfoResponse, error) {
 	var respData GetConnectorInfoResponse
-	client := graphql.NewClient(cmdArgs.ConnectorRegistryGQLUrl)
+	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
 	ctx := context.Background()
 
 	req := graphql.NewRequest(`
@@ -422,7 +417,7 @@ query GetConnectorInfo ($name: String!, $namespace: String!) {
 	req.Var("namespace", connectorNamespace)
 
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
-	req.Header.Set("x-connector-publication-key", cmdArgs.ConnectorPublicationKey)
+	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
 
 	// Execute the GraphQL query and check the response.
 	if err := client.Run(ctx, req, &respData); err != nil {
@@ -488,7 +483,7 @@ func buildRegistryPayload(
 
 func updateRegistryGQL(payload []ConnectorVersion) error {
 	var respData map[string]interface{}
-	client := graphql.NewClient(cmdArgs.ConnectorRegistryGQLUrl)
+	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
 	ctx := context.Background()
 
 	req := graphql.NewRequest(`
@@ -504,7 +499,7 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
 	req.Var("connectorVersion", payload)
 
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
-	req.Header.Set("x-connector-publication-key", cmdArgs.ConnectorPublicationKey)
+	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
 
 	// Execute the GraphQL query and check the response.
 	if err := client.Run(ctx, req, &respData); err != nil {
