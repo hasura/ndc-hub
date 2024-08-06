@@ -129,7 +129,7 @@ func buildContext() {
 }
 
 // processAddedOrModifiedConnectorVersions processes the files in the PR and extracts the connector name and version
-func processAddedOrModifiedConnectorVersions(files []string) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
+func processAddedOrModifiedConnectorVersions(changedFiles ChangedFiles) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
 	newlyAddedConnectorVersions := make(map[string]map[string]string)
 	modifiedLogos := make(map[string]string)
 	modifiedReadmes := make(map[string]string)
@@ -137,6 +137,8 @@ func processAddedOrModifiedConnectorVersions(files []string) (NewConnectorVersio
 	var connectorVersionPackageRegex = regexp.MustCompile(`^registry/([^/]+)/releases/([^/]+)/connector-packaging\.json$`)
 	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/logo\.png$`)
 	var readmeMdRegex = regexp.MustCompile(`^registry/([^/]+)/README\.md$`)
+
+	files := append(changedFiles.Added, changedFiles.Modified...)
 
 	for _, file := range files {
 		// Check if the file is a connector version package
@@ -215,7 +217,7 @@ func runCI(cmd *cobra.Command, args []string) {
 	// Separate the modified files according to the type of file
 
 	// Collect the added or modified connectors
-	addedOrModifiedConnectorVersions, modifiedLogos, modifiedReadmes := collectAddedOrModifiedConnectors(changedFiles)
+	addedOrModifiedConnectorVersions, modifiedLogos, modifiedReadmes := processAddedOrModifiedConnectorVersions(changedFiles)
 
 	// print out the modified logos and readmes
 	fmt.Printf("Modified logos and modified readmes: %+v %+v\n", modifiedLogos, modifiedReadmes)
@@ -289,19 +291,6 @@ type ModifiedLogos map[string]string
 
 // ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
 type ModifiedReadmes map[string]string
-
-// collectAddedOrModifiedConnectors collects the added or modified connectors from the changed files
-func collectAddedOrModifiedConnectors(changedFiles ChangedFiles) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
-
-	newConnectorVersions, modifiedLogos, modifiedReadmes := processAddedOrModifiedConnectorVersions(changedFiles.Added)
-
-	// Not sure if we need to process the modified files as well, because it is very unlikely
-	// that an existing connector version will be modified.
-
-	// processAddedOrModifiedConnectorVersions(changedFiles.Modified, addedOrModifiedConnectorVersions)
-
-	return newConnectorVersions, modifiedLogos, modifiedReadmes
-}
 
 // uploadConnectorVersionPackage uploads the connector version package to the registry
 func uploadConnectorVersionPackage(client *storage.Client, connectorName string, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {

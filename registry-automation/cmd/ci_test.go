@@ -60,8 +60,12 @@ func TestProcessAddedOrModifiedConnectorVersions(t *testing.T) {
 			// Initialize the map to store the added or modified connectors
 			addedOrModifiedConnectorVersions := make(map[string]map[string]string)
 
+			var changedFiles ChangedFiles
+
+			changedFiles.Added = tc.files
+
 			// Call the function under test
-			processAddedOrModifiedConnectorVersions(tc.files)
+			processAddedOrModifiedConnectorVersions(changedFiles)
 
 			// Compare the actual result with the expected result
 			if len(addedOrModifiedConnectorVersions) != len(tc.expectedAddedOrModifiedConnectors) {
