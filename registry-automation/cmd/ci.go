@@ -45,7 +45,7 @@ type ConnectorVersion struct {
 	PackageDefinitionURL string `json:"package_definition_url"`
 	// Is the connector version multitenant?
 	IsMultitenant bool `json:"is_multitenant"`
-	// Type of the connector packaging `PreBuiltDockerImage`/`ManagedDockerBuild`
+	// Type of the connector packaging `PrebuiltDockerImage`/`ManagedDockerBuild`
 	Type string `json:"type"`
 }
 
