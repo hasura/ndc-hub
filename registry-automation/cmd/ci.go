@@ -128,27 +128,47 @@ func buildContext() {
 	}
 }
 
-// processAddedOrModifiedConnectorVersions processes the files in the PR and extracts the connector name and version
-func processAddedOrModifiedConnectorVersions(files []string, addedOrModifiedConnectorVersions map[string]map[string]string) {
-	const connectorVersionPackageRegex = `^registry/([^/]+)/releases/([^/]+)/connector-packaging\.json$`
-	re := regexp.MustCompile(connectorVersionPackageRegex)
+// processChangedFiles processes the files in the PR and extracts the connector name and version
+// This function checks for the following things:
+// 1. If a new connector version is added, it adds the connector version to the `newlyAddedConnectorVersions` map.
+// 2. If the logo file is modified, it adds the connector name and the path to the modified logo to the `modifiedLogos` map.
+// 3. If the README file is modified, it adds the connector name and the path to the modified README to the `modifiedReadmes` map.
+func processChangedFiles(changedFiles ChangedFiles) NewConnectorVersions {
+
+	newlyAddedConnectorVersions := make(map[Connector]map[string]string)
+
+	var connectorVersionPackageRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/releases/([^/]+)/connector-packaging\.json$`)
+
+	files := append(changedFiles.Added, changedFiles.Modified...)
 
 	for _, file := range files {
 		// Extract the connector name and version from the file path
+		if connectorVersionPackageRegex.MatchString(file) {
 
-		matches := re.FindStringSubmatch(file)
-		if len(matches) == 3 {
-			connectorName := matches[1]
-			connectorVersion := matches[2]
+			matches := connectorVersionPackageRegex.FindStringSubmatch(file)
+			if len(matches) == 4 {
+				connectorNamespace := matches[1]
+				connectorName := matches[2]
+				connectorVersion := matches[3]
 
-			if _, exists := addedOrModifiedConnectorVersions[connectorName]; !exists {
-				addedOrModifiedConnectorVersions[connectorName] = make(map[string]string)
+				connector := Connector{
+					Name:      connectorName,
+					Namespace: connectorNamespace,
+				}
+
+				if _, exists := newlyAddedConnectorVersions[connector]; !exists {
+					newlyAddedConnectorVersions[connector] = make(map[string]string)
+				}
+
+				newlyAddedConnectorVersions[connector][connectorVersion] = file
 			}
 
-			addedOrModifiedConnectorVersions[connectorName][connectorVersion] = file
+		} else {
+			fmt.Println("Skipping file: ", file)
 		}
 	}
 
+	return newlyAddedConnectorVersions
 }
 
 // runCI is the main function that runs the CI workflow
@@ -180,32 +200,36 @@ func runCI(cmd *cobra.Command, args []string) {
 	}
 
 	// Collect the added or modified connectors
-	addedOrModifiedConnectorVersions := collectAddedOrModifiedConnectors(changedFiles)
+	addedOrModifiedConnectorVersions := processChangedFiles(changedFiles)
 	// check if the map is empty
 	if len(addedOrModifiedConnectorVersions) == 0 {
 		fmt.Println("No connector versions found in the changed files.")
 		return
 	} else {
-		// Iterate over the added or modified connectors and upload the connector versions
-		var connectorVersions []ConnectorVersion
-		var uploadConnectorVersionErr error
-		encounteredError := false
+		processNewlyAddedConnectorVersions(client, addedOrModifiedConnectorVersions)
+	}
+}
 
-		for connectorName, versions := range addedOrModifiedConnectorVersions {
-			for version, connectorVersionPath := range versions {
-				var connectorVersion ConnectorVersion
-				connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
+func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnectorVersions NewConnectorVersions) {
+	// Iterate over the added or modified connectors and upload the connector versions
+	var connectorVersions []ConnectorVersion
+	var uploadConnectorVersionErr error
+	encounteredError := false
 
-				if uploadConnectorVersionErr != nil {
-					fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, err)
-					encounteredError = true
-					break
-				}
+	for connectorName, versions := range newlyAddedConnectorVersions {
+		for version, connectorVersionPath := range versions {
+			var connectorVersion ConnectorVersion
+			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
+
+			if uploadConnectorVersionErr != nil {
+				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, uploadConnectorVersionErr)
+				encounteredError = true
+
+				break
+			} else {
 				connectorVersions = append(connectorVersions, connectorVersion)
 			}
-			if encounteredError {
-				break
-			}
+
 		}
 
 		if encounteredError {
@@ -216,7 +240,7 @@ func runCI(cmd *cobra.Command, args []string) {
 
 		} else {
 			fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
-			err = updateRegistryGQL(connectorVersions)
+			err := updateRegistryGQL(connectorVersions)
 			if err != nil {
 				// attempt to cleanup the uploaded connector versions
 				_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
@@ -243,32 +267,18 @@ func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions 
 	return nil
 }
 
-// collectAddedOrModifiedConnectors collects the added or modified connectors from the changed files
-func collectAddedOrModifiedConnectors(changedFiles ChangedFiles) map[string]map[string]string {
-
-	addedOrModifiedConnectorVersions := make(map[string]map[string]string)
-
-	processAddedOrModifiedConnectorVersions(changedFiles.Added, addedOrModifiedConnectorVersions)
-
-	// Not sure if we need to process the modified files as well, because it is very unlikely
-	// that an existing connector version will be modified.
-
-	// processAddedOrModifiedConnectorVersions(changedFiles.Modified, addedOrModifiedConnectorVersions)
-
-	return addedOrModifiedConnectorVersions
+// Type that uniquely identifies a connector
+type Connector struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
 }
 
+type NewConnectorVersions map[Connector]map[string]string
+
 // uploadConnectorVersionPackage uploads the connector version package to the registry
-func uploadConnectorVersionPackage(client *storage.Client, connectorName string, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
+func uploadConnectorVersionPackage(client *storage.Client, connector Connector, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
 
 	var connectorVersion ConnectorVersion
-	// Read the connector's metadata and the connector version's metadata
-
-	// connector's `metadata.json`, `registry/mongodb/metadata.json`
-	connectorMetadata, err := readJSONFile[map[string]interface{}](fmt.Sprintf("registry/%s/metadata.json", connectorName))
-	if err != nil {
-		return connectorVersion, fmt.Errorf("failed to read the connector metadata file: %v", err)
-	}
 
 	// connector version's metadata, `registry/mongodb/releases/v1.0.0/connector-packaging.json`
 	connectorVersionPackagingInfo, err := readJSONFile[map[string]interface{}](changedConnectorVersionPath) // Read metadata file
@@ -283,26 +293,21 @@ func uploadConnectorVersionPackage(client *storage.Client, connectorName string,
 		return connectorVersion, fmt.Errorf("invalid or undefined TGZ URL: %v", tgzUrl)
 	}
 
-	connectorVersionMetadata, connectorMetadataTgzPath, err := getConnectorVersionMetadata(tgzUrl, connectorName, version)
+	connectorVersionMetadata, connectorMetadataTgzPath, err := getConnectorVersionMetadata(tgzUrl, connector, version)
 	if err != nil {
 		return connectorVersion, err
 	}
 
-	connectorNamespace, err := getConnectorNamespace(connectorMetadata)
+	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connector.Name, connector.Namespace, version, connectorMetadataTgzPath)
 	if err != nil {
-		return connectorVersion, fmt.Errorf("failed to get the connector namespace: %v", err)
-	}
-
-	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connectorNamespace, connectorName, version, connectorMetadataTgzPath)
-	if err != nil {
-		return connectorVersion, fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connectorName, version, err)
+		return connectorVersion, fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connector.Name, version, err)
 	} else {
 		// print success message with the name of the connector and the version
-		fmt.Printf("Successfully uploaded the connector version definition in google cloud registry for the connector: %v version: %v\n", connectorName, version)
+		fmt.Printf("Successfully uploaded the connector version definition in google cloud registry for the connector: %v version: %v\n", connector.Name, version)
 	}
 
 	// Build payload for registry upsert
-	return buildRegistryPayload(connectorNamespace, connectorName, version, connectorVersionMetadata, uploadedTgzUrl)
+	return buildRegistryPayload(connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl)
 }
 
 func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
@@ -318,7 +323,7 @@ func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace
 
 // Downloads the TGZ File from the URL specified by `tgzUrl`, extracts the TGZ file and returns the content of the
 // connector-definition.yaml present in the .hasura-connector folder.
-func getConnectorVersionMetadata(tgzUrl string, connectorName string, connectorVersion string) (map[string]interface{}, string, error) {
+func getConnectorVersionMetadata(tgzUrl string, connector Connector, connectorVersion string) (map[string]interface{}, string, error) {
 	var connectorVersionMetadata map[string]interface{}
 	tgzPath := getTempFilePath("extracted_tgz")
 
@@ -336,7 +341,7 @@ func getConnectorVersionMetadata(tgzUrl string, connectorName string, connectorV
 		}
 	}
 
-	connectorVersionMetadataYamlFilePath, err := extractTarGz(tgzPath, extractedTgzFolderPath+"/"+connectorName+"/"+connectorVersion)
+	connectorVersionMetadataYamlFilePath, err := extractTarGz(tgzPath, extractedTgzFolderPath+"/"+connector.Namespace+"/"+connector.Name+"/"+connectorVersion)
 	if err != nil {
 		return connectorVersionMetadata, "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
 	} else {
