@@ -60,7 +60,8 @@ type ConnectionVersionMetadata struct {
 type ConnectorReadmeUpdates struct {
 	Updates []struct {
 		Set struct {
-			Docs string `json:"docs"`
+			Docs *string `json:"docs,omitempty"`
+			Logo *string `json:"logo,omitempty"`
 		} `json:"_set"`
 		Where struct {
 			ConnectorName      string `json:"name"`
@@ -303,7 +304,6 @@ func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
 			log.Fatalf("Failed to read the README file: %v", err)
 		}
 		modifiedConnectorReadmeContent[connectorName] = string(readmeContent)
-
 	}
 
 	return nil
@@ -365,13 +365,18 @@ func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions 
 	return nil
 }
 
+type Connector struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+}
+
 type NewConnectorVersions map[string]map[string]string
 
 // ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
 type ModifiedLogos map[string]string
 
 // ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
-type ModifiedReadmes map[string]string
+type ModifiedReadmes map[Connector]string
 
 // uploadConnectorVersionPackage uploads the connector version package to the registry
 func uploadConnectorVersionPackage(client *storage.Client, connectorName string, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
