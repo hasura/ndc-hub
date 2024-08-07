@@ -57,6 +57,18 @@ type ConnectionVersionMetadata struct {
 	Image *string `yaml:"image,omitempty"`
 }
 
+type ConnectorReadmeUpdates struct {
+	Updates []struct {
+		Set struct {
+			Docs string `json:"docs"`
+		} `json:"_set"`
+		Where struct {
+			ConnectorName      string `json:"name"`
+			ConnectorNamespace string `json:"namespace"`
+		} `json:"where"`
+	} `json:"updates"`
+}
+
 const (
 	ManagedDockerBuild  = "ManagedDockerBuild"
 	PrebuiltDockerImage = "PrebuiltDockerImage"
@@ -139,7 +151,7 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 	modifiedReadmes := make(map[string]string)
 
 	var connectorVersionPackageRegex = regexp.MustCompile(`^registry/([^/]+)/releases/([^/]+)/connector-packaging\.json$`)
-	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/logo\.png$`)
+	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/logo\.(png|svg)$`)
 	var readmeMdRegex = regexp.MustCompile(`^registry/([^/]+)/README\.md$`)
 
 	files := append(changedFiles.Added, changedFiles.Modified...)
@@ -179,7 +191,6 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 				modifiedReadmes[connectorName] = file
 				fmt.Printf("Processing README file for connector: %s\n", connectorName)
 			}
-
 		} else {
 			fmt.Println("Skipping file: ", file)
 		}
@@ -187,7 +198,6 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 	}
 
 	return newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes
-
 }
 
 // runCI is the main function that runs the CI workflow
@@ -221,56 +231,123 @@ func runCI(cmd *cobra.Command, args []string) {
 	// Separate the modified files according to the type of file
 
 	// Collect the added or modified connectors
-	addedOrModifiedConnectorVersions, modifiedLogos, modifiedReadmes := processChangedFiles(changedFiles)
-
-	// print out the modified logos and readmes
-	fmt.Printf("Modified logos and modified readmes: %+v %+v\n", modifiedLogos, modifiedReadmes)
+	newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes := processChangedFiles(changedFiles)
 
 	// check if the map is empty
-	if len(addedOrModifiedConnectorVersions) == 0 {
-		fmt.Println("No connector versions found in the changed files.")
+	if len(newlyAddedConnectorVersions) == 0 && len(modifiedLogos) == 0 && len(modifiedReadmes) == 0 {
+		fmt.Println("No connectors to be added or modified in the registry")
 		return
 	} else {
-		// Iterate over the added or modified connectors and upload the connector versions
-		var connectorVersions []ConnectorVersion
-		var uploadConnectorVersionErr error
-		encounteredError := false
+		if len(newlyAddedConnectorVersions) > 0 {
+			// TODO(KC): Uncomment the below line.
+			//processNewlyAddedConnectorVersions(client, newlyAddedConnectorVersions)
+		}
 
-		for connectorName, versions := range addedOrModifiedConnectorVersions {
-			for version, connectorVersionPath := range versions {
-				var connectorVersion ConnectorVersion
-				connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
-
-				if uploadConnectorVersionErr != nil {
-					fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, err)
-					encounteredError = true
-					break
-				}
-				connectorVersions = append(connectorVersions, connectorVersion)
+		if len(modifiedReadmes) > 0 {
+			err := processModifiedReadmes(modifiedReadmes)
+			if err != nil {
+				log.Fatalf("Failed to process the modified READMEs: %v", err)
 			}
-			if encounteredError {
+			fmt.Println("Successfully updated the READMEs in the registry.")
+		}
+
+		// // Iterate over the added or modified connectors and upload the connector versions
+		// var connectorVersions []ConnectorVersion
+		// var uploadConnectorVersionErr error
+		// encounteredError := false
+
+		// for connectorName, versions := range newlyAddedConnectorVersions {
+		// 	for version, connectorVersionPath := range versions {
+		// 		var connectorVersion ConnectorVersion
+		// 		connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
+
+		// 		if uploadConnectorVersionErr != nil {
+		// 			fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, err)
+		// 			encounteredError = true
+		// 			break
+		// 		}
+		// 		connectorVersions = append(connectorVersions, connectorVersion)
+		// 	}
+		// 	if encounteredError {
+		// 		break
+		// 	}
+		// }
+
+		// if encounteredError {
+		// 	// attempt to cleanup the uploaded connector versions
+		// 	_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
+		// 	// delete the uploaded connector versions from the registry
+		// 	log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
+
+		// } else {
+		// 	fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
+		// 	err = updateRegistryGQL(connectorVersions)
+		// 	if err != nil {
+		// 		// attempt to cleanup the uploaded connector versions
+		// 		_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
+		// 		log.Fatalf("Failed to update the registry: %v", err)
+		// 	}
+		// }
+		// fmt.Println("Successfully added connector versions to the registry.")
+	}
+}
+
+func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
+	// Iterate over the modified READMEs and update the READMEs in the registry
+	modifiedConnectorReadmeContent := make(map[string]string)
+
+	for connectorName, readmePath := range modifiedReadmes {
+		// open the README file
+		readmeContent, err := readFile(readmePath)
+		if err != nil {
+			log.Fatalf("Failed to read the README file: %v", err)
+		}
+		modifiedConnectorReadmeContent[connectorName] = string(readmeContent)
+
+	}
+
+	return nil
+}
+
+func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnectorVersions NewConnectorVersions) {
+	// Iterate over the added or modified connectors and upload the connector versions
+	var connectorVersions []ConnectorVersion
+	var uploadConnectorVersionErr error
+	encounteredError := false
+
+	for connectorName, versions := range newlyAddedConnectorVersions {
+		for version, connectorVersionPath := range versions {
+			var connectorVersion ConnectorVersion
+			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
+
+			if uploadConnectorVersionErr != nil {
+				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, uploadConnectorVersionErr)
+				encounteredError = true
 				break
 			}
+			connectorVersions = append(connectorVersions, connectorVersion)
 		}
-
 		if encounteredError {
+			break
+		}
+	}
+
+	if encounteredError {
+		// attempt to cleanup the uploaded connector versions
+		_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
+		// delete the uploaded connector versions from the registry
+		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
+
+	} else {
+		fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
+		err := updateRegistryGQL(connectorVersions)
+		if err != nil {
 			// attempt to cleanup the uploaded connector versions
 			_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
-			// delete the uploaded connector versions from the registry
-			log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
-
-		} else {
-			fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
-			err = updateRegistryGQL(connectorVersions)
-			if err != nil {
-				// attempt to cleanup the uploaded connector versions
-				_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
-				log.Fatalf("Failed to update the registry: %v", err)
-			}
+			log.Fatalf("Failed to update the registry: %v", err)
 		}
-
-		fmt.Println("Successfully added connector versions to the registry.")
 	}
+	fmt.Println("Successfully added connector versions to the registry.")
 }
 
 func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions []ConnectorVersion) error {
@@ -535,6 +612,31 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
 }`)
 	// add the payload to the request
 	req.Var("connectorVersion", payload)
+
+	req.Header.Set("x-hasura-role", "connector_publishing_automation")
+	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
+
+	// Execute the GraphQL query and check the response.
+	if err := client.Run(ctx, req, &respData); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateConnectorReadmes(readmesToUpdates ConnectorReadmeUpdates) error {
+	var respData map[string]interface{}
+	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
+	ctx := context.Background()
+
+	req := graphql.NewRequest(`
+mutation UpdateConnectorReadme ($updates: [connector_overview_updates!]!) {
+  update_connector_overview_many(updates: $updates) {
+    affected_rows
+  }
+}`)
+	// add the payload to the request
+	req.Var("updates", readmesToUpdates)
 
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
 	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
