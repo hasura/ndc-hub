@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,8 @@ import (
 	"regexp"
 
 	"cloud.google.com/go/storage"
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/machinebox/graphql"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
@@ -57,17 +60,19 @@ type ConnectionVersionMetadata struct {
 	Image *string `yaml:"image,omitempty"`
 }
 
+type ConnectorOverviewUpdate struct {
+	Set struct {
+		Docs *string `json:"docs,omitempty"`
+		Logo *string `json:"logo,omitempty"`
+	} `json:"_set"`
+	Where struct {
+		ConnectorName      string `json:"name"`
+		ConnectorNamespace string `json:"namespace"`
+	} `json:"where"`
+}
+
 type ConnectorOverviewUpdates struct {
-	Updates []struct {
-		Set struct {
-			Docs *string `json:"docs,omitempty"`
-			Logo *string `json:"logo,omitempty"`
-		} `json:"_set"`
-		Where struct {
-			ConnectorName      string `json:"name"`
-			ConnectorNamespace string `json:"namespace"`
-		} `json:"where"`
-	} `json:"updates"`
+	Updates []ConnectorOverviewUpdate `json:"updates"`
 }
 
 const (
@@ -83,6 +88,7 @@ type ConnectorRegistryArgs struct {
 	ConnectorPublicationKey  string
 	GCPServiceAccountDetails string
 	GCPBucketName            string
+	CloudinaryUrl            string
 }
 
 var ciCmdArgs ConnectorRegistryArgs
@@ -139,6 +145,15 @@ func buildContext() {
 	} else {
 		ciCmdArgs.GCPBucketName = gcpBucketName
 	}
+
+	cloudinaryUrl := os.Getenv("CLOUDINARY_URL")
+
+	if cloudinaryUrl == "" {
+		log.Fatalf("CLOUDINARY_URL is not set")
+	} else {
+		ciCmdArgs.CloudinaryUrl = cloudinaryUrl
+	}
+
 }
 
 // processChangedFiles processes the files in the PR and extracts the connector name and version
@@ -184,7 +199,7 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 			// Process the logo file
 			// print the name of the connector and the version
 			matches := logoPngRegex.FindStringSubmatch(file)
-			if len(matches) == 3 {
+			if len(matches) == 4 {
 
 				connectorNamespace := matches[1]
 				connectorName := matches[2]
@@ -274,23 +289,93 @@ func runCI(cmd *cobra.Command, args []string) {
 			fmt.Println("Successfully updated the READMEs in the registry.")
 		}
 
+		if len(modifiedLogos) > 0 {
+			err := processModifiedLogos(modifiedLogos)
+			if err != nil {
+				log.Fatalf("Failed to process the modified logos: %v", err)
+			}
+			fmt.Println("Successfully updated the logos in the registry.")
+		}
 	}
+
+	fmt.Println("Successfully processed the changed files in the PR")
+}
+
+func processModifiedLogos(modifiedLogos ModifiedLogos) error {
+	// Iterate over the modified logos and update the logos in the registry
+	var connectorOverviewUpdates []ConnectorOverviewUpdate
+	// upload the logo to cloudinary
+	cloudinary, err := cloudinary.NewFromURL(ciCmdArgs.CloudinaryUrl)
+	if err != nil {
+		return err
+	}
+
+	for connector, logoPath := range modifiedLogos {
+		// open the logo file
+		logoContent, err := readFile(logoPath)
+		if err != nil {
+			fmt.Printf("Failed to read the logo file: %v", err)
+			return err
+		}
+
+		imageReader := bytes.NewReader(logoContent)
+
+		uploadResult, err := cloudinary.Upload.Upload(context.Background(), imageReader, uploader.UploadParams{
+			PublicID: fmt.Sprintf("%s-%s", connector.Namespace, connector.Name),
+			Format:   "png",
+		})
+		if err != nil {
+			fmt.Printf("Failed to upload the logo to cloudinary for the connector: %s, Error: %v\n", connector.Name, err)
+			return err
+		} else {
+			fmt.Printf("Successfully uploaded the logo to cloudinary for the connector: %s\n", connector.Name)
+		}
+
+		var connectorOverviewUpdate ConnectorOverviewUpdate
+
+		if connectorOverviewUpdate.Set.Logo == nil {
+			connectorOverviewUpdate.Set.Logo = new(string)
+		} else {
+			*connectorOverviewUpdate.Set.Logo = ""
+		}
+
+		*connectorOverviewUpdate.Set.Logo = string(uploadResult.SecureURL)
+
+		connectorOverviewUpdate.Where.ConnectorName = connector.Name
+		connectorOverviewUpdate.Where.ConnectorNamespace = connector.Namespace
+
+		connectorOverviewUpdates = append(connectorOverviewUpdates, connectorOverviewUpdate)
+
+	}
+
+	return updateConnectorOverview(ConnectorOverviewUpdates{Updates: connectorOverviewUpdates})
+
 }
 
 func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
 	// Iterate over the modified READMEs and update the READMEs in the registry
-	modifiedConnectorReadmeContent := make(map[Connector]string)
+	var connectorOverviewUpdates []ConnectorOverviewUpdate
 
-	for connectorName, readmePath := range modifiedReadmes {
+	for connector, readmePath := range modifiedReadmes {
 		// open the README file
 		readmeContent, err := readFile(readmePath)
 		if err != nil {
-			log.Fatalf("Failed to read the README file: %v", err)
+			return err
+
 		}
-		modifiedConnectorReadmeContent[connectorName] = string(readmeContent)
+
+		var connectorOverviewUpdate ConnectorOverviewUpdate
+		*connectorOverviewUpdate.Set.Docs = string(readmeContent)
+
+		connectorOverviewUpdate.Where.ConnectorName = connector.Name
+		connectorOverviewUpdate.Where.ConnectorNamespace = connector.Namespace
+
+		connectorOverviewUpdates = append(connectorOverviewUpdates, connectorOverviewUpdate)
+
 	}
 
-	return nil
+	return updateConnectorOverview(ConnectorOverviewUpdates{Updates: connectorOverviewUpdates})
+
 }
 
 func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnectorVersions NewConnectorVersions) {
@@ -602,7 +687,7 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
 	return nil
 }
 
-func updateConnectorReadmes(readmesToUpdates ConnectorOverviewUpdates) error {
+func updateConnectorOverview(updates ConnectorOverviewUpdates) error {
 	var respData map[string]interface{}
 	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
 	ctx := context.Background()
@@ -614,7 +699,7 @@ mutation UpdateConnector ($updates: [connector_overview_updates!]!) {
   }
 }`)
 	// add the payload to the request
-	req.Var("updates", readmesToUpdates)
+	req.Var("updates", updates)
 
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
 	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)

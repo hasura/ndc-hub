@@ -5,6 +5,12 @@ go 1.21.4
 require github.com/spf13/cobra v1.8.0
 
 require (
+	github.com/cloudinary/cloudinary-go/v2 v2.8.0 // indirect
+	github.com/creasty/defaults v1.7.0 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
+)
+
+require (
 	cloud.google.com/go v0.115.0 // indirect
 	cloud.google.com/go/auth v0.7.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
