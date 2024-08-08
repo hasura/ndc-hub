@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v0.0.15"
+    "latest_version": "v0.0.29"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -27,6 +27,17 @@
       "source": {
         "hash": "6bae967daf7b9aa718d62103e077a739c41d5a6d"
       }
+    },
+    {
+      "version": "0.0.29",
+      "uri": "https://github.com/hasura/ndc-turso/releases/download/v0.0.29/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "3dc04b8d0c98d8af582dc6aa153bcfc4f84053b0e0963bd37eedfc0b58bd5f78"
+      },
+      "source": {
+        "hash": "1d840dba43d7c6fc55e5c92ef1c3205e77c0e34e"
+      }
     }
   ],
   "source_code": {
@@ -36,6 +47,11 @@
       {
         "tag": "v0.0.15",
         "hash": "6bae967daf7b9aa718d62103e077a739c41d5a6d",
+        "is_verified": false
+      },
+      {
+        "tag": "v0.0.29",
+        "hash": "1d840dba43d7c6fc55e5c92ef1c3205e77c0e34e",
         "is_verified": false
       }
     ]
