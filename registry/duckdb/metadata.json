@@ -1,43 +1,59 @@
 {
-    "overview": {
-      "namespace": "hasura",
-      "description": "Connect to a DuckDB database and expose them to Hasura v3 Project",
-      "title": "(MotherDuck) DuckDB Native Data Connector",
-      "logo": "logo.svg",
-      "tags": [
-        "database"
-      ],
-      "latest_version": "v0.0.17"
-    },
-    "author": {
-      "support_email": "support@hasura.io",
-      "homepage": "https://hasura.io",
-      "name": "Hasura"
-    },
-    "is_verified": false,
-    "is_hosted_by_hasura": true,
-    "packages": [
-      {
-        "version": "0.0.17",
-        "uri": "https://github.com/hasura/ndc-duckdb/releases/download/v0.0.17/connector-definition.tgz",
-        "checksum": {
-          "type": "sha256",
-          "value": "3449766fff1794f0866f19505355b37d151d91682e1f784aef664b91abd57570"
-        },
-        "source": {
-          "hash": "875c5fb4539febea0e5dad569fd8b64557870c1c"
-        }
-      }
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a DuckDB database and expose them to Hasura v3 Project",
+    "title": "(MotherDuck) DuckDB Native Data Connector",
+    "logo": "logo.svg",
+    "tags": [
+      "database"
     ],
-    "source_code": {
-      "is_open_source": true,
-      "repository": "https://github.com/hasura/ndc-duckdb",
-      "version": [
-        {
-          "tag": "v0.0.17",
-          "hash": "875c5fb4539febea0e5dad569fd8b64557870c1c",
-          "is_verified": false
-        }
-      ]
+    "latest_version": "v0.0.20"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": false,
+  "is_hosted_by_hasura": true,
+  "packages": [
+    {
+      "version": "0.0.17",
+      "uri": "https://github.com/hasura/ndc-duckdb/releases/download/v0.0.17/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "3449766fff1794f0866f19505355b37d151d91682e1f784aef664b91abd57570"
+      },
+      "source": {
+        "hash": "875c5fb4539febea0e5dad569fd8b64557870c1c"
+      }
+    },
+    {
+      "version": "0.0.20",
+      "uri": "https://github.com/hasura/ndc-duckdb/releases/download/v0.0.20/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "8a6d27ab06e1e22c0f8156c0b447fdf4a8f87191985971b2a6d4decdfd424806"
+      },
+      "source": {
+        "hash": "ad9bbffe56aaeb4f11c91525344acd29dd5290ca"
+      }
     }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-duckdb",
+    "version": [
+      {
+        "tag": "v0.0.17",
+        "hash": "875c5fb4539febea0e5dad569fd8b64557870c1c",
+        "is_verified": false
+      },
+      {
+        "tag": "v0.0.20",
+        "hash": "ad9bbffe56aaeb4f11c91525344acd29dd5290ca",
+        "is_verified": false
+      }
+    ]
   }
+}
