@@ -1,6 +1,7 @@
 # Connector registry Github packaging
 
-This is a Work-In-Progress document. Please provide any feedback you wish to contribute via Github comments and suggestions.
+> [!NOTE]
+> This RFC is an update on the [Connector Package Distribution RFC](0002-distribution-gh.md).
 
 ## Introduction
 
