@@ -222,9 +222,7 @@ func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnec
 			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
 
 			if uploadConnectorVersionErr != nil {
-				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, uploadConnectorVersionErr)
 				encounteredError = true
-
 				break
 			} else {
 				connectorVersions = append(connectorVersions, connectorVersion)
@@ -475,6 +473,15 @@ func buildRegistryPayload(
 		return connectorVersion, fmt.Errorf("Inserting a new connector is not supported yet")
 	}
 
+	var connectorVersionType string
+
+	if connectorVersionPackagingType == PrebuiltDockerImage {
+		// Note: The connector version type is set to `PreBuiltDockerImage` if the connector version is of type `PrebuiltDockerImage`, this is a HACK because this value might be removed in the future and we might not even need to insert new connector versions in the `hub_registry_connector_version` table.
+		connectorVersionType = "PreBuiltDockerImage"
+	} else {
+		connectorVersionType = ManagedDockerBuild
+	}
+
 	connectorVersion = ConnectorVersion{
 		Namespace:            connectorNamespace,
 		Name:                 connectorName,
@@ -482,7 +489,7 @@ func buildRegistryPayload(
 		Image:                &connectorVersionDockerImage,
 		PackageDefinitionURL: uploadedConnectorDefinitionTgzUrl,
 		IsMultitenant:        connectorInfo.HubRegistryConnector[0].MultitenantConnector != nil,
-		Type:                 connectorVersionPackagingType,
+		Type:                 connectorVersionType,
 	}
 
 	return connectorVersion, nil
