@@ -224,6 +224,7 @@ func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnec
 			if uploadConnectorVersionErr != nil {
 				encounteredError = true
 				break
+
 			} else {
 				connectorVersions = append(connectorVersions, connectorVersion)
 			}

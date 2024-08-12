@@ -5,8 +5,7 @@
 
 ## Introduction
 
-This RFC proposes how a new connector version should be added to the `registry` folder to automatically be published. Publishing here
-means that the connector version will be available for use in Hasura's DDN.
+This RFC proposes how a new connector version should be added to the `registry` folder to automatically be published. Publishing in this context means that the connector version will be available for public use in Hasura's DDN.
 
 ## File structure of the connectors `registry`
 
@@ -15,8 +14,6 @@ The packages field in the `metadata.json` file will be removed and replaced by a
 The releases folder will house a separate folder for each version of the connector, with each version folder containing a `connector-packaging.json` file.
 
 This `connector-packaging.json` file will include all the necessary information to access the package definition.
-
-## Directory structure of the connectors `registry`
 
 The following directory structure for connector versions is proposed:
 
@@ -51,6 +48,8 @@ The `registry` folder will contain a folder for each connector. Each connector f
 - `README.md`: The README file of the connector. The README file should contain information about the connector, how to use it, and any other relevant information. The contents of the README file would be displayed in the landing page of the connector in the Hasura.
 - `releases`: The releases folder will contain a folder for each version of the connector. Each version folder will contain a `connector-packaging.json` file. More details about the `connector-packaging.json` file are provided below.
 
+NOTE: The `releases` folder should only be added for Hub connectors.
+For example, `postgres-azure` connector should not have a `releases` folder as it is not a Hub connector.
 
 ### `connector-packaging.json`
 
