@@ -325,9 +325,11 @@ func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace
 // connector-definition.yaml present in the .hasura-connector folder.
 func getConnectorVersionMetadata(tgzUrl string, connector Connector, connectorVersion string) (map[string]interface{}, string, error) {
 	var connectorVersionMetadata map[string]interface{}
-	tgzPath := getTempFilePath("extracted_tgz")
-
-	err := downloadFile(tgzUrl, tgzPath, map[string]string{})
+	tgzPath, err := getTempFilePath("extracted_tgz")
+	if err != nil {
+		return connectorVersionMetadata, "", fmt.Errorf("failed to get the temp file path: %v", err)
+	}
+	err = downloadFile(tgzUrl, tgzPath, map[string]string{})
 	if err != nil {
 		return connectorVersionMetadata, "", fmt.Errorf("failed to download the connector version metadata file from the URL: %v - err: %v", tgzUrl, err)
 	}

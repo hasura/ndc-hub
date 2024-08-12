@@ -22,7 +22,7 @@ The `connector-packaging.json` file will contain the relevant information to acc
 The following directory structure for connector versions is proposed:
 
 ```
-registry/<connector_name>
+registry/<connector_namespace>/<connector_name>
 ├── logo.png
 ├── metadata.json
 ├── README.md
