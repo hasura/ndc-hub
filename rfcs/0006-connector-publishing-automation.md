@@ -8,15 +8,13 @@
 This RFC proposes how a new connector version should be added to the `registry` folder to automatically be published. Publishing here
 means that the connector version will be available for use in Hasura's DDN.
 
-This RFC builds on top of the [Connector Package Distribution RFC](0002-distribution-gh.md).
+## File structure of the connectors `registry`
 
-## Changes to the existing `metadata.json` file
+The packages field in the `metadata.json` file will be removed and replaced by a releases folder within the connector directory.
 
-The `packages` field will be removed from the `metadata.json` file. The `packages` field will be replaced by a `releases` folder in the connector directory.
+The releases folder will house a separate folder for each version of the connector, with each version folder containing a `connector-packaging.json` file.
 
-The `releases` folder will contain a folder for each version of the connector. Each version folder will contain a `connector-packaging.json` file.
-
-The `connector-packaging.json` file will contain the relevant information to access the package definition.
+This `connector-packaging.json` file will include all the necessary information to access the package definition.
 
 ## Directory structure of the connectors `registry`
 
