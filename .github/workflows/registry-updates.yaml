@@ -28,7 +28,6 @@ jobs:
           files: |
             registry/**
 
-
       - name: Print out all the changed filse
         env:
           ADDED_FILES: ${{ steps.connector-version-changed-files.outputs.added_files }}
@@ -52,7 +51,7 @@ jobs:
           CHANGED_FILES_PATH: "changed_files.json"
           PUBLICATION_ENV: "staging"
           CONNECTOR_REGISTRY_GQL_URL: ${{ secrets.CONNECTOR_REGISTRY_GQL_URL }}
-          GCP_BUCKET_NAME: dev-connector-platform-registry
+          GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
           GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
           CONNECTOR_PUBLICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
         run: |
