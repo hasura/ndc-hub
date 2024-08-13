@@ -19,8 +19,8 @@ Below, you'll find a matrix of all supported features for the Elasticsearch conn
 <!-- DocDB matrix -->
 
 | Feature                         | Supported | Notes |
-| ------------------------------- | --------- | ----- |
-| Native Queries + Logical Models | ❌         |       |
+| ------------------------------- |-----------| ----- |
+| Native Queries + Logical Models | ✅         |       |
 | Simple Object Query             | ✅         |       |
 | Filter / Search                 | ✅         |       |
 | Simple Aggregation              | ✅         |       |
