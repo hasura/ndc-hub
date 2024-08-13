@@ -1,8 +1,8 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "The Open API Lambda Connector allows you to import already existing APIs specified by the Open API Spec into you Hasura DDN subgraphs",
-    "title": "Open API Lambda Connector",
+    "description": "The OpenAPI Lambda Connector allows you to import already existing APIs specified by the Open API Spec into you Hasura DDN subgraphs",
+    "title": "OpenAPI Lambda Connector",
     "logo": "logo.png",
     "tags": [],
     "latest_version": "v0.1.1"
