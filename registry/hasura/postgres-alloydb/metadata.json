@@ -1,13 +1,13 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect Hasura DDN to a Google Cloud SQL PostgreSQL database",
-    "title": "GCP Cloud SQL PostgreSQL",
+    "description": "Connect Hasura DDN to an AlloyDB PostgreSQL database",
+    "title": "AlloyDB PostgreSQL",
     "logo": "logo.png",
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.1"
+    "latest_version": "v1.0.2"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -53,6 +53,11 @@
       {
         "tag": "v1.0.1",
         "hash": "e2fd651",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.0.2",
+        "hash": "1378805",
         "is_verified": true
       }
     ]

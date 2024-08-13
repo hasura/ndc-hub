@@ -1,13 +1,13 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "Connect Hasura DDN to a Azure Cosmos DB for PostgreSQL database",
-    "title": "Azure Cosmos DB for PostgreSQL",
-    "logo": "logo.png",
+    "description": "Connect Hasura DDN to a Citus PostgreSQL database",
+    "title": "Citus PostgreSQL",
+    "logo": "logo.svg",
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.1"
+    "latest_version": "v1.0.2"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -21,8 +21,8 @@
     "repository": "https://github.com/hasura/ndc-postgres",
     "version": [
       {
-        "tag": "v0.5.1",
-        "hash": "bdb2702",
+        "tag": "v0.5.2",
+        "hash": "805bc53",
         "is_verified": true
       },
       {
@@ -53,6 +53,11 @@
       {
         "tag": "v1.0.1",
         "hash": "e2fd651",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.0.2",
+        "hash": "1378805",
         "is_verified": true
       }
     ]

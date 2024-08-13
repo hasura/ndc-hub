@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 func generateGCPObjectName(namespace, connectorName, version string) string {
@@ -82,19 +80,9 @@ func readFile(location string) ([]byte, error) {
 	return fileBytes, nil
 }
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-// generateRandomFileName generates a random file name based on the current time.
-func generateRandomFileName() string {
-	b := make([]byte, 10)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b) + ".tar.gz"
-}
-
 // getTempFilePath generates a random file name in the specified directory.
-func getTempFilePath(directory string) string {
+func getTempFilePath(directory string) (string, error) {
+
 	// Ensure the directory exists
 	err := os.MkdirAll(directory, os.ModePerm)
 	if err != nil {
@@ -102,19 +90,14 @@ func getTempFilePath(directory string) string {
 	}
 
 	// Generate a random file name
-	fileName := generateRandomFileName()
 
-	// Create the file path
-	filePath := filepath.Join(directory, fileName)
-
-	// Check if the file already exists
-	_, err = os.Stat(filePath)
-	if !os.IsNotExist(err) {
-		// File exists, generate a new name
-		fileName = generateRandomFileName()
-		filePath = filepath.Join(directory, fileName)
+	tempFile, err := os.CreateTemp(directory, "connector-*.tar.gz")
+	if err != nil {
+		return "", fmt.Errorf("error creating temp file: %v", err)
 	}
-	return filePath
+	defer tempFile.Close()
+
+	return tempFile.Name(), nil
 
 }
 

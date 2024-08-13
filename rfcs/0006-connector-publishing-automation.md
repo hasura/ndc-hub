@@ -1,28 +1,24 @@
 # Connector registry Github packaging
 
-This is a Work-In-Progress document. Please provide any feedback you wish to contribute via Github comments and suggestions.
+> [!NOTE]
+> This RFC is an update on the [Connector Package Distribution RFC](0002-distribution-gh.md).
 
 ## Introduction
 
-This RFC proposes how a new connector version should be added to the `registry` folder to automatically be published. Publishing here
-means that the connector version will be available for use in Hasura's DDN.
+This RFC proposes how a new connector version should be added to the `registry` folder to automatically be published. Publishing in this context means that the connector version will be available for public use in Hasura's DDN.
 
-This RFC builds on top of the [Connector Package Distribution RFC](0002-distribution-gh.md).
+## File structure of the connectors `registry`
 
-## Changes to the existing `metadata.json` file
+The packages field in the `metadata.json` file will be removed and replaced by a releases folder within the connector directory.
 
-The `packages` field will be removed from the `metadata.json` file. The `packages` field will be replaced by a `releases` folder in the connector directory.
+The releases folder will house a separate folder for each version of the connector, with each version folder containing a `connector-packaging.json` file.
 
-The `releases` folder will contain a folder for each version of the connector. Each version folder will contain a `connector-packaging.json` file.
-
-The `connector-packaging.json` file will contain the relevant information to access the package definition.
-
-## Directory structure of the connectors `registry`
+This `connector-packaging.json` file will include all the necessary information to access the package definition.
 
 The following directory structure for connector versions is proposed:
 
 ```
-registry/<connector_name>
+registry/<connector_namespace>/<connector_name>
 ├── logo.png
 ├── metadata.json
 ├── README.md
@@ -48,14 +44,17 @@ registry/<connector_name>
 The `registry` folder will contain a folder for each connector. Each connector folder will contain the following files:
 
 - `logo.png`: The logo of the connector. The logo should be in PNG format.
-- `metadata.json`: The metadata of the connector. (TODO: Link to the metadata RFC)
+
+- `metadata.json`: The metadata of the connector. Metadata format is described in the [Github Distribution RFC](./0002-distribution-gh.md).
 - `README.md`: The README file of the connector. The README file should contain information about the connector, how to use it, and any other relevant information. The contents of the README file would be displayed in the landing page of the connector in the Hasura.
 - `releases`: The releases folder will contain a folder for each version of the connector. Each version folder will contain a `connector-packaging.json` file. More details about the `connector-packaging.json` file are provided below.
 
+NOTE: The `releases` folder should only be added for Hub connectors.
+For example, `postgres-azure` connector should not have a `releases` folder as it is not a Hub connector.
 
 ### `connector-packaging.json`
 
-Every connector version should have a package definition, as specified here(TODO: Link to the packaging RFC). The `connector-packaging.json`
+Every connector version should have a package definition. The `connector-packaging.json`
 file should contain the relevant information to access the package definition.
 
 ```json
@@ -91,8 +90,11 @@ To publish a new connector version, follow these steps:
 5. Once the workflow is successful, the new version of the connector will be available in the **Staging** Hasura DDN. Every new commit will overwrite the previous version of that connector in the staging DDN. So, feel free to push new commits to the PR to update the connector version in the staging DDN.
 6. Once the PR is merged, the new version of the connector will be available in the **Production** Hasura DDN.
 
+> [!NOTE]
+> The `registry-update` workflow will only run on the PRs against the `main` branch of the repository.
 
-P.S: Multiple connector versions can be published in the same PR. The `registry-update` workflow will publish all the versions in the PR to the registry.
+> [!NOTE]
+> Multiple connector versions can be published in the same PR. The `registry-update` workflow will publish all the versions in the PR to the registry.
 
 
 ## Updates to logo and README

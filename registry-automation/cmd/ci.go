@@ -174,6 +174,7 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 	files := append(changedFiles.Added, changedFiles.Modified...)
 
 	for _, file := range files {
+
 		// Check if the file is a connector version package
 		if connectorVersionPackageRegex.MatchString(file) {
 
@@ -236,6 +237,7 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 	}
 
 	return newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes
+
 }
 
 // runCI is the main function that runs the CI workflow
@@ -277,8 +279,7 @@ func runCI(cmd *cobra.Command, args []string) {
 		return
 	} else {
 		if len(newlyAddedConnectorVersions) > 0 {
-			// TODO(KC): Uncomment the below line.
-			//processNewlyAddedConnectorVersions(client, newlyAddedConnectorVersions)
+			processNewlyAddedConnectorVersions(client, newlyAddedConnectorVersions)
 		}
 
 		if len(modifiedReadmes) > 0 {
@@ -417,6 +418,7 @@ func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnec
 		}
 	}
 	fmt.Println("Successfully added connector versions to the registry.")
+
 }
 
 func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions []ConnectorVersion) error {
@@ -498,9 +500,12 @@ func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace
 // connector-definition.yaml present in the .hasura-connector folder.
 func getConnectorVersionMetadata(tgzUrl string, connector Connector, connectorVersion string) (map[string]interface{}, string, error) {
 	var connectorVersionMetadata map[string]interface{}
-	tgzPath := getTempFilePath("extracted_tgz")
+	tgzPath, err := getTempFilePath("extracted_tgz")
+	if err != nil {
+		return connectorVersionMetadata, "", fmt.Errorf("failed to get the temp file path: %v", err)
+	}
+	err = downloadFile(tgzUrl, tgzPath, map[string]string{})
 
-	err := downloadFile(tgzUrl, tgzPath, map[string]string{})
 	if err != nil {
 		return connectorVersionMetadata, "", fmt.Errorf("failed to download the connector version metadata file from the URL: %v - err: %v", tgzUrl, err)
 	}
@@ -646,6 +651,15 @@ func buildRegistryPayload(
 		return connectorVersion, fmt.Errorf("Inserting a new connector is not supported yet")
 	}
 
+	var connectorVersionType string
+
+	if connectorVersionPackagingType == PrebuiltDockerImage {
+		// Note: The connector version type is set to `PreBuiltDockerImage` if the connector version is of type `PrebuiltDockerImage`, this is a HACK because this value might be removed in the future and we might not even need to insert new connector versions in the `hub_registry_connector_version` table.
+		connectorVersionType = "PreBuiltDockerImage"
+	} else {
+		connectorVersionType = ManagedDockerBuild
+	}
+
 	connectorVersion = ConnectorVersion{
 		Namespace:            connectorNamespace,
 		Name:                 connectorName,
@@ -653,7 +667,7 @@ func buildRegistryPayload(
 		Image:                &connectorVersionDockerImage,
 		PackageDefinitionURL: uploadedConnectorDefinitionTgzUrl,
 		IsMultitenant:        connectorInfo.HubRegistryConnector[0].MultitenantConnector != nil,
-		Type:                 connectorVersionPackagingType,
+		Type:                 connectorVersionType,
 	}
 
 	return connectorVersion, nil
