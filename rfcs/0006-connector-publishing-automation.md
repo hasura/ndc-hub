@@ -89,8 +89,11 @@ To publish a new connector version, follow these steps:
 5. Once the workflow is successful, the new version of the connector will be available in the **Staging** Hasura DDN. Every new commit will overwrite the previous version of that connector in the staging DDN. So, feel free to push new commits to the PR to update the connector version in the staging DDN.
 6. Once the PR is merged, the new version of the connector will be available in the **Production** Hasura DDN.
 
+> [!NOTE]
+> The `registry-update` workflow will only run on the PRs against the `main` branch of the repository.
 
-P.S: Multiple connector versions can be published in the same PR. The `registry-update` workflow will publish all the versions in the PR to the registry.
+> [!NOTE]
+> Multiple connector versions can be published in the same PR. The `registry-update` workflow will publish all the versions in the PR to the registry.
 
 
 ## Updates to logo and README
