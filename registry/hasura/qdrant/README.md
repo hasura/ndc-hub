@@ -105,7 +105,7 @@ QDRANT_URL=http://local.hasura.dev:6333
 With the connector configured, we can now use the CLI to introspect our database and create a source-specific configuration file for our connector.
 
 ```bash
-ddn connector introspect --connector my_subgraph/connector/qdrant/connector.yaml
+ddn connector introspect --connector my_subgraph/connector/qdrant/connector.local.yaml
 ```
 
 ### Step 6. Create the Hasura metadata
