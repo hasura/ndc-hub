@@ -446,7 +446,7 @@ func buildRegistryPayload(
 	uploadedConnectorDefinitionTgzUrl string,
 ) (ConnectorVersion, error) {
 	var connectorVersion ConnectorVersion
-	var connectorVersionDockerImage string
+	var connectorVersionDockerImage string = ""
 	connectorVersionPackagingDefinition, ok := connectorVersionMetadata["packagingDefinition"].(map[interface{}]interface{})
 	if !ok {
 		return connectorVersion, fmt.Errorf("could not find the 'packagingDefinition' of the connector %s version %s in the connector's metadata", connectorName, version)
@@ -483,11 +483,19 @@ func buildRegistryPayload(
 		connectorVersionType = ManagedDockerBuild
 	}
 
+	var connectorVersionImage *string
+
+	if connectorVersionDockerImage == "" {
+		connectorVersionImage = nil
+	} else {
+		connectorVersionImage = &connectorVersionDockerImage
+	}
+
 	connectorVersion = ConnectorVersion{
 		Namespace:            connectorNamespace,
 		Name:                 connectorName,
 		Version:              version,
-		Image:                &connectorVersionDockerImage,
+		Image:                connectorVersionImage,
 		PackageDefinitionURL: uploadedConnectorDefinitionTgzUrl,
 		IsMultitenant:        connectorInfo.HubRegistryConnector[0].MultitenantConnector != nil,
 		Type:                 connectorVersionType,
