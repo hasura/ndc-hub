@@ -503,7 +503,7 @@ func updateRegistryGQL(payload []ConnectorVersion) error {
 
 	req := graphql.NewRequest(`
 mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_version_insert_input!]!) {
-  insert_hub_registry_connector_version(objects: $connectorVersion, on_conflict: {constraint: connector_version_namespace_name_version_key, update_columns: [image, package_definition_url]}) {
+  insert_hub_registry_connector_version(objects: $connectorVersion, on_conflict: {constraint: connector_version_namespace_name_version_key, update_columns: [image, package_definition_url, is_multitenant]}) {
     affected_rows
     returning {
       id
