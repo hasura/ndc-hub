@@ -297,7 +297,7 @@ func uploadConnectorVersionPackage(client *storage.Client, connector Connector, 
 		return connectorVersion, err
 	}
 
-	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connector.Name, connector.Namespace, version, connectorMetadataTgzPath)
+	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connector.Namespace, connector.Name, version, connectorMetadataTgzPath)
 	if err != nil {
 		return connectorVersion, fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connector.Name, version, err)
 	} else {
