@@ -1,6 +1,11 @@
 # Connector Package Distribution RFC - Milestone 1
 
+> [!NOTE]
+> This RFC has since been extended by the [Connector publishing automation](./0006-connectors-publishing-automation.md)
+
 This is a Work-In-Progress document. Please provide any feedback you wish to contribute via Github comments and suggestions.
+
+
 
 
 ## Purpose
@@ -271,4 +276,3 @@ Any publicly accessible APIs with publication capabilities have the potential to
 * Recycling of content
 * Unintentional mistakes
 * Spam / Reflection
-
