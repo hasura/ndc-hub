@@ -738,7 +738,6 @@ mutation UpdateConnector ($updates: [connector_overview_updates!]!) {
 	// add the payload to the request
 	req.Var("updates", updates.Updates)
 
-	req.Header.Set("x-hasura-admin-secret", "myadminsecretkey")
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
 	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
 
