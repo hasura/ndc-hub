@@ -1,4 +1,4 @@
-## Overview
+## Overview, damn this works!
 
 `ndc-mongodb` provides a Hasura Data Connector to the MongoDB database,
 which can expose and run GraphQL queries via the Hasura v3 Project.
@@ -10,12 +10,12 @@ The connector implements the [NDC Specification](https://hasura.github.io/ndc-sp
 but does not currently support mutations, column relationship arguments in queries, functions or procedures.
 
 Visit the
-[Hasura v3 Documentation](https://hasura.io/docs/3.0/native-data-connectors/mongodb) 
+[Hasura v3 Documentation](https://hasura.io/docs/3.0/native-data-connectors/mongodb)
 for more information.
 
 ## Usage
 
-Follow the [Quick Start Guide](https://hasura.io/docs/3.0/quickstart/) 
+Follow the [Quick Start Guide](https://hasura.io/docs/3.0/quickstart/)
 to use the MongoDB data connector from the [Hasura v3 Console](https://console.hasura.io).
 
 ## Troubleshooting
