@@ -60,15 +60,27 @@ type ConnectionVersionMetadata struct {
 	Image *string `yaml:"image,omitempty"`
 }
 
+type WhereClause struct {
+	ConnectorName      string
+	ConnectorNamespace string
+}
+
+func (wc WhereClause) MarshalJSON() ([]byte, error) {
+	where := map[string]interface{}{
+		"_and": []map[string]interface{}{
+			{"name": map[string]string{"_eq": wc.ConnectorName}},
+			{"namespace": map[string]string{"_eq": wc.ConnectorNamespace}},
+		},
+	}
+	return json.Marshal(where)
+}
+
 type ConnectorOverviewUpdate struct {
 	Set struct {
 		Docs *string `json:"docs,omitempty"`
 		Logo *string `json:"logo,omitempty"`
 	} `json:"_set"`
-	Where struct {
-		ConnectorName      string `json:"name"`
-		ConnectorNamespace string `json:"namespace"`
-	} `json:"where"`
+	Where WhereClause `json:"where"`
 }
 
 type ConnectorOverviewUpdates struct {
@@ -365,8 +377,10 @@ func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
 
 		}
 
+		readMeContentString := string(readmeContent)
+
 		var connectorOverviewUpdate ConnectorOverviewUpdate
-		*connectorOverviewUpdate.Set.Docs = string(readmeContent)
+		connectorOverviewUpdate.Set.Docs = &readMeContentString
 
 		connectorOverviewUpdate.Where.ConnectorName = connector.Name
 		connectorOverviewUpdate.Where.ConnectorNamespace = connector.Namespace
@@ -720,15 +734,19 @@ mutation UpdateConnector ($updates: [connector_overview_updates!]!) {
     affected_rows
   }
 }`)
-	// add the payload to the request
-	req.Var("updates", updates)
 
+	// add the payload to the request
+	req.Var("updates", updates.Updates)
+
+	req.Header.Set("x-hasura-admin-secret", "myadminsecretkey")
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
 	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
 
 	// Execute the GraphQL query and check the response.
 	if err := client.Run(ctx, req, &respData); err != nil {
 		return err
+	} else {
+		fmt.Printf("Successfully updated the connector overview: %+v\n", respData)
 	}
 
 	return nil
