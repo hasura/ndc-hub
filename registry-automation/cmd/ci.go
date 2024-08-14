@@ -183,9 +183,7 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/logo\.(png|svg)$`)
 	var readmeMdRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/README\.md$`)
 
-	files := append(changedFiles.Added, changedFiles.Modified...)
-
-	for _, file := range files {
+	for _, file := range changedFiles.Added {
 
 		// Check if the file is a connector version package
 		if connectorVersionPackageRegex.MatchString(file) {
@@ -208,7 +206,14 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 				newlyAddedConnectorVersions[connector][connectorVersion] = file
 			}
 
-		} else if logoPngRegex.MatchString(file) {
+		} else {
+			fmt.Println("Skipping newly added file: ", file)
+		}
+
+	}
+
+	for _, file := range changedFiles.Modified {
+		if logoPngRegex.MatchString(file) {
 			// Process the logo file
 			// print the name of the connector and the version
 			matches := logoPngRegex.FindStringSubmatch(file)
@@ -243,7 +248,7 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 				fmt.Printf("Processing README file for connector: %s\n", connectorName)
 			}
 		} else {
-			fmt.Println("Skipping file: ", file)
+			fmt.Println("Skipping modified file: ", file)
 		}
 
 	}
