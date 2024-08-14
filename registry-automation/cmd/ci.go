@@ -473,7 +473,7 @@ func uploadConnectorVersionPackage(client *storage.Client, connector Connector, 
 		return connectorVersion, err
 	}
 
-	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connector.Name, connector.Namespace, version, connectorMetadataTgzPath)
+	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connector.Namespace, connector.Name, version, connectorMetadataTgzPath)
 	if err != nil {
 		return connectorVersion, fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connector.Name, version, err)
 	} else {
@@ -623,7 +623,7 @@ func buildRegistryPayload(
 	uploadedConnectorDefinitionTgzUrl string,
 ) (ConnectorVersion, error) {
 	var connectorVersion ConnectorVersion
-	var connectorVersionDockerImage string
+	var connectorVersionDockerImage string = ""
 	connectorVersionPackagingDefinition, ok := connectorVersionMetadata["packagingDefinition"].(map[interface{}]interface{})
 	if !ok {
 		return connectorVersion, fmt.Errorf("could not find the 'packagingDefinition' of the connector %s version %s in the connector's metadata", connectorName, version)
@@ -660,11 +660,19 @@ func buildRegistryPayload(
 		connectorVersionType = ManagedDockerBuild
 	}
 
+	var connectorVersionImage *string
+
+	if connectorVersionDockerImage == "" {
+		connectorVersionImage = nil
+	} else {
+		connectorVersionImage = &connectorVersionDockerImage
+	}
+
 	connectorVersion = ConnectorVersion{
 		Namespace:            connectorNamespace,
 		Name:                 connectorName,
 		Version:              version,
-		Image:                &connectorVersionDockerImage,
+		Image:                connectorVersionImage,
 		PackageDefinitionURL: uploadedConnectorDefinitionTgzUrl,
 		IsMultitenant:        connectorInfo.HubRegistryConnector[0].MultitenantConnector != nil,
 		Type:                 connectorVersionType,
@@ -680,7 +688,7 @@ func updateRegistryGQL(payload []ConnectorVersion) error {
 
 	req := graphql.NewRequest(`
 mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_version_insert_input!]!) {
-  insert_hub_registry_connector_version(objects: $connectorVersion, on_conflict: {constraint: connector_version_namespace_name_version_key, update_columns: [image, package_definition_url]}) {
+  insert_hub_registry_connector_version(objects: $connectorVersion, on_conflict: {constraint: connector_version_namespace_name_version_key, update_columns: [image, package_definition_url, is_multitenant]}) {
     affected_rows
     returning {
       id
