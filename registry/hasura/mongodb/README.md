@@ -1,4 +1,4 @@
-## Overview, damn this works!
+## Overview
 
 `ndc-mongodb` provides a Hasura Data Connector to the MongoDB database,
 which can expose and run GraphQL queries via the Hasura v3 Project.
