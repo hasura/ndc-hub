@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v1.0.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "0dc038620f40911a2c5662b61d8e2ac9605876c80b3eb3cbae5cc1ebcd5b611f"
+  },
+  "source": {
+    "hash": "4beb7ddabddc3035ca5cc7bd85493a71a2e34147"
+  }
+}
