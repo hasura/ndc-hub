@@ -352,6 +352,8 @@ func getConnectorVersionMetadata(tgzUrl string, connector Connector, connectorVe
 	connectorVersionMetadata, err = readYAMLFile(connectorVersionMetadataYamlFilePath)
 	if err != nil {
 		return connectorVersionMetadata, "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
+	} else {
+		fmt.Printf("Downloaded Connector version metadata: %v\n", connectorVersionMetadata)
 	}
 	return connectorVersionMetadata, tgzPath, nil
 }
