@@ -57,4 +57,5 @@ jobs:
         run: |
           mv changed_files.json registry-automation/changed_files.json
           cd registry-automation
+          rm -rf extracted_tgz
           go run main.go ci
