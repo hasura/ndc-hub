@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,8 @@ import (
 	"regexp"
 
 	"cloud.google.com/go/storage"
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/machinebox/graphql"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
@@ -57,6 +60,33 @@ type ConnectionVersionMetadata struct {
 	Image *string `yaml:"image,omitempty"`
 }
 
+type WhereClause struct {
+	ConnectorName      string
+	ConnectorNamespace string
+}
+
+func (wc WhereClause) MarshalJSON() ([]byte, error) {
+	where := map[string]interface{}{
+		"_and": []map[string]interface{}{
+			{"name": map[string]string{"_eq": wc.ConnectorName}},
+			{"namespace": map[string]string{"_eq": wc.ConnectorNamespace}},
+		},
+	}
+	return json.Marshal(where)
+}
+
+type ConnectorOverviewUpdate struct {
+	Set struct {
+		Docs *string `json:"docs,omitempty"`
+		Logo *string `json:"logo,omitempty"`
+	} `json:"_set"`
+	Where WhereClause `json:"where"`
+}
+
+type ConnectorOverviewUpdates struct {
+	Updates []ConnectorOverviewUpdate `json:"updates"`
+}
+
 const (
 	ManagedDockerBuild  = "ManagedDockerBuild"
 	PrebuiltDockerImage = "PrebuiltDockerImage"
@@ -70,6 +100,7 @@ type ConnectorRegistryArgs struct {
 	ConnectorPublicationKey  string
 	GCPServiceAccountDetails string
 	GCPBucketName            string
+	CloudinaryUrl            string
 }
 
 var ciCmdArgs ConnectorRegistryArgs
@@ -126,6 +157,15 @@ func buildContext() {
 	} else {
 		ciCmdArgs.GCPBucketName = gcpBucketName
 	}
+
+	cloudinaryUrl := os.Getenv("CLOUDINARY_URL")
+
+	if cloudinaryUrl == "" {
+		log.Fatalf("CLOUDINARY_URL is not set")
+	} else {
+		ciCmdArgs.CloudinaryUrl = cloudinaryUrl
+	}
+
 }
 
 // processChangedFiles processes the files in the PR and extracts the connector name and version
@@ -133,16 +173,19 @@ func buildContext() {
 // 1. If a new connector version is added, it adds the connector version to the `newlyAddedConnectorVersions` map.
 // 2. If the logo file is modified, it adds the connector name and the path to the modified logo to the `modifiedLogos` map.
 // 3. If the README file is modified, it adds the connector name and the path to the modified README to the `modifiedReadmes` map.
-func processChangedFiles(changedFiles ChangedFiles) NewConnectorVersions {
+func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
 
 	newlyAddedConnectorVersions := make(map[Connector]map[string]string)
+	modifiedLogos := make(map[Connector]string)
+	modifiedReadmes := make(map[Connector]string)
 
 	var connectorVersionPackageRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/releases/([^/]+)/connector-packaging\.json$`)
+	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/logo\.(png|svg)$`)
+	var readmeMdRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/README\.md$`)
 
-	files := append(changedFiles.Added, changedFiles.Modified...)
+	for _, file := range changedFiles.Added {
 
-	for _, file := range files {
-		// Extract the connector name and version from the file path
+		// Check if the file is a connector version package
 		if connectorVersionPackageRegex.MatchString(file) {
 
 			matches := connectorVersionPackageRegex.FindStringSubmatch(file)
@@ -164,11 +207,54 @@ func processChangedFiles(changedFiles ChangedFiles) NewConnectorVersions {
 			}
 
 		} else {
-			fmt.Println("Skipping file: ", file)
+			fmt.Println("Skipping newly added file: ", file)
 		}
+
 	}
 
-	return newlyAddedConnectorVersions
+	for _, file := range changedFiles.Modified {
+		if logoPngRegex.MatchString(file) {
+			// Process the logo file
+			// print the name of the connector and the version
+			matches := logoPngRegex.FindStringSubmatch(file)
+			if len(matches) == 4 {
+
+				connectorNamespace := matches[1]
+				connectorName := matches[2]
+				connector := Connector{
+					Name:      connectorName,
+					Namespace: connectorNamespace,
+				}
+				modifiedLogos[connector] = file
+				fmt.Printf("Processing logo file for connector: %s\n", connectorName)
+			}
+
+		} else if readmeMdRegex.MatchString(file) {
+			// Process the README file
+			// print the name of the connector and the version
+			matches := readmeMdRegex.FindStringSubmatch(file)
+
+			if len(matches) == 3 {
+
+				connectorNamespace := matches[1]
+				connectorName := matches[2]
+				connector := Connector{
+					Name:      connectorName,
+					Namespace: connectorNamespace,
+				}
+
+				modifiedReadmes[connector] = file
+
+				fmt.Printf("Processing README file for connector: %s\n", connectorName)
+			}
+		} else {
+			fmt.Println("Skipping modified file: ", file)
+		}
+
+	}
+
+	return newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes
+
 }
 
 // runCI is the main function that runs the CI workflow
@@ -199,15 +285,117 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	}
 
+	// Separate the modified files according to the type of file
+
 	// Collect the added or modified connectors
-	addedOrModifiedConnectorVersions := processChangedFiles(changedFiles)
+	newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes := processChangedFiles(changedFiles)
+
 	// check if the map is empty
-	if len(addedOrModifiedConnectorVersions) == 0 {
-		fmt.Println("No connector versions found in the changed files.")
+	if len(newlyAddedConnectorVersions) == 0 && len(modifiedLogos) == 0 && len(modifiedReadmes) == 0 {
+		fmt.Println("No connectors to be added or modified in the registry")
 		return
 	} else {
-		processNewlyAddedConnectorVersions(client, addedOrModifiedConnectorVersions)
+		if len(newlyAddedConnectorVersions) > 0 {
+			processNewlyAddedConnectorVersions(client, newlyAddedConnectorVersions)
+		}
+
+		if len(modifiedReadmes) > 0 {
+			err := processModifiedReadmes(modifiedReadmes)
+			if err != nil {
+				log.Fatalf("Failed to process the modified READMEs: %v", err)
+			}
+			fmt.Println("Successfully updated the READMEs in the registry.")
+		}
+
+		if len(modifiedLogos) > 0 {
+			err := processModifiedLogos(modifiedLogos)
+			if err != nil {
+				log.Fatalf("Failed to process the modified logos: %v", err)
+			}
+			fmt.Println("Successfully updated the logos in the registry.")
+		}
 	}
+
+	fmt.Println("Successfully processed the changed files in the PR")
+}
+
+func processModifiedLogos(modifiedLogos ModifiedLogos) error {
+	// Iterate over the modified logos and update the logos in the registry
+	var connectorOverviewUpdates []ConnectorOverviewUpdate
+	// upload the logo to cloudinary
+	cloudinary, err := cloudinary.NewFromURL(ciCmdArgs.CloudinaryUrl)
+	if err != nil {
+		return err
+	}
+
+	for connector, logoPath := range modifiedLogos {
+		// open the logo file
+		logoContent, err := readFile(logoPath)
+		if err != nil {
+			fmt.Printf("Failed to read the logo file: %v", err)
+			return err
+		}
+
+		imageReader := bytes.NewReader(logoContent)
+
+		uploadResult, err := cloudinary.Upload.Upload(context.Background(), imageReader, uploader.UploadParams{
+			PublicID: fmt.Sprintf("%s-%s", connector.Namespace, connector.Name),
+			Format:   "png",
+		})
+		if err != nil {
+			fmt.Printf("Failed to upload the logo to cloudinary for the connector: %s, Error: %v\n", connector.Name, err)
+			return err
+		} else {
+			fmt.Printf("Successfully uploaded the logo to cloudinary for the connector: %s\n", connector.Name)
+		}
+
+		var connectorOverviewUpdate ConnectorOverviewUpdate
+
+		if connectorOverviewUpdate.Set.Logo == nil {
+			connectorOverviewUpdate.Set.Logo = new(string)
+		} else {
+			*connectorOverviewUpdate.Set.Logo = ""
+		}
+
+		*connectorOverviewUpdate.Set.Logo = string(uploadResult.SecureURL)
+
+		connectorOverviewUpdate.Where.ConnectorName = connector.Name
+		connectorOverviewUpdate.Where.ConnectorNamespace = connector.Namespace
+
+		connectorOverviewUpdates = append(connectorOverviewUpdates, connectorOverviewUpdate)
+
+	}
+
+	return updateConnectorOverview(ConnectorOverviewUpdates{Updates: connectorOverviewUpdates})
+
+}
+
+func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
+	// Iterate over the modified READMEs and update the READMEs in the registry
+	var connectorOverviewUpdates []ConnectorOverviewUpdate
+
+	for connector, readmePath := range modifiedReadmes {
+		// open the README file
+		readmeContent, err := readFile(readmePath)
+		if err != nil {
+			return err
+
+		}
+
+		readMeContentString := string(readmeContent)
+
+		var connectorOverviewUpdate ConnectorOverviewUpdate
+		connectorOverviewUpdate.Set.Docs = &readMeContentString
+
+		connectorOverviewUpdate.Where.ConnectorName = connector.Name
+		connectorOverviewUpdate.Where.ConnectorNamespace = connector.Namespace
+
+		connectorOverviewUpdates = append(connectorOverviewUpdates, connectorOverviewUpdate)
+
+	}
+
+	return updateConnectorOverview(ConnectorOverviewUpdates{Updates: connectorOverviewUpdates})
+
 }
 
 func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnectorVersions NewConnectorVersions) {
@@ -222,33 +410,34 @@ func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnec
 			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
 
 			if uploadConnectorVersionErr != nil {
+				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, uploadConnectorVersionErr)
 				encounteredError = true
 				break
-
-			} else {
-				connectorVersions = append(connectorVersions, connectorVersion)
 			}
-
+			connectorVersions = append(connectorVersions, connectorVersion)
 		}
-
 		if encounteredError {
+			break
+		}
+	}
+
+	if encounteredError {
+		// attempt to cleanup the uploaded connector versions
+		_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
+		// delete the uploaded connector versions from the registry
+		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
+
+	} else {
+		fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
+		err := updateRegistryGQL(connectorVersions)
+		if err != nil {
 			// attempt to cleanup the uploaded connector versions
 			_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
-			// delete the uploaded connector versions from the registry
-			log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
-
-		} else {
-			fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
-			err := updateRegistryGQL(connectorVersions)
-			if err != nil {
-				// attempt to cleanup the uploaded connector versions
-				_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
-				log.Fatalf("Failed to update the registry: %v", err)
-			}
+			log.Fatalf("Failed to update the registry: %v", err)
 		}
-
-		fmt.Println("Successfully added connector versions to the registry.")
 	}
+	fmt.Println("Successfully added connector versions to the registry.")
+
 }
 
 func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions []ConnectorVersion) error {
@@ -273,6 +462,12 @@ type Connector struct {
 }
 
 type NewConnectorVersions map[Connector]map[string]string
+
+// ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
+type ModifiedLogos map[Connector]string
+
+// ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
+type ModifiedReadmes map[Connector]string
 
 // uploadConnectorVersionPackage uploads the connector version package to the registry
 func uploadConnectorVersionPackage(client *storage.Client, connector Connector, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
@@ -329,6 +524,7 @@ func getConnectorVersionMetadata(tgzUrl string, connector Connector, connectorVe
 		return connectorVersionMetadata, "", fmt.Errorf("failed to get the temp file path: %v", err)
 	}
 	err = downloadFile(tgzUrl, tgzPath, map[string]string{})
+
 	if err != nil {
 		return connectorVersionMetadata, "", fmt.Errorf("failed to download the connector version metadata file from the URL: %v - err: %v", tgzUrl, err)
 	}
@@ -527,6 +723,34 @@ mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_versi
 	// Execute the GraphQL query and check the response.
 	if err := client.Run(ctx, req, &respData); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func updateConnectorOverview(updates ConnectorOverviewUpdates) error {
+	var respData map[string]interface{}
+	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
+	ctx := context.Background()
+
+	req := graphql.NewRequest(`
+mutation UpdateConnector ($updates: [connector_overview_updates!]!) {
+  update_connector_overview_many(updates: $updates) {
+    affected_rows
+  }
+}`)
+
+	// add the payload to the request
+	req.Var("updates", updates.Updates)
+
+	req.Header.Set("x-hasura-role", "connector_publishing_automation")
+	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
+
+	// Execute the GraphQL query and check the response.
+	if err := client.Run(ctx, req, &respData); err != nil {
+		return err
+	} else {
+		fmt.Printf("Successfully updated the connector overview: %+v\n", respData)
 	}
 
 	return nil
