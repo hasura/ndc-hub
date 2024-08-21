@@ -54,6 +54,7 @@ jobs:
           GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
           GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
           CONNECTOR_PUBLICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
+          CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
         run: |
           mv changed_files.json registry-automation/changed_files.json
           cd registry-automation

@@ -56,9 +56,9 @@ func downloadFile(sourceURL, destination string, headers map[string]string) erro
 func readJSONFile[T any](location string) (T, error) {
 	// Read the file
 	var result T
-	fileBytes, err := os.ReadFile("../" + location)
+	fileBytes, err := readFile(location)
 	if err != nil {
-		return result, fmt.Errorf("error reading file at location: %s %v", location, err)
+		return result, err
 	}
 
 	if err := json.Unmarshal(fileBytes, &result); err != nil {
@@ -68,8 +68,21 @@ func readJSONFile[T any](location string) (T, error) {
 	return result, nil
 }
 
+// Note: The location is relative to the root of the repository
+func readFile(location string) ([]byte, error) {
+	// Read the file
+
+	fileBytes, err := os.ReadFile("../" + location)
+	if err != nil {
+		return fileBytes, fmt.Errorf("error reading file at location: %s %v", location, err)
+	}
+
+	return fileBytes, nil
+}
+
 // getTempFilePath generates a random file name in the specified directory.
 func getTempFilePath(directory string) (string, error) {
+
 	// Ensure the directory exists
 	err := os.MkdirAll(directory, os.ModePerm)
 	if err != nil {
@@ -77,6 +90,7 @@ func getTempFilePath(directory string) (string, error) {
 	}
 
 	// Generate a random file name
+
 	tempFile, err := os.CreateTemp(directory, "connector-*.tar.gz")
 	if err != nil {
 		return "", fmt.Errorf("error creating temp file: %v", err)
