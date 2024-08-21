@@ -5,7 +5,7 @@
       "title": "Azure Cosmos DB for NoSQL Connector",
       "logo": "logo.png",
       "tags": [],
-      "latest_version": "v0.1.3"
+      "latest_version": "v0.1.6"
     },
     "author": {
       "support_email": "support@hasura.io",
@@ -14,9 +14,7 @@
     },
     "is_verified": true,
     "is_hosted_by_hasura": true,
-    "packages": [
-
-    ],
+    "packages": [],
     "source_code": {
       "is_open_source": true,
       "repository": "https://github.com/hasura/ndc-azure-cosmos-connector/",
@@ -29,6 +27,11 @@
         {
           "tag": "v0.1.2",
           "hash": "f67b2f80d64175a055a9489d4e59f30d5d3870a0",
+          "is_verified": true
+        },
+        {
+          "tag": "v0.1.6",
+          "hash": "eb6beadf7d6102c647820a8ebb957b6f99b68f59",
           "is_verified": true
         }
       ]

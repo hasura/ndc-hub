@@ -44,6 +44,7 @@ registry/<connector_namespace>/<connector_name>
 The `registry` folder will contain a folder for each connector. Each connector folder will contain the following files:
 
 - `logo.png`: The logo of the connector. The logo should be in PNG format.
+
 - `metadata.json`: The metadata of the connector. Metadata format is described in the [Github Distribution RFC](./0002-distribution-gh.md).
 - `README.md`: The README file of the connector. The README file should contain information about the connector, how to use it, and any other relevant information. The contents of the README file would be displayed in the landing page of the connector in the Hasura.
 - `releases`: The releases folder will contain a folder for each version of the connector. Each version folder will contain a `connector-packaging.json` file. More details about the `connector-packaging.json` file are provided below.

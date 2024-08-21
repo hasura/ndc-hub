@@ -18,6 +18,17 @@
   "is_hosted_by_hasura": false,
   "packages": [
     {
+      "version": "1.0.1",
+      "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v1.0.1/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "0069c1d611e0edaafc88de0ee3d22f5f6ed813757d077885c0c3caa1d8ef7d14"
+      },
+      "source": {
+        "hash": "a5df7ec5d5a7ca65dcf6a16460dacbd0b81e39f2"
+      }
+    },
+    {
       "version": "1.0.0",
       "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v1.0.0/connector-definition.tgz",
       "checksum": {
@@ -165,6 +176,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-clickhouse/",
     "version": [
+      {
+        "tag": "v1.0.1",
+        "hash": "a5df7ec5d5a7ca65dcf6a16460dacbd0b81e39f2",
+        "is_verified": true
+      },
       {
         "tag": "v1.0.0",
         "hash": "3da872909893964aabaedb4659af129f0ceaa565",
