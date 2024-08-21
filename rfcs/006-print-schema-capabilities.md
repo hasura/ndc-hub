@@ -2,7 +2,7 @@
 
 Currently, the only way to get the connector schema for CLI is to call `/schema` and `/capabilities` endpoints on a running NDC connector instance. In case of local connector build, CLI builds and runs the respective NDC connector in a docker container and calls the `/schema` and `/capabilities` endpoints on it. This is required by the CLI to build the DataConnectorLink which can then be used by the engine to query the underlying data source. The new local CLI workflow is aimed at reducing the number of steps to get a working API. In this workflow users should be able to update the DataConnectorLink without any dependency.
 
-This RFC proposes to add a new optional command `printSchema` to the connector plugin which prints out NDC schema of the underlying data source (the type [VersionedSchemaAndCapabilities](https://github.com/hasura/v3-engine-multitenant/blob/c6da0685556f8f31194a7f6620513ff5c7261497/v3-metadata-build-service/jsonschemas/metadata.jsonschema#L5636)) to STDOUT. CLI can then call the plugin with relevant command to get the schema and construct DataConnectorLink from the output. All connector plugins are expected to have this command going forward. DDN CLI will use this to generate NDC schema if this command is present. In case, the command is not implemented on plugin (in older versions of connectors), CLI will rely on running the connector in docker to get the schema.
+This RFC proposes to add a new command `printSchema` to the connector plugin which prints out NDC schema of the underlying data source (the type [VersionedSchemaAndCapabilities](https://github.com/hasura/v3-engine-multitenant/blob/c6da0685556f8f31194a7f6620513ff5c7261497/v3-metadata-build-service/jsonschemas/metadata.jsonschema#L5636)) to STDOUT. CLI can then call the plugin with relevant command to get the schema and construct DataConnectorLink from the output. All connector plugins are expected to have this command going forward. DDN CLI will use this to generate NDC schema if this command is present. In case, the command is not implemented on plugin (in older versions of connectors), CLI will rely on running the connector in docker to get the schema.
 
 ## Changes to the packaging spec
 There is a new command `print-schema` in the `commands` section: 
@@ -12,7 +12,7 @@ packagingDefinition:
   type: ManagedDockerBuild/PrebuiltDockerImage
 supportedEnvironmentVariables: [...]
 commands:
-  update: hasura-ndc-postgres update
+  update: hasura-ndc-plugin update
 + printSchema: hasura-ndc-plugin print-schema
 ...
 ```
