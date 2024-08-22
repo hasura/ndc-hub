@@ -33,6 +33,8 @@ Below, you'll find a matrix of all supported features for the Azure Cosmos DB fo
 
 ## Before you get Started
 
+
+
 1. Create a [Hasura Cloud account](https://console.hasura.io)
 2. Install the [CLI](https://hasura.io/docs/3.0/cli/installation/)
 3. Install the [Hasura VS Code extension](https://marketplace.visualstudio.com/items?itemName=HasuraHQ.hasura)
@@ -41,9 +43,11 @@ Below, you'll find a matrix of all supported features for the Azure Cosmos DB fo
 
 ## Using the connector
 
+
 To use the Azure Cosmos DB for NoSQL connector, follow these steps in a Hasura project:
 (Note: for more information on the following steps, please refer to the Postgres connector documentation [here](https://hasura.io/docs/3.0/getting-started/connect-to-data/connect-a-source))
 
+Using the new magic UX.
 
 ### 1. Init the connector
 (Note: here and following we are naming the subgraph "my_subgraph" and the connector "my_azure_cosmos")
