@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - kc/test-registry-automation-in-prod
     paths:
       - registry/**
 
