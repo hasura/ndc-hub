@@ -102,7 +102,7 @@ Check out our [contributing guide](.docs/contributing.md) for more details.
 
 ## Changelog
 
-Please refer to the [changelog](https://github.com/hasura/ndc-open-api-lambda/blob/main/changelog.md)
+Please refer to the [Changelog](https://github.com/hasura/ndc-open-api-lambda/blob/main/changelog.md).
 
 ## License
 
