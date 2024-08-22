@@ -89,7 +89,7 @@ This command will track all the API endpoints in your OpenAPI Document as [Comma
 
 ## Saving User Changes
 
-Please refer to [Saving User Changes](https://github.com/hasura/ndc-open-api-lambda/blob/main/docs/documentation.md#saving-user-changes)
+Please refer to [Saving User Changes](https://github.com/hasura/ndc-open-api-lambda/blob/main/docs/documentation.md#saving-user-changes).
 
 ## Known Limiations
 
