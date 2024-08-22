@@ -10,8 +10,8 @@ The Hasura Qdrant Connector allows for connecting to a Qdrant database to give y
 
 This connector is built using the [Typescript Data Connector SDK](https://github.com/hasura/ndc-sdk-typescript) and implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 
-* [Connector information in the Hasura Hub](https://hasura.io/connectors/qdrant)
-* [Hasura V3 Documentation](https://hasura.io/docs/3.0/index/)
+- [See the listing in the Hasura Hub](https://hasura.io/connectors/qdrant)
+- [Hasura V3 Documentation](https://hasura.io/docs/3.0/index/)
 
 ## Features
 
@@ -52,112 +52,59 @@ connector — after it's been configured — [here](https://hasura.io/docs/3.0/g
 ddn auth login
 ```
 
-### Step 2: Initialize the connector
+### Step 2: Configure the connector
+
+Once you have an initialized supergraph and subgraph, run the initialization command in interactive mode while providing a name for the connector in the prompt:
 
 ```bash
-ddn connector init qdrant  --subgraph my_subgraph  --hub-connector hasura/qdrant
+ddn connector init qdrant -i
 ```
 
-In the snippet above, we've used the subgraph `my_subgraph` as an example; however, you should change this
-value to match any subgraph which you've created in your project.
+#### Step 2.1: Choose the `hasura/qdrant` option from the list
 
-### Step 3: Modify the connector's port
+#### Step 2.2: Choose a port for the connector
 
-When you initialized your connector, the CLI generated a set of configuration files, including a Docker Compose file for
-the connector. Typically, connectors default to port `8080`. Each time you add a connector, we recommend incrementing the published port by one to avoid port collisions.
+The CLI will ask for a specific port to run the connector on. Choose a port that is not already in use or use the default suggested port.
 
-As an example, if your connector's configuration is in `my_subgraph/connector/qdrant/docker-compose.qdrant.yaml`, you can modify the published port to reflect a value that isn't currently being used by any other connectors:
+#### Step 2.3: Provide the env var(s) for the connector
 
-```yaml
-ports:
-  - mode: ingress
-    target: 8080
-    published: "8082"
-    protocol: tcp
+| Name | Description |
+|-|-|
+| QDRANT_URL        | The connection string for the Qdrant database |
+| QDRANT_API_KEY | The Qdrant API Key |
+
+You'll find the environment variables in the `.env` file and they will be in the format:
+
+`<SUBGRAPH_NAME>_<CONNECTOR_NAME>_<VARIABLE_NAME>`
+
+Here is an example of what your `.env` file might look like:
+
+```
+APP_QDRANT_AUTHORIZATION_HEADER="Bearer B9-PceSL1QrUE_Z1gJNdGQ=="
+APP_QDRANT_HASURA_SERVICE_TOKEN_SECRET="B9-PceSL1QrUE_Z1gJNdGQ=="
+APP_QDRANT_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://local.hasura.dev:4317"
+APP_QDRANT_OTEL_SERVICE_NAME="app_qdrant"
+APP_QDRANT_QDRANT_API_KEY="5PX..."
+APP_QDRANT_QDRANT_URL="https://2a4ae326-fdef-473e-a13c-7dc07f2f2759.us-east4-0.gcp.cloud.qdrant.io"
+APP_QDRANT_READ_URL="http://local.hasura.dev:5963"
+APP_QDRANT_WRITE_URL="http://local.hasura.dev:5963"
 ```
 
-### Step 4: Add environment variables
+### Step 3: Introspect the connector
 
-Now that our connector has been scaffolded out for us, we need to provide a connection string so that the data source can be introspected and the boilerplate configuration can be taken care of by the CLI.
-
-The CLI has provided an `.env.local` file for our connector in the `my_subgraph/connector/qdrant` directory. We can add a key-value pair of `QDRANT_URL` along with the connection string itself to this file, and our connector will use this to connect to our database. If the Qdrant database has an API key you can also provide the environment variable for the `QDRANT_API_KEY` which allows the connector to authenticate.
-
-
-The file, after adding the `QDRANT_URL`, should look like this example if connecting to a Qdrant hosted database instance:
-
-```env
-OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://local.hasura.dev:4317
-OTEL_SERVICE_NAME=my_subgraph_qdrant
-QDRANT_URL=https://7312d6c4-3f6c-432c-987c-34d7d96428ef.us-east4-0.gcp.cloud.qdrant.io
-QDRANT_API_KEY=Ch8I...
-```
-
-To connect to a locally running Qdrant instance you can then point the `QDRANT_URL` to the local database. Assuming the Qdrant database is running on port 6333 without any API key, you should be able to use this example:
-
-```env
-OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://local.hasura.dev:4317
-OTEL_SERVICE_NAME=my_subgraph_qdrant
-QDRANT_URL=http://local.hasura.dev:6333
-```
-
-### Step 5: Introspect your data source
-
-With the connector configured, we can now use the CLI to introspect our database and create a source-specific configuration file for our connector.
+Introspecting the connector will generate a `config.json` file and a `qdrant.hml` file.
 
 ```bash
-ddn connector introspect --connector my_subgraph/connector/qdrant/connector.yaml
+ddn connector introspect qdrant
 ```
 
-### Step 6. Create the Hasura metadata
+### Step 4: Add your resources
 
-Hasura DDN uses a concept called "connector linking" to take [NDC-compliant](https://github.com/hasura/ndc-spec)
-configuration JSON files for a data connector and transform them into an `hml` (Hasura Metadata Language) file as a
-[`DataConnectorLink` metadata object](https://hasura.io/docs/3.0/supergraph-modeling/data-connectors#dataconnectorlink-dataconnectorlink).
-
-Basically, metadata objects in `hml` files define our API.
-
-First we need to create this `hml` file with the `connector-link add` command and then convert our configuration files
-into `hml` syntax and add it to this file with the `connector-link update` command.
-
-Let's name the `hml` file the same as our connector, `qdrant`:
+You can add the models, commands, and relationships to your API by tracking them which generates the HML files. 
 
 ```bash
-ddn connector-link add qdrant --subgraph my_subgraph
+ddn connector-link add-resources qdrant
 ```
-
-The new file is scaffolded out at `my_subgraph/metadata/qdrant/qdrant.hml`.
-
-### Step 7. Update the environment variables
-
-The generated file has two environment variables — one for reads and one for writes — that you'll need to add to your subgraph's `.env.my_subgraph` file. Each key is prefixed by the subgraph name, an underscore, and the name of the connector. Ensure the port value matches what is published in your connector's docker compose file.
-
-As an example:
-
-```env
-MY_SUBGRAPH_QDRANT_READ_URL=http://local.hasura.dev:<port>
-MY_SUBGRAPH_QDRANT_WRITE_URL=http://local.hasura.dev:<port>
-```
-
-These values are for the connector itself and utilize `local.hasura.dev` to ensure proper resolution within the docker container.
-
-### Step 8. Start the connector's Docker Compose
-
-Let's start our connector's Docker Compose file by running the following from inside the connector's subgraph:
-
-```bash
-docker compose -f docker-compose.qdrant.yaml up
-```
-
-### Step 9. Update the new `DataConnectorLink` object
-
-Finally, now that our `DataConnectorLink` has the correct environment variables configured for the connector, we can run the update command to have the CLI look at the configuration JSON and transform it to reflect our database's schema in `hml` format. In a new terminal tab, run:
-
-```bash
-ddn connector-link update qdrant --subgraph my_subgraph
-```
-
-After this command runs, you can open your `my_subgraph/metadata/qdrant.hml` file and see your metadata completely
-scaffolded out for you 🎉
 
 ## Documentation
 
