@@ -48,7 +48,7 @@ jobs:
       - name: Run registry automation program
         env:
           CHANGED_FILES_PATH: "changed_files.json"
-          PUBLICATION_ENV: "staging"
+          PUBLICATION_ENV: "production"
           CONNECTOR_REGISTRY_GQL_URL: ${{ secrets.CONNECTOR_REGISTRY_GQL_URL }}
           GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
           GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
