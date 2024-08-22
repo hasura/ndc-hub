@@ -1,4 +1,4 @@
-name: Update Hub DB from GH Registry (Staging)
+name: Update Hub DB from GH Registry (prod)
 
 on:
   push:
