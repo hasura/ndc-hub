@@ -1,7 +1,7 @@
 name: Update Hub DB from GH Registry (Staging)
 
 on:
-  pull_request:
+  push:
     branches:
       - main
     paths:
@@ -10,7 +10,7 @@ on:
 jobs:
   update_registry_db:
     runs-on: ubuntu-latest
-    environment: production
+    environment: staging
 
     steps:
       - name: Checkout repository
@@ -48,7 +48,7 @@ jobs:
       - name: Run registry automation program
         env:
           CHANGED_FILES_PATH: "changed_files.json"
-          PUBLICATION_ENV: "production"
+          PUBLICATION_ENV: "staging"
           CONNECTOR_REGISTRY_GQL_URL: ${{ secrets.CONNECTOR_REGISTRY_GQL_URL }}
           GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
           GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
