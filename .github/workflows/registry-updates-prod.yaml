@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - main
+      - kc/test-registry-automation-in-prod
     paths:
       - registry/**
 
 jobs:
   update_registry_db:
     runs-on: ubuntu-latest
-    environment: staging
+    environment: production
 
     steps:
       - name: Checkout repository
