@@ -1,5 +1,7 @@
 # SingleStore Data Connector
 
+<a href="https://www.singlestore.com/"><img src="https://github.com/singlestore-labs/singlestore-hasura-connector/blob/main/docs/singlestore_logo_horizontal_color_on-white_rgb.png" align="right" width="200"></a>
+
 ![Logo Image](docs/singlestore_logo_horizontal_color_on-white_rgb.png)
 
 <!-- TODO: update when connector will be published -->
