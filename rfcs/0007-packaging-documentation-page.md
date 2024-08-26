@@ -17,10 +17,12 @@ This should NOT point to the homepage or repository page for the connector, unle
 
 The page may be hosted on the Hasura docs, on Hasura hub, or on the repository. Hasura connector authors are encouraged to point to Hasura docs as this serves as the primary channel through which users are otherwise onboarded to ddn.
 
+It is highly recommended that you create a redirection URL to the actual page you want to use (for example, creating https://hasura.info/nodejs-getting-started that redirects to https://hasura.io/docs/3.0/getting-started/build/add-business-logic/?db=TypeScript). This will enable you to update the target of the redirection URL in the future if the documentation ever moves.
+
 **connector-metadata.yaml**
 
 ```yaml
-documentationPage: "https://hasura.io/docs/3.0/getting-started/build/add-business-logic?db=TypeScript"
+documentationPage: "https://hasura.info/nodejs-getting-started"
 ```
 
 
