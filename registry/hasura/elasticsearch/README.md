@@ -1,25 +1,34 @@
 # Elasticsearch Connector
 
-[![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/latest/connectors/elasticsearch/)
-[![ndc-hub](https://img.shields.io/badge/ndc--hub-elasticsearch-blue.svg?style=flat)](https://hasura.io/connectors/ndc-elasticsearch)
-[![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
-[![Status](https://img.shields.io/badge/status-alpha-yellow.svg?style=flat)](./readme.md)
+[![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0)
+[![ndc-hub](https://img.shields.io/badge/ndc--hub-elasticsearch-blue.svg?style=flat)](https://hasura.io/connectors/elasticsearch)
+[![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
 With this connector, Hasura allows you to instantly create a real-time GraphQL API on top of your documents in Elasticsearch. This connector supports Elasticsearch functionalities listed in the table below, allowing for efficient and scalable data operations. Additionally, you will benefit from all the powerful features of Hasura’s Data Delivery Network (DDN) platform, including query pushdown capabilities that delegate all query operations to the Elasticsearch, thereby enhancing query optimization and performance.
 
 This connector is built using the [Go Data Connector SDK](https://github.com/hasura/ndc-sdk-go) and implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 
-- [Connector information in the Hasura Hub](https://hasura.io/connectors/elasticsearch)
-- [Hasura V3 Documentation](https://hasura.io/docs/3.0)
+- [See the listing in the Hasura Hub](https://hasura.io/connectors/elasticsearch)
+- [Hasura DDN Documentation](https://hasura.io/docs/3.0)
+- [Hasura DDN Quickstart](https://hasura.io/docs/3.0/getting-started/quickstart)
+- [GraphQL on Elasticsearch](https://hasura.io/graphql/database/elasticsearch)
+
+Docs for the Elasticsearch data connector:
+
+- [Architecture](https://github.com/hasura/ndc-elasticsearch/blob/main/docs/architecture.md)
+- [Code of Conduct](https://github.com/hasura/ndc-elasticsearch/blob/main/docs/code-of-conduct.md)
+- [Contributing](https://github.com/hasura/ndc-elasticsearch/blob/main/docs/contributing.md)
+- [Configuration](https://github.com/hasura/ndc-elasticsearch/blob/main/docs/configuration.md)
+- [Development](https://github.com/hasura/ndc-elasticsearch/blob/main/docs/development.md)
+- [Security](https://github.com/hasura/ndc-elasticsearch/blob/main/docs/security.md)
+- [Support](https://github.com/hasura/ndc-elasticsearch/blob/main/docs/support.md)
 
 ## Features
 
 Below, you'll find a matrix of all supported features for the Elasticsearch connector:
 
-<!-- DocDB matrix -->
-
 | Feature                         | Supported | Notes |
-| ------------------------------- | -------- | ----- |
+| ------------------------------- | --------- | ----- |
 | Native Queries + Logical Models | ✅        |       |
 | Simple Object Query             | ✅        |       |
 | Filter / Search                 | ✅        |       |
@@ -28,148 +37,73 @@ Below, you'll find a matrix of all supported features for the Elasticsearch conn
 | Paginate                        | ✅        |       |
 | Nested Objects                  | ✅        |       |
 | Nested Arrays                   | ✅        |       |
-| Nested Filtering                | ❌        |       |
+| Nested Filtering                | ✅        |       |
 | Nested Sorting                  | ❌        |       |
 | Nested Relationships            | ❌        |       |
-
 
 ## Before you get Started
 
 1. Create a [Hasura Cloud account](https://console.hasura.io)
-2. Install the [CLI](https://hasura.io/docs/3.0/cli/installation/)
+2. Please ensure you have the [DDN CLI](https://hasura.io/docs/3.0/cli/installation) and [Docker](https://docs.docker.com/engine/install/) installed
 3. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
 4. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
 
-## Using the connector
+## Using the Elasticsearch connector
 
-To use the Elasticsearch connector, follow these steps in a Hasura project:
-(Note: for more information on the following steps, please refer to the Postgres connector documentation [here](https://hasura.io/docs/3.0/getting-started/connect-to-data/connect-a-source))
+### Step 1: Authenticate your CLI session
 
-
-### 1. Init the connector
-(Note: here and following we are naming the subgraph "my_subgraph" and the connector "my_elastic")
-
-   ```bash
-   ddn connector init my_elastic --subgraph my_subgraph --hub-connector hasura/elasticsearch
-   ```
-
-### 2. Add your Elasticsearch credentials:
-
-```env title="my_subgraph/connector/my_elastic/.env.local"
-OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://local.hasura.dev:4317
-OTEL_SERVICE_NAME=my_subgraph_my_elastic
-ELASTICSEARCH_URL=<YOUR_ELASTICSEARCH_URL>
-ELASTICSEARCH_USERNAME=<YOUR_ELASTICSEARCH_USERNAME>
-ELASTICSEARCH_PASSWORD=<YOUR_ELASTICSEARCH_PASSWORD>
+```bash
+ddn auth login
 ```
+
+### Step 2: Configure the connector
+
+Once you have an initialized supergraph and subgraph, run the initialization command in interactive mode while
+providing a name for the connector in the prompt:
+
+```bash
+ddn connector init <connector-name> -i
+```
+
+#### Step 2.1: Choose `hasura/elasticsearch` from the list
+
+#### Step 2.2: Choose a port for the connector
+
+The CLI will ask for a specific port to run the connector on. Choose a port that is not already in use or use the
+default suggested port.
+
+#### Step 2.3: Provide the env vars required for the connector
 
 To configure the connector, the following environment variables need to be set:
 
-| Environment Variable          | Description                                                                                                     | Required | Example Value                                                  |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------- |
-| `ELASTICSEARCH_URL`           | The comma-separated list of Elasticsearch host addresses for connection                                         | Yes      | `https://example.es.gcp.cloud.es.io:9200`                      |
-| `ELASTICSEARCH_USERNAME`      | The username for authenticating to the Elasticsearch cluster                                                    | Yes      | `admin`                                                        |
-| `ELASTICSEARCH_PASSWORD`      | The password for the Elasticsearch user account                                                                 | Yes      | `default`                                                      |
-| `ELASTICSEARCH_API_KEY`       | The Elasticsearch API key for authenticating to the Elasticsearch cluster                                       | No       | `ABCzYWk0NEI0aDRxxxxxxxxxx1k6LWVQa2gxMUpRTUstbjNwTFIzbGoyUQ==` |
-| `ELASTICSEARCH_CA_CERT_PATH`  | The path to the Certificate Authority (CA) certificate for verifying the Elasticsearch server's SSL certificate | No       | `/etc/connector/cacert.pem`                                    |
-| `ELASTICSEARCH_INDEX_PATTERN` | The pattern for matching Elasticsearch indices, potentially including wildcards, used by the connector          | No       | `hasura*`                                                      |
+| Environment Variable          | Description                                                                                                                                                                | Required | Example Value                                                  |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------- |
+| `ELASTICSEARCH_URL`           | The comma-separated list of Elasticsearch host addresses for connection (Use `local.hasura.dev` instead of `localhost` if your connector is running on your local machine) | Yes      | `https://example.es.gcp.cloud.es.io:9200`                      |
+| `ELASTICSEARCH_USERNAME`      | The username for authenticating to the Elasticsearch cluster                                                                                                               | Yes      | `admin`                                                        |
+| `ELASTICSEARCH_PASSWORD`      | The password for the Elasticsearch user account                                                                                                                            | Yes      | `default`                                                      |
+| `ELASTICSEARCH_API_KEY`       | The Elasticsearch API key for authenticating to the Elasticsearch cluster                                                                                                  | No       | `ABCzYWk0NEI0aDRxxxxxxxxxx1k6LWVQa2gxMUpRTUstbjNwTFIzbGoyUQ==` |
+| `ELASTICSEARCH_CA_CERT_PATH`  | The path to the Certificate Authority (CA) certificate for verifying the Elasticsearch server's SSL certificate                                                            | No       | `/etc/connector/cacert.pem`                                    |
+| `ELASTICSEARCH_INDEX_PATTERN` | The pattern for matching Elasticsearch indices, potentially including wildcards, used by the connector                                                                     | No       | `hasura*`                                                      |
 
-
-### 3. Introspect your indices
-
-```bash title="From the root of your project run:"
-ddn connector introspect --connector my_subgraph/connector/my_elastic/connector.yaml
-```
-
-If you look at the `configuration.json` for your connector, you'll see metadata describing your Elasticsearch mappings.
-
-### 4. Create the Hasura metadata
-
-```bash title="Run the following from the root of your project:"
-ddn connector-link add my_elastic --subgraph my_subgraph
-```
-
-The generated file has two environment variables — one for reads and one for writes — that you'll need to add to your
-subgraph's `.env.my_subgraph` file. Each key is prefixed by the subgraph name, an underscore, and the name of the
-connector. Ensure the port value matches what is published in your connector's docker compose file.
-
-```env title="my_subgraph/.env.my_subgraph"
-MY_SUBGRAPH_MY_ELASTIC_READ_URL=http://local.hasura.dev:8081
-MY_SUBGRAPH_MY_ELASTIC_WRITE_URL=http://local.hasura.dev:8081
-```
-
-### 5. Start the connector's docker compose
-
-Let's start our connector's docker compose file.
-
-```bash title="Run the following from the connector's subdirectory inside a subgraph:"
-docker compose -f docker-compose.my_elastic.yaml up
-```
-
-This starts our PostgreSQL connector on the specified port. We can navigate to the following address, with the port
-modified, to see the schema of our Elasticsearch data source:
+## Step 3: Introspect the connector
 
 ```bash
-http://localhost:8081/schema
+ddn connector introspect <connector-name>
 ```
 
-### 6. Include the connector in your docker compose
+This will generate a `configuration.json` file that will have the schema of your Elasticsearch DB.
 
-Kill the connector by pressing `CTRL+C` in the terminal tab in which the connector is running.
+## Step 4: Add your resources
 
-Then, add the following inclusion to the docker compose in your project's root directory, taking care to modify the
-subgraph's name.
-
-```yaml title="docker-compose.hasura.yaml"
-include:
-  - path: my_subgraph/connector/my_elastic/docker-compose.my_elastic.yaml
+```bash
+ddn connector-link add-resources <connector-name>
 ```
 
-Now, whenever running the following, you'll bring up the GraphQL engine, observability tools, and any connectors you've
-included:
-
-```bash title="From the root of your project, run:"
-HASURA_DDN_PAT=$(ddn auth print-pat) docker compose -f docker-compose.hasura.yaml watch
-```
-
-### 7. Update the new DataConnectorLink object
-
-Finally, now that our `DataConnectorLink` has the correct environment variables configured for the Elasticsearch connector,
-we can run the update command to have the CLI look at the configuration JSON and transform it to reflect our database's
-schema in `hml` format. In a new terminal tab, run:
-
-```bash title="From the root of your project, run:"
-ddn connector-link update my_elastic --subgraph my_subgraph
-```
-
-After this command runs, you can open your `my_subgraph/metadata/my_elastic.hml` file and see your metadata completely
-scaffolded out for you 🎉
-
-### 8. Import _all_ your indices
-
-You can do this in one convenience command.
-
-```bash title="From the root of your project, run:"
-ddn connector-link update my_elastic --subgraph my_subgraph --add-all-resources
-```
-
-### 9. Create a supergraph build
-
-Pass the `local` subcommand along with specifying the output directory as `./engine` in the root of the project. This
-directory is used by the docker-compose file to serve the engine locally:
-
-```bash title="From the root of your project, run:"
-ddn supergraph build local --output-dir ./engine
-```
-
-You can now navigate to
-[`https://console.hasura.io/local/graphql?url=http://localhost:3000`](https://console.hasura.io/local/graphql?url=http://localhost:3000)
-and interact with your API using the Hasura Console.
-
+This command will track all the indices in your Elasticsearch DB as [Models](https://hasura.io/docs/3.0/supergraph-modeling/models).
 
 ## Contributing
 
-Check out our [contributing guide](./docs/contributing.md) for more details.
+Check out our [contributing guide](https://github.com/hasura/ndc-elasticsearch/blob/main/docs/contributing.md) for more details.
 
 ## License
 
