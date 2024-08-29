@@ -19,6 +19,26 @@ jobs:
         with:
           fetch_depth: 1
 
+
+      - name: Check for PR approvals
+        id: check-approval
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: reviews } = await github.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            const approved = reviews.some(review => review.state === 'APPROVED');
+            return approved;
+
+      - name: Cancel if not approved
+        if: steps.check-approval.outputs.approved == 'false'
+        run: |
+          echo "The PR has not been approved. Cancelling the workflow."
+          exit 1  # This will exit the workflow early
+
       - name: Get all connector version package changes
         id: connector-version-changed-files
         uses: tj-actions/changed-files@v44
