@@ -91,7 +91,7 @@ APP_TURSO_WRITE_URL="http://local.hasura.dev:4362"
 
 If you are attaching to a local SQLite file, first make sure that the file is located inside the connector directory. For example, if you had a `data.sqlite` file you could place it at `/app/connector/turso/data.sqlite`. Files in the connector directory get mounted to `/etc/connector/`. 
 
-In this instance, you would set the `TURSO_URL=/etc/connector/data.sqlite` and leave the `TURSO_AUTH_TOKEN` as blank/null. Now your `.env` might look like this:
+In this instance, you would set the `TURSO_URL=file:/etc/connector/data.sqlite` and leave the `TURSO_AUTH_TOKEN` as blank/null. Now your `.env` might look like this:
 
 ```
 APP_TURSO_AUTHORIZATION_HEADER="Bearer QTJ7rl19SvKa0rwOZjYILQ=="
@@ -99,7 +99,7 @@ APP_TURSO_HASURA_SERVICE_TOKEN_SECRET="QTJ7rl19SvKa0rwOZjYILQ=="
 APP_TURSO_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://local.hasura.dev:4317"
 APP_TURSO_OTEL_SERVICE_NAME="app_turso"
 APP_TURSO_READ_URL="http://local.hasura.dev:4362"
-APP_TURSO_TURSO_URL="/etc/connector/data.sqlite"
+APP_TURSO_TURSO_URL="file:/etc/connector/data.sqlite"
 APP_TURSO_WRITE_URL="http://local.hasura.dev:4362"
 ```
 
