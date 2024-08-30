@@ -5,7 +5,7 @@
         "title":"Python Lambda Connector",
         "logo":"logo.svg",
         "tags":["lambda"],
-        "latest_version":"v0.0.45"
+        "latest_version":"v0.1.0"
     },
     "author":{
         "support_email":"support@hasura.io",
