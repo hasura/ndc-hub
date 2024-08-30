@@ -86,6 +86,22 @@ APP_DUCKDB_READ_URL="http://local.hasura.dev:7525"
 APP_DUCKDB_WRITE_URL="http://local.hasura.dev:7525"
 ```
 
+If you are attaching to a local DuckDB file, first make sure that the file is located inside the connector directory. For example, if you had a `data.duckdb` file you could place it at `/app/connector/duckdb/data.duckdb`. Files in the connector directory get mounted to `/etc/connector/`. 
+
+In this instance, you would set the `DUCKDB_URL=/etc/connector/data.duckdb`. Now your `.env` might look like this:
+
+```
+APP_DUCKDB_AUTHORIZATION_HEADER="Bearer SPHZWfL7P3Jdc9mDMF9ZNA=="
+APP_DUCKDB_DUCKDB_URL="/etc/connector/data.duckdb"
+APP_DUCKDB_HASURA_SERVICE_TOKEN_SECRET="SPHZWfL7P3Jdc9mDMF9ZNA=="
+APP_DUCKDB_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://local.hasura.dev:4317"
+APP_DUCKDB_OTEL_SERVICE_NAME="app_duckdb"
+APP_DUCKDB_READ_URL="http://local.hasura.dev:7525"
+APP_DUCKDB_WRITE_URL="http://local.hasura.dev:7525"
+```
+
+Your experience mounting files may vary, and while useful to explore a file locally, it's not recommended to attempt to deploy a connector using a locally mounted file.
+
 ### Step 3: Introspect the connector
 
 Introspecting the connector will generate a `config.json` file and a `duckdb.hml` file.
