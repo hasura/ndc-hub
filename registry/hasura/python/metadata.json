@@ -12,8 +12,8 @@
         "homepage":"https://hasura.io",
         "name":"Hasura"
     },
-    "is_verified":false,
-    "is_hosted_by_hasura":false,
+    "is_verified":true,
+    "is_hosted_by_hasura":true,
     "source_code":{
         "is_open_source":true,
         "repository":"https://github.com/hasura/ndc-python-lambda",
