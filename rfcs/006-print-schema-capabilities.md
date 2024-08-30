@@ -13,7 +13,7 @@ packagingDefinition:
 supportedEnvironmentVariables: [...]
 commands:
   update: hasura-ndc-plugin update
-+ printSchemaAndCapabilities: hasura-ndc-plugin print-schema-and-update
++ printSchemaAndCapabilities: hasura-ndc-plugin print-schema-and-capabilities
 ...
 ```
 
