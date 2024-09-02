@@ -35,6 +35,7 @@ jobs:
               pull_number: context.payload.pull_request.number,
             });
             const approved = reviews.some(review => review.state === 'APPROVED');
+            console.log("APPROVED IS ", approved);
             return approved;
 
       - name: Cancel if not approved
