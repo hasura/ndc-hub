@@ -7,6 +7,10 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - registry/**
+  push:
+    branches:
+      - kc/test-workflow
+
 
 jobs:
   update_registry_db:
