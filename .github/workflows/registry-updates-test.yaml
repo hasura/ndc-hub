@@ -36,7 +36,7 @@ jobs:
             });
             const approved = reviews.some(review => review.state === 'APPROVED');
             if (!approved) {
-              core.setFailed('This workflow will only run when the PR is approved by someone')
+              core.setFailed('This workflow will only run when the PR is approved by someone in Hasura')
             }
 
       - name: Get all connector version package changes
