@@ -21,6 +21,11 @@ jobs:
         with:
           fetch_depth: 1
 
+      - name: check for PR approval 1
+        run: |
+          echo "PR IS approved: ${{ github.event.review_state }}"
+
+
 
       - name: Check for PR approvals
         id: check-approval
