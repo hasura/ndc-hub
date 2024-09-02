@@ -140,6 +140,7 @@ You can now navigate to
 [`https://console.hasura.io/local/graphql?url=http://localhost:3000`](https://console.hasura.io/local/graphql?url=http://localhost:3000)
 and interact with your API using the Hasura Console.
 
+
 ## Contributing
 
 We're happy to receive any contributions from the community. Please refer to our [development guide](https://github.com/hasura/ndc-azure-cosmos-connector/blob/main/docs/development.md).
