@@ -4,6 +4,7 @@ on:
   pull_request_target:
     branches:
       - main
+      - kc/run-workflow-on-forked-prs
     types: [opened, synchronize, reopened]
     paths:
       - registry/**
@@ -11,7 +12,7 @@ on:
 jobs:
   update_registry_db:
     runs-on: ubuntu-latest
-    environment: staging
+    environment: test
 
     steps:
       - name: Checkout repository
