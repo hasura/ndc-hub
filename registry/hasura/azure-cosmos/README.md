@@ -147,3 +147,5 @@ We're happy to receive any contributions from the community. Please refer to our
 ## License
 
 The Hasura Azure Cosmos DB for NoSQL connector is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+blah
