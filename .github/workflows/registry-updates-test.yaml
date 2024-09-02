@@ -39,7 +39,7 @@ jobs:
             return approved;
 
       - name: Cancel if not approved
-        if: ${{ steps.check-approval.outputs.approved == "false" }}
+        if: steps.check-approval.outputs.approved == "false"
         run: |
           echo "************ check-approval {{ steps.check-approval.outputs.approved }}"
           echo "The PR has not been approved. Cancelling the workflow."
