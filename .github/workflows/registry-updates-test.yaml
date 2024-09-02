@@ -26,6 +26,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const core = require('@actions/core');
             const { owner, repo } = context.issue;
             const pull_number = context.payload.pull_request.number;
             console.log("Owner and repo and pull_number", owner, repo, pull_number);
@@ -35,15 +36,9 @@ jobs:
               pull_number: context.payload.pull_request.number,
             });
             const approved = reviews.some(review => review.state === 'APPROVED');
-            console.log("APPROVED IS ", approved);
-            return approved;
-
-      - name: Cancel if not approved
-        if: steps.check-approval.outputs.approved == "false"
-        run: |
-          echo "************ check-approval {{ steps.check-approval.outputs.approved }}"
-          echo "The PR has not been approved. Cancelling the workflow."
-          exit 1  # This will exit the workflow early
+            if (!approved) {
+              core.setFailed('This workflow will only run when the PR is approved by someone')
+            }
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
