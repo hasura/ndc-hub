@@ -16,11 +16,6 @@ jobs:
     environment: staging
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch_depth: 1
-
       - name: check for PR approval 1
         run: |
           echo "PR IS approved: ${{ github.event.review_state }}"
@@ -42,6 +37,12 @@ jobs:
             });
             const approved = reviews.some(review => review.state === 'APPROVED');
             return approved;
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch_depth: 1
+
 
       - name: Cancel if not approved
         if: steps.check-approval.outputs.approved == 'false'
