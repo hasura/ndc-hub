@@ -17,7 +17,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          fetch_depth: 1
+          # In the case of forked PRs, the forked repository will
+          # be checked out.
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          fetch-depth: 1
 
       - name: Check for PR approvals
         id: check-approval
