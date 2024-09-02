@@ -1,0 +1,33 @@
+{
+    "overview":{
+        "namespace":"hasura",
+        "description":"The Python Lambda Connector allows you to expose Python functions as NDC functions/procedures for use in your Hasura DDN subgraphs.",
+        "title":"Python Lambda Connector",
+        "logo":"logo.svg",
+        "tags":["lambda"],
+        "latest_version":"v0.1.0"
+    },
+    "author":{
+        "support_email":"support@hasura.io",
+        "homepage":"https://hasura.io",
+        "name":"Hasura"
+    },
+    "is_verified":false,
+    "is_hosted_by_hasura":false,
+    "source_code":{
+        "is_open_source":true,
+        "repository":"https://github.com/hasura/ndc-python-lambda",
+        "version":[
+            {
+                "tag":"v0.0.45",
+                "hash":"76a3d43d8ccf990b14812d9c0c354c4320b810f6",
+                "is_verified": false
+            },
+            {
+                "tag":"v0.1.0",
+                "hash":"6f83afe355a60bd9677536e1bb13b212dca5460a",
+                "is_verified": false
+            }
+        ]
+    }
+}
