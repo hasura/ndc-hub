@@ -34,7 +34,7 @@ jobs:
           script: |
             const { owner, repo } = context.issue;
             const pull_number = context.payload.pull_request.number;
-            console.log("Github pulls", JSON.stringify(github.pulls, null, 2));
+            console.log("Owner and repo and pull_number", owner, repo, pull_number);
             const { data: reviews } = await github.pulls.listReviews({
               owner: context.repo.owner,
               repo: context.repo.repo,
