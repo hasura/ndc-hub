@@ -4,7 +4,7 @@
 > This RFC builds upon the concepts defined in [add documentation page to packaging spec](./0007-packaging-documentation-page.md)
 
 Some environment variables are mandatory for certain connectors. These connectors may make a distinction
-between the environment variable not being set and being set as an empty string. 
+between the environment variable not being set and being set as an empty string.
 
 If a user provides an empty string as value for an environment variable during `ddn connector init -i`, the
 CLI does not include these variables in the environment variable mapping or the .env file. As a result, for
@@ -17,7 +17,7 @@ This RFC aims to improve the user experience by eliminating the need for this ma
 
 ## Solution
 
-This RFC proposes introducing a new optional field called `required` to indicate that an environment variable is mandatory. This way even if its value is empty, the CLI will still add it to the environment variable mapping and to the 
+This RFC proposes introducing a new optional field called `required` to indicate that an environment variable is mandatory. This way even if its value is empty, the CLI will still add it to the environment variable mapping and to the
 .env file as an empty string so that the user does not have to do it manually.
 
 
