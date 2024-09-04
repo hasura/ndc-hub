@@ -1,0 +1,35 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The Hasura SingleStore Connector enables you to connect to a SingleStore database and gives instant access to a GraphQL API on top of your data.",
+    "title": "SingleStore Data Connector",
+    "logo": "logo.png",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.0.2"
+  },
+  "author": {
+    "support_email": "integrations@singlestore.com",
+    "homepage": "https://www.singlestore.com/",
+    "name": "SingleStore"
+  },
+  "is_verified": false,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/singlestore-labs/singlestore-hasura-connector/",
+    "version": [
+      {
+        "tag": "v0.0.1",
+        "hash": "a9caa889c13a251040003c0934c7e67fccfd7de4",
+        "is_verified": false
+      },
+      {
+        "tag": "v0.0.2",
+        "hash": "2afe3150215fbd6bf8a93ee6f853ad232e5d101d",
+        "is_verified": false
+      }
+    ]
+  }
+}
