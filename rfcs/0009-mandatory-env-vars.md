@@ -7,8 +7,8 @@ Some environment variables are mandatory for certain connectors. These connector
 between the environment variable not being set and being set as an empty string.
 
 If a user provides an empty string as value for an environment variable during `ddn connector init -i`, the
-CLI does not include these variables in the environment variable mapping or the .env file. As a result, for
-required environment variables, users must manually add them as empty strings for the connector to function correctly.
+CLI does not include these variables in the environment variable mapping or the .env file. Now, users must manually
+add the environment variables to .env and the mapping for the connector to function correctly.
 
 The CLI does not currently have a way to distinguish between optional environment variables where an empty value
 should be ignored and a required environment variable where an empty value must still be written as an empty string.
@@ -17,8 +17,28 @@ This RFC aims to improve the user experience by eliminating the need for this ma
 
 ## Solution
 
-This RFC proposes introducing a new optional field called `required` to indicate that an environment variable is mandatory. This way even if its value is empty, the CLI will still add it to the environment variable mapping and to the
+This RFC proposes introducing a new optional field called `required` to indicate that an environment variable is mandatory. This way, if a user provides an empty value, the CLI will still add it to the environment variable mapping and to the
 .env file as an empty string so that the user does not have to do it manually.
+
+Tooling behaviour is described in the table below.
+
+Do we write the env var to .env files? YES/NO
+
+| defaultValue/requiredFlag | true                                                                                                                                | false\|undefined                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Non empty string          | YES                                                                                                                                 | YES (discouraged: tooling always writes defaultValues even for not required env vars) |
+| Empty string              | YES                                                                                                                                 | NO (discouraged: inconsistent behaviour) (backward compatible behaviour)           |
+| undefined                 | YES (discouraged: should provide a defaultValue for required flags) (write user provided string or write empty string by default) | NO                                                                                     |
+
+Recommendation for connector authors:
+- If the env var should be written to .env files
+   - Mark env vars as required
+   - Provide default values for these env vars, even if it an empty string
+- If it is not to be written to .env files
+   - Don't mark env vars as required
+   - Don't provide any default value
+(discouraged) means that the flag combination provided by the connector author is discouraged, but still has well defined behaviour
+
 
 
 ## `connector-metadata.yaml` types
