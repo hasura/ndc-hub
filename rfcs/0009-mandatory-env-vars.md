@@ -15,7 +15,7 @@ This RFC aims to improve the user experience by eliminating the need for this ma
 
 We propose adding a new optional field, `required`, to specify that an environment variable is mandatory. If this field is set, the CLI will include the environment variable in the mapping and `.env` file even if the user provides an empty string.
 
-The table below describes whether the tooling writes the environment variable to the .env files or not based on the `defaultValue` and `required` fields:
+The table below describes whether or not the tooling writes the environment variable to the .env files based on the `defaultValue` and `required` fields:
 
 | defaultValue/required | true                                                                                                                                | false\|undefined                                                                       |
 |---------------------------|-------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
