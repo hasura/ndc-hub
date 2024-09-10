@@ -1,0 +1,30 @@
+{
+    "overview": {
+	"namespace": "hasura",
+	"description": "The Calcite Native Data Connector allows for connecting to a Calcite instance giving you an instant GraphQL API on top of your Calcite data.",
+	"title": "Calcite Native Data Connector",
+	"logo": "logo.svg",
+	"tags": [
+	    "database"
+	],
+	"latest_version": "v0.6.5"
+    },
+    "author": {
+	"support_email": "support@hasura.io",
+	"homepage": "https://hasura.io",
+	"name": "Hasura"
+    },
+    "is_verified": true,
+    "is_hosted_by_hasura": false,
+    "source_code": {
+	"is_open_source": true,
+	"repository": "https://github.com/hasura/ndc-calcite/",
+	"version": [
+	    {
+		"tag": "v0.6.5",
+		"hash": "d8f082edf359eb530340586e3cf02136644defb3",
+		"is_verified": true
+	    }
+	]
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "version": "0.6.5",
+    "uri": "https://github.com/hasura/ndc-calcite/releases/download/v0.6.5/connector-definition.tgz",
+    "checksum": {
+	"type": "sha256",
+	"value": "8ed69bad57e86ce49ab6efb29581c8bfd876f818efd1d5604b7b9cc81d9101fe"
+    },
+    "source": {
+	"hash": "d8f082edf359eb530340586e3cf02136644defb3"
+    }
+}
