@@ -1,6 +1,6 @@
 # SQL Server Connector
 
-[![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/getting-started/overview/)
+[![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0)
 [![ndc-hub](https://img.shields.io/badge/ndc--hub-sqlserver-blue.svg?style=flat)](https://hasura.io/connectors/sqlserver)
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg?style=flat)](./readme.md)
@@ -14,8 +14,8 @@ thereby enhancing query optimization and performance.
 This connector is built using the [Rust Data Connector SDK](https://github.com/hasura/ndc-hub#rusk-sdk) and implements
 the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 
-- [Connector information in the Hasura Hub](https://hasura.io/connectors/sqlserver)
-- [Hasura V3 Documentation](https://hasura.io/docs/3.0)
+- [See the listing in the Hasura Hub](https://hasura.io/connectors/sqlserver)
+- [Hasura V3 Documentation](https://hasura.io/docs/3.0/)
 
 ## Features
 
@@ -33,8 +33,9 @@ Below, you'll find a matrix of all supported features for the SQL Server connect
 | Table Relationships             | ✅        |                                      |
 | Views                           | ✅        |                                      |
 | Remote Relationships            | ✅        |                                      |
+| Stored Procedures               | ✅        |                                      |
 | Custom Fields                   | ❌        |                                      |
-| Mutations                       | ✅        | Only native mutations are suppported |
+| Mutations                       | ❌        | Only native mutations are suppported |
 | Distinct                        | ✅        |                                      |
 | Enums                           | ❌        |                                      |
 | Naming Conventions              | ❌        |                                      |
@@ -44,113 +45,66 @@ Below, you'll find a matrix of all supported features for the SQL Server connect
 ## Before you get Started
 
 1. Create a [Hasura Cloud account](https://console.hasura.io)
-2. Install the [CLI](https://hasura.io/docs/3.0/cli/installation/)
-3. Install the [Hasura VS Code extension](https://marketplace.visualstudio.com/items?itemName=HasuraHQ.hasura)
-4. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
-5. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
+2. Please ensure you have the [DDN CLI](https://hasura.io/docs/3.0/cli/installation) and [Docker](https://docs.docker.com/engine/install/) installed
+3. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
+4. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
 
-## Using the connector
+The steps below explain how to Initialize and configure a connector for local development. You can learn how to deploy a
+connector — after it's been configured — [here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
 
-To use the SQL Server connector, follow these steps in a Hasura project:
-(Note: for more information on the following steps, please refer to the Postgres connector documentation [here](https://hasura.io/docs/3.0/getting-started/connect-to-data/connect-a-source))
+## Using the SQL Server connector
 
-### 1. Init the connector
-(Note: here and following we are naming the subgraph "my_subgraph" and the connector "ms_sql")
+### Step 1: Authenticate your CLI session
 
-   ```bash
-   ddn connector init ms_sql --subgraph my_subgraph/subgraph.yaml --hub-connector hasura/sqlserver --configure-port 8081 --add-to-compose-file compose.yaml
-   ```
-
-### 2. Add your SQLServer credentials
-
-Add your credentials to `my_subgraph/connector/ms_sql/.env.local`
-
-```env title="my_subgraph/connector/ms_sql/.env.local"
-OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://local.hasura.dev:4317
-OTEL_SERVICE_NAME=my_subgraph_ms_sql
-CONNECTION_URI=<YOUR_SQLSERVER_URL>
+```bash
+ddn auth login
 ```
 
-### 3. Introspect your Database
+### Step 2: Configure the connector
 
-From the root of your project run:
+Once you have an initialized supergraph and subgraph, run the initialization command in interactive mode while
+providing a name for the connector in the prompt:
 
-```bash title="From the root of your project run:"
-ddn connector introspect --connector my_subgraph/connector/ms_sql/connector.local.yaml
+```bash
+ddn connector init <connector-name> -i
 ```
 
-If you look at the `configuration.json` for your connector, you'll see metadata describing your SQL Server mappings.
+#### Step 2.1: Choose the `hasura/sqlserver` from the list
 
-### 4. Restart the services
+#### Step 2.2: Choose a port for the connector
 
-Let's restart the docker compose services. Run the folowing from the root of your project:
+The CLI will ask for a specific port to run the connector on. Choose a port that is not already in use or use the
+default suggested port.
 
-```bash title="From the root of your project run:"
-HASURA_DDN_PAT=$(ddn auth print-pat) docker compose up --build --watch
+#### Step 2.3: Provide the env vars for the connector
+
+| Name           | Description                                      | Required | Default |
+|----------------|--------------------------------------------------|----------|---------|
+| CONNECTION_URI | The connection string of the SQL Server database | Yes      | N/A     |
+
+## Step 3: Introspect the connector
+
+```bash
+ddn connector introspect <connector-name>
 ```
 
-### 5. Create the Hasura metadata
+This will generate a `configuration.json` file that will have the schema of your SQL Server database.
 
-In a new terminal tab from your project's root directory run:
+## Step 4: Add your resources
 
-```bash title="Run the following from the root of your project:"
-ddn connector-link add ms_sql --subgraph my_subgraph/subgraph.yaml --configure-host http://local.hasura.dev:8081 --target-env-file my_subgraph/.env.my_subgraph.local
+```bash
+ddn connector-link add-resources <connector-name>
 ```
 
-The above step will add the following env vars to the `.env.my_subgraph.local` file.
-
-```env title="my_subgraph/.env.my_subgraph.local"
-MY_SUBGRAPH_MS_SQL_READ_URL=http://local.hasura.dev:8081
-MY_SUBGRAPH_MS_SQL_WRITE_URL=http://local.hasura.dev:8081
-```
-
-The generated file has two environment variables — one for reads and one for writes.
-Each key is prefixed by the subgraph name, an underscore, and the name of the
-connector.
-
-### 6. Update the new DataConnectorLink object
-
-Finally, now that our `DataConnectorLink` has the correct environment variables configured for the SQL Server connector,
-we can run the update command to have the CLI look at the configuration JSON and transform it to reflect our database's
-schema in `hml` format. From your project's root directory, run:
-
-```bash title="From the root of your project, run:"
-ddn connector-link update ms_sql --subgraph my_subgraph/subgraph.yaml --env-file my_subgraph/.env.my_subgraph.local
-```
-
-After this command runs, you can open your `my_subgraph/metadata/ms_sql.hml` file and see your metadata completely
-scaffolded out for you 🎉
-
-The schema of the database can be viewed at http://localhost:8081/schema.
-
-### 7. Import _all_ your indices
-
-You can do this with just one command. From your project's root directory, run:
-
-```bash title="From the root of your project, run:"
-ddn connector-link update ms_sql --subgraph my_subgraph/subgraph.yaml --env-file my_subgraph/.env.my_subgraph.local --add-all-resources
-```
-
-### 8. Create a supergraph build
-
-Pass the `local` subcommand along with specifying the output directory as `./engine` in the root of the project. This
-directory is used by the docker-compose file to serve the engine locally. From your project's root directory, run:
-
-```bash title="From the root of your project, run:"
-ddn supergraph build local --output-dir ./engine --subgraph-env-file my_subgraph:my_subgraph/.env.my_subgraph.local
-```
-
-You can now navigate to
-[`https://console.hasura.io/local/graphql?url=http://localhost:3000`](https://console.hasura.io/local/graphql?url=http://localhost:3000)
-and interact with your API using the Hasura Console.
+This command will track all the containers in your SQL Server DB as [Models](https://hasura.io/docs/3.0/supergraph-modeling/models).
 
 ## Documentation
 
-View the full documentation for the ndc-sqlserver connector [here](https://github.com/hasura/ndc-sqlserver/blob/main/docs/readme.md).
+View the full documentation for the ndc-sqlserver connector [here](./docs/readme.md).
 
 ## Contributing
 
-We're happy to receive any contributions from the community. Please refer to our [development guide](https://github.com/hasura/ndc-sqlserver/blob/main/docs/development.md).
+We're happy to receive any contributions from the community. Please refer to our [development guide](./docs/development.md).
 
 ## License
 
