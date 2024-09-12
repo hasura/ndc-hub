@@ -1,11 +1,11 @@
 {
     "version": "1.0.0",
-    "uri": "https://drive.google.com/file/d/18egOHipjj6tLpY31-wpY5-jq0B4VMzbt/view?usp=sharing",
+    "uri": "https://github.com/hasura/ndc-cassandra/releases/download/v1.0.0/connector-definition.tgz",
     "checksum": {
 	"type": "sha256",
-	"value": "8ed69bad57e86ce49ab6efb29581c8bfd876f818efd1d5604b7b9cc81d9101fe"
+	"value": "a1375bffffb8bbe77b80f42cbdeeab6697717355c92810fefb93d18f8f7f8f6c"
     },
     "source": {
-	"hash": "d8f082edf359eb530340586e3cf02136644defb3"
+	"hash": "d24a7b7c25026ffaf9aad48a6c29d47003c0c03a"
     }
 }
