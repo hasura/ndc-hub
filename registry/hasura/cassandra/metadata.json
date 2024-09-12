@@ -21,8 +21,8 @@
 	"repository": "https://github.com/hasura/ndc-cassandra/",
 	"version": [
 	    {
-		"tag": "v0.6.5",
-		"hash": "d8f082edf359eb530340586e3cf02136644defb3",
+		"tag": "v1.0.0",
+		"hash": "d24a7b7c25026ffaf9aad48a6c29d47003c0c03a",
 		"is_verified": true
 	    }
 	]
