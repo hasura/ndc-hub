@@ -3,7 +3,7 @@
 	"namespace": "hasura",
 	"description": "The Cassandra Native Data Connector allows for connecting to a Cassandra instance giving you an instant GraphQL API on top of your Cassandra data.",
 	"title": "Cassandra Native Data Connector",
-	"logo": "logo-white-r.png",
+	"logo": "logo.png",
 	"tags": [
 	    "database"
 	],
