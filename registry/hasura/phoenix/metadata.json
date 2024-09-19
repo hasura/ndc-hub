@@ -1,0 +1,43 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to an Apache Phoenix database and expose it to Hasura v3 Project",
+    "title": "Apache Phoenix Connector",
+    "logo": "logo.png",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.0.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "packages": [
+    {
+      "version": "1.0.0",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/phoenix%2Fv1.0.0/package.tar.gz",
+      "checksum": {
+          "type": "sha256",
+          "value": "6875748c433e772da7603e3b4fd0798b4c2321a4"
+      },
+      "source": {
+          "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
+      }
+    }  
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-jvm-mono",
+    "version": [
+      {
+        "tag": "phoenix/v1.0.0",
+        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e",
+        "is_verified": true
+      }
+    ]
+  }
+}
