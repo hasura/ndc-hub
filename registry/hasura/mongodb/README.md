@@ -10,7 +10,7 @@ The connector implements the [NDC Specification](https://hasura.github.io/ndc-sp
 but does not currently support mutations, column relationship arguments in queries, functions or procedures.
 
 Visit the
-[Hasura v3 Documentation](https://hasura.io/docs/3.0/native-data-connectors/mongodb) 
+[Hasura v3 Documentation](https://hasura.io/docs/3.0/connectors/mongodb/) 
 for more information.
 
 ## Usage
