@@ -15,3 +15,8 @@ See the README file in the boilerplate which is generated from [this template](h
 | ---------- | ----------- |
 | 1.21+      | v1.x        |
 | 1.19+      | v0.x        |
+
+## More Information
+
+- [Hasura DDN Documentation](https://hasura.io/docs/3.0/business-logic/go)
+- [GitHub Repository](https://github.com/hasura/ndc-sdk-go/tree/main/cmd/hasura-ndc-go)
