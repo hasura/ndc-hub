@@ -95,7 +95,7 @@ This will generate a `configuration.json` file that will have the schema of your
 ## Step 4: Add your resources
 
 ```bash
-ddn connector-link add-resources <connector-name>
+ddn model add <connector-name> '*'
 ```
 
 This command will track all the containers in your BigQuery DB as [Models](https://hasura.io/docs/3.0/supergraph-modeling/models).
