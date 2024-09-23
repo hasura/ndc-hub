@@ -35,63 +35,25 @@ Docs for the OpenAPI data connector:
 | PUT          | ✅    | ✅   | ✅   | ✅      |
 | PATCH        | ✅    | ✅   | ✅   | ✅      |
 
-## Before you get Started
+## Prerequisites
 
 1. Create a [Hasura Cloud account](https://console.hasura.io)
 2. Please ensure you have the [DDN CLI](https://hasura.io/docs/3.0/cli/installation) and [Docker](https://docs.docker.com/engine/install/) installed
 3. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
 4. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
-5. If you want to make changes to the generated Typescript files, please ensure you have Node.js v20+ installed
 
-## Using the OpenAPI connector
+The steps below explain how to initialize and configure a connector for local development. You can learn how to deploy a
+connector — after it's been configured — [here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
 
-### Step 1: Authenticate your CLI session
+## Using the OpenAPI Lambda connector
 
-```bash
-ddn auth login
-```
-
-### Step 2: Configure the connector
-
-Once you have an initialized supergraph and subgraph, run the initialization command in interactive mode while
-providing a name for the connector in the prompt:
-
-```bash
-ddn connector init <connector-name> -i
-```
-
-#### Step 2.1: Choose `hasura/openapi` from the list
-
-#### Step 2.2: Choose a port for the connector
-
-The CLI will ask for a specific port to run the connector on. Choose a port that is not already in use or use the
-default suggested port.
-
-#### Step 2.3: Provide the env vars required for the connector
-
-Environment variables that can be used to configure the connector are listed under [Supported Environment Variables](https://github.com/hasura/ndc-open-api-lambda/blob/main/docs/documentation.md#supported-environment-variables).
-
-## Step 3: Introspect the connector
-
-```bash
-ddn connector introspect <connector-name>
-```
-
-This will generate the required metadata and TypeScript files.
-
-## Step 4: Add your resources
-
-```bash
-ddn connector-link add-resources <connector-name>
-```
-
-This command will track all the API endpoints in your OpenAPI Document as [Commands](https://hasura.io/docs/3.0/supergraph-modeling/commands/).
+Check out the [Hasura docs here](https://hasura.io/docs/3.0/getting-started/build/connect-to-data/connect-a-source?db=OpenAPI) to get started with the OpenAPI Lambda connector.
 
 ## Saving User Changes
 
 Please refer to [Saving User Changes](https://github.com/hasura/ndc-open-api-lambda/blob/main/docs/documentation.md#saving-user-changes).
 
-## Known Limiations
+## Known Limitations
 
 - Support for [Relaxed Types](https://github.com/hasura/ndc-nodejs-lambda/tree/main?tab=readme-ov-file#relaxed-types) is a WiP.
 - [Types not supported by the NodeJS Lambda Connector](https://github.com/hasura/ndc-nodejs-lambda?tab=readme-ov-file#unsupported-types) are not supported.
