@@ -4,10 +4,13 @@ How does a user upgrade across connector versions? For example: from postgres v0
 
 ## Solution
 
-`ddn connector upgrade --connector <path-to-connector.yaml>` will
+`ddn connector upgrade --connector <path-to-connector.yaml> [--version <hub-version>]` will
+- upgrade the connector to the specified version or to the latest version
 - upgrade the connector.yaml and compose.yaml files in place
 - atomically replace the .hasura-connector folder
 - call a new plugin command `upgradeConfiguration`
+
+The target version must be greater than the current version.
 
 The plugin command is expected to perform any connector specific upgrades to the connector configuration.
 
@@ -18,7 +21,6 @@ Should upgrade the context directory in place. The user is expected to use a ver
 Note: connectors should capture the configuration version as a part of the configuration.
 
 Do not rely on the following files: connector.yaml, compose.yaml. Connectors must modify only files that the connector itself owns.
-
 
 ## `connector-metadata.yaml` types
 
