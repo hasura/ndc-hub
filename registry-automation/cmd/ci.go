@@ -92,6 +92,34 @@ const (
 	PrebuiltDockerImage = "PrebuiltDockerImage"
 )
 
+// Type to represent the metadata.json file
+type ConnectorMetadata struct {
+	Overview struct {
+		Namespace     string   `json:"namespace"`
+		Description   string   `json:"description"`
+		Title         string   `json:"title"`
+		Logo          string   `json:"logo"`
+		Tags          []string `json:"tags"`
+		LatestVersion string   `json:"latest_version"`
+	} `json:"overview"`
+	Author struct {
+		SupportEmail string `json:"support_email"`
+		Homepage     string `json:"homepage"`
+		Name         string `json:"name"`
+	} `json:"author"`
+
+	IsVerified         bool `json:"is_verified"`
+	IsHostedByHasura   bool `json:"is_hosted_by_hasura"`
+	HasuraHubConnector struct {
+		Namespace string `json:"namespace"`
+		Name      string `json:"name"`
+	} `json:"hasura_hub_connector"`
+	SourceCode struct {
+		IsOpenSource bool   `json:"is_open_source"`
+		Repository   string `json:"repository"`
+	} `json:"source_code"`
+}
+
 // Make a struct with the fields expected in the command line arguments
 type ConnectorRegistryArgs struct {
 	ChangedFilesPath         string
@@ -168,25 +196,96 @@ func buildContext() {
 
 }
 
+type NewConnector struct {
+	// Name of the connector, e.g. "mongodb"
+	Name string
+	// Namespace of the connector, e.g. "hasura"
+	Namespace string
+}
+
+type MetadataFile string
+
+type NewConnectors map[NewConnector]MetadataFile
+
+type ProcessedChangedFiles struct {
+	NewConnectorVersions NewConnectorVersions
+	ModifiedLogos        ModifiedLogos
+	ModifiedReadmes      ModifiedReadmes
+	NewConnectors        NewConnectors
+	NewLogos             NewLogos
+	NewReadmes           NewReadmes
+}
+
 // processChangedFiles processes the files in the PR and extracts the connector name and version
 // This function checks for the following things:
 // 1. If a new connector version is added, it adds the connector version to the `newlyAddedConnectorVersions` map.
 // 2. If the logo file is modified, it adds the connector name and the path to the modified logo to the `modifiedLogos` map.
 // 3. If the README file is modified, it adds the connector name and the path to the modified README to the `modifiedReadmes` map.
-func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
+func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 
 	newlyAddedConnectorVersions := make(map[Connector]map[string]string)
 	modifiedLogos := make(map[Connector]string)
 	modifiedReadmes := make(map[Connector]string)
+	newConnectors := make(map[NewConnector]MetadataFile)
+	newLogos := make(map[Connector]string)
+	newReadmes := make(map[Connector]string)
 
 	var connectorVersionPackageRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/releases/([^/]+)/connector-packaging\.json$`)
 	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/logo\.(png|svg)$`)
 	var readmeMdRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/README\.md$`)
+	var connectorMetadataRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/metadata.json$`)
 
 	for _, file := range changedFiles.Added {
 
-		// Check if the file is a connector version package
-		if connectorVersionPackageRegex.MatchString(file) {
+		if connectorMetadataRegex.MatchString(file) {
+			// Process the metadata file
+			// print the name of the connector and the version
+			matches := connectorMetadataRegex.FindStringSubmatch(file)
+			if len(matches) == 3 {
+				connectorNamespace := matches[1]
+				connectorName := matches[2]
+				connector := NewConnector{
+					Name:      connectorName,
+					Namespace: connectorNamespace,
+				}
+				newConnectors[connector] = MetadataFile(file)
+				fmt.Printf("Processing metadata file for connector: %s\n", connectorName)
+			}
+		} else if logoPngRegex.MatchString(file) {
+			// Process the logo file
+			// print the name of the connector and the version
+			matches := logoPngRegex.FindStringSubmatch(file)
+			if len(matches) == 4 {
+
+				connectorNamespace := matches[1]
+				connectorName := matches[2]
+				connector := Connector{
+					Name:      connectorName,
+					Namespace: connectorNamespace,
+				}
+				newLogos[connector] = file
+				fmt.Printf("Processing logo file for connector: %s\n", connectorName)
+			}
+
+		} else if readmeMdRegex.MatchString(file) {
+			// Process the README file
+			// print the name of the connector and the version
+			matches := readmeMdRegex.FindStringSubmatch(file)
+
+			if len(matches) == 3 {
+
+				connectorNamespace := matches[1]
+				connectorName := matches[2]
+				connector := Connector{
+					Name:      connectorName,
+					Namespace: connectorNamespace,
+				}
+
+				newReadmes[connector] = file
+
+				fmt.Printf("Processing README file for connector: %s\n", connectorName)
+			}
+		} else if connectorVersionPackageRegex.MatchString(file) {
 
 			matches := connectorVersionPackageRegex.FindStringSubmatch(file)
 			if len(matches) == 4 {
@@ -253,7 +352,88 @@ func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, Modif
 
 	}
 
-	return newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes
+	return ProcessedChangedFiles{
+		NewConnectorVersions: newlyAddedConnectorVersions,
+		ModifiedLogos:        modifiedLogos,
+		ModifiedReadmes:      modifiedReadmes,
+		NewConnectors:        newConnectors,
+		NewLogos:             newLogos,
+		NewReadmes:           newReadmes,
+	}
+
+}
+
+func processNewConnector(client *storage.Client, connector NewConnector, metadataFile MetadataFile) {
+	// Process the newly added connector
+	// Get the string value from metadataFile
+
+	connectorMetadata, err := readJSONFile[ConnectorMetadata](string(metadataFile))
+	if err != nil {
+		log.Fatalf("Failed to parse the connector metadata file: %v", err)
+	}
+
+	// Check if the connector already exists in the registry
+	connectorInfo, err := getConnectorInfoFromRegistry(connector.Name, connector.Namespace)
+	if err != nil {
+		log.Fatalf("Failed to get the connector info from the registry: %v", err)
+	}
+
+	if len(connectorInfo.HubRegistryConnector) > 0 {
+		log.Fatalf("Attempting to create a new hub connector, but the connector already exists in the registry: %s/%s", connector.Namespace, connector.Name)
+	}
+
+	// Insert the connector in the registry
+	err = insertConnectorInRegistry(connectorMetadata)
+	if err != nil {
+		log.Fatalf("Failed to insert the connector in the registry: %v", err)
+	}
+
+}
+
+type HubRegistryConnectorInsertInput struct {
+	Name      string `json:"name"`
+	Title     string `json:"title"`
+	Namespace string `json:"namespace"`
+}
+
+func insertConnectorInRegistry(connectorMetadata ConnectorMetadata, connector NewConnector) error {
+	var respData map[string]interface{}
+	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
+	ctx := context.Background()
+
+	// This if condition checks if the hub connector in the metadata file is the same as the connector in the PR, if yes, we proceed to
+	// insert it as a hub connector in the registry. If the value is not the same, it means that the current connector is just an alias
+	// to an existing connector in the registry and we skip inserting it as a new hub connector in the registry. Example: `postgres-cosmos` is
+	// just an alias to the `postgres` connector in the registry.
+	if (connectorMetadata.HasuraHubConnector.Namespace == connector.Namespace) && (connectorMetadata.HasuraHubConnector.Name == connector.Name) {
+
+		req := graphql.NewRequest(`
+mutation InsertHubRegistryConnector ($connector:hub_registry_connector_insert_input!){
+  insert_hub_registry_connector_one(object: $connector) {
+    name
+    title
+  }
+}`)
+		hubRegistryConnectorInsertInput := HubRegistryConnectorInsertInput{
+			Name:      connector.Name,
+			Title:     connectorMetadata.Overview.Title,
+			Namespace: connector.Namespace,
+		}
+
+		req.Var("connector", hubRegistryConnectorInsertInput)
+		req.Header.Set("x-hasura-role", "connector_publishing_automation")
+		req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
+
+		// Execute the GraphQL query and check the response.
+		if err := client.Run(ctx, req, &respData); err != nil {
+			return err
+		} else {
+			fmt.Printf("Successfully inserted the connector in the registry: %+v\n", respData)
+		}
+
+	}
+
+	return nil
 
 }
 
@@ -288,7 +468,22 @@ func runCI(cmd *cobra.Command, args []string) {
 	// Separate the modified files according to the type of file
 
 	// Collect the added or modified connectors
-	newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes := processChangedFiles(changedFiles)
+	processChangedFiles := processChangedFiles(changedFiles)
+
+	newlyAddedConnectorVersions := processChangedFiles.NewConnectorVersions
+	modifiedLogos := processChangedFiles.ModifiedLogos
+	modifiedReadmes := processChangedFiles.ModifiedReadmes
+
+	newlyAddedConnectors := processChangedFiles.NewConnectors
+
+	if len(newlyAddedConnectors) > 0 {
+		fmt.Println("New connectors to be added to the registry: ", newlyAddedConnectors)
+
+		for connector, metadataFile := range newlyAddedConnectors {
+			processNewConnector(client, connector, metadataFile)
+		}
+
+	}
 
 	// check if the map is empty
 	if len(newlyAddedConnectorVersions) == 0 && len(modifiedLogos) == 0 && len(modifiedReadmes) == 0 {
@@ -468,6 +663,12 @@ type ModifiedLogos map[Connector]string
 
 // ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
 type ModifiedReadmes map[Connector]string
+
+// ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
+type NewLogos map[Connector]string
+
+// ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
+type NewReadmes map[Connector]string
 
 // uploadConnectorVersionPackage uploads the connector version package to the registry
 func uploadConnectorVersionPackage(client *storage.Client, connector Connector, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
