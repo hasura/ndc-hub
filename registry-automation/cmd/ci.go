@@ -16,7 +16,6 @@ import (
 	"github.com/machinebox/graphql"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
-	"gopkg.in/yaml.v2"
 )
 
 // ciCmd represents the ci command
@@ -24,111 +23,6 @@ var ciCmd = &cobra.Command{
 	Use:   "ci",
 	Short: "Run the CI workflow for hub registry publication",
 	Run:   runCI,
-}
-
-type ChangedFiles struct {
-	Added    []string `json:"added_files"`
-	Modified []string `json:"modified_files"`
-	Deleted  []string `json:"deleted_files"`
-}
-
-// ConnectorVersion represents a version of a connector, this type is
-// used to insert a new version of a connector in the registry.
-type ConnectorVersion struct {
-	// Namespace of the connector, e.g. "hasura"
-	Namespace string `json:"namespace"`
-	// Name of the connector, e.g. "mongodb"
-	Name string `json:"name"`
-	// Semantic version of the connector version, e.g. "v1.0.0"
-	Version string `json:"version"`
-	// Docker image of the connector version (optional)
-	// This field is only required if the connector version is of type `PrebuiltDockerImage`
-	Image *string `json:"image,omitempty"`
-	// URL to the connector's metadata
-	PackageDefinitionURL string `json:"package_definition_url"`
-	// Is the connector version multitenant?
-	IsMultitenant bool `json:"is_multitenant"`
-	// Type of the connector packaging `PrebuiltDockerImage`/`ManagedDockerBuild`
-	Type string `json:"type"`
-}
-
-// Create a struct with the following fields:
-// type string
-// image *string (optional)
-type ConnectionVersionMetadata struct {
-	Type  string  `yaml:"type"`
-	Image *string `yaml:"image,omitempty"`
-}
-
-type WhereClause struct {
-	ConnectorName      string
-	ConnectorNamespace string
-}
-
-func (wc WhereClause) MarshalJSON() ([]byte, error) {
-	where := map[string]interface{}{
-		"_and": []map[string]interface{}{
-			{"name": map[string]string{"_eq": wc.ConnectorName}},
-			{"namespace": map[string]string{"_eq": wc.ConnectorNamespace}},
-		},
-	}
-	return json.Marshal(where)
-}
-
-type ConnectorOverviewUpdate struct {
-	Set struct {
-		Docs *string `json:"docs,omitempty"`
-		Logo *string `json:"logo,omitempty"`
-	} `json:"_set"`
-	Where WhereClause `json:"where"`
-}
-
-type ConnectorOverviewUpdates struct {
-	Updates []ConnectorOverviewUpdate `json:"updates"`
-}
-
-const (
-	ManagedDockerBuild  = "ManagedDockerBuild"
-	PrebuiltDockerImage = "PrebuiltDockerImage"
-)
-
-// Type to represent the metadata.json file
-type ConnectorMetadata struct {
-	Overview struct {
-		Namespace     string   `json:"namespace"`
-		Description   string   `json:"description"`
-		Title         string   `json:"title"`
-		Logo          string   `json:"logo"`
-		Tags          []string `json:"tags"`
-		LatestVersion string   `json:"latest_version"`
-	} `json:"overview"`
-	Author struct {
-		SupportEmail string `json:"support_email"`
-		Homepage     string `json:"homepage"`
-		Name         string `json:"name"`
-	} `json:"author"`
-
-	IsVerified         bool `json:"is_verified"`
-	IsHostedByHasura   bool `json:"is_hosted_by_hasura"`
-	HasuraHubConnector struct {
-		Namespace string `json:"namespace"`
-		Name      string `json:"name"`
-	} `json:"hasura_hub_connector"`
-	SourceCode struct {
-		IsOpenSource bool   `json:"is_open_source"`
-		Repository   string `json:"repository"`
-	} `json:"source_code"`
-}
-
-// Make a struct with the fields expected in the command line arguments
-type ConnectorRegistryArgs struct {
-	ChangedFilesPath         string
-	PublicationEnv           string
-	ConnectorRegistryGQLUrl  string
-	ConnectorPublicationKey  string
-	GCPServiceAccountDetails string
-	GCPBucketName            string
-	CloudinaryUrl            string
 }
 
 var ciCmdArgs ConnectorRegistryArgs
@@ -218,26 +112,6 @@ func buildContext() Context {
 		Cloudinary:        cloudinaryClient,
 	}
 
-}
-
-type NewConnector struct {
-	// Name of the connector, e.g. "mongodb"
-	Name string
-	// Namespace of the connector, e.g. "hasura"
-	Namespace string
-}
-
-type MetadataFile string
-
-type NewConnectors map[NewConnector]MetadataFile
-
-type ProcessedChangedFiles struct {
-	NewConnectorVersions NewConnectorVersions
-	ModifiedLogos        ModifiedLogos
-	ModifiedReadmes      ModifiedReadmes
-	NewConnectors        NewConnectors
-	NewLogos             NewLogos
-	NewReadmes           NewReadmes
 }
 
 // processChangedFiles processes the files in the PR and extracts the connector name and version
@@ -387,7 +261,7 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 
 }
 
-func processNewConnector(ciCtx Context, connector NewConnector, metadataFile MetadataFile) {
+func processNewConnector(ciCtx Context, connector NewConnector, metadataFile MetadataFile) error {
 	// Process the newly added connector
 	// Get the string value from metadataFile
 
@@ -396,76 +270,40 @@ func processNewConnector(ciCtx Context, connector NewConnector, metadataFile Met
 		log.Fatalf("Failed to parse the connector metadata file: %v", err)
 	}
 
-	// Check if the connector already exists in the registry
+	// Get connector info from the registry
 	connectorInfo, err := getConnectorInfoFromRegistry(*ciCtx.RegistryGQLClient, connector.Name, connector.Namespace)
 	if err != nil {
 		log.Fatalf("Failed to get the connector info from the registry: %v", err)
 	}
 
+	// Check if the connector already exists in the registry
 	if len(connectorInfo.HubRegistryConnector) > 0 {
-		log.Fatalf("Attempting to create a new hub connector, but the connector already exists in the registry: %s/%s", connector.Namespace, connector.Name)
+		if ciCtx.Env == "staging" {
+			fmt.Printf("Connector already exists in the registry: %s/%s\n", connector.Namespace, connector.Name)
+			fmt.Println("The connector is going to be overwritten in the registry.")
+
+		} else {
+			return fmt.Errorf("Attempting to create a new hub connector, but the connector already exists in the registry: %s/%s", connector.Namespace, connector.Name)
+		}
+
 	}
 
-	// Insert the connector in the registry
-	err = insertConnectorInRegistry(*ciCtx.RegistryGQLClient, connectorMetadata, connector)
-	if err != nil {
-		log.Fatalf("Failed to insert the connector in the registry: %v", err)
-	}
-
-}
-
-type HubRegistryConnectorInsertInput struct {
-	Name      string `json:"name"`
-	Title     string `json:"title"`
-	Namespace string `json:"namespace"`
-}
-
-func insertConnectorInRegistry(client graphql.Client, connectorMetadata ConnectorMetadata, connector NewConnector) error {
-	var respData map[string]interface{}
-
-	ctx := context.Background()
-
+	// Insert hub registry connector in the registry
 	// This if condition checks if the hub connector in the metadata file is the same as the connector in the PR, if yes, we proceed to
 	// insert it as a hub connector in the registry. If the value is not the same, it means that the current connector is just an alias
 	// to an existing connector in the registry and we skip inserting it as a new hub connector in the registry. Example: `postgres-cosmos` is
 	// just an alias to the `postgres` connector in the registry.
 	if (connectorMetadata.HasuraHubConnector.Namespace == connector.Namespace) && (connectorMetadata.HasuraHubConnector.Name == connector.Name) {
-
-		req := graphql.NewRequest(`
-mutation InsertHubRegistryConnector ($connector:hub_registry_connector_insert_input!){
-  insert_hub_registry_connector_one(object: $connector) {
-    name
-    title
-  }
-}`)
-		hubRegistryConnectorInsertInput := HubRegistryConnectorInsertInput{
-			Name:      connector.Name,
-			Title:     connectorMetadata.Overview.Title,
-			Namespace: connector.Namespace,
+		err = insertHubRegistryConnector(*ciCtx.RegistryGQLClient, connectorMetadata, connector)
+		if err != nil {
+			return fmt.Errorf("Failed to insert the hub registry connector in the registry: %v", err)
 		}
-
-		req.Var("connector", hubRegistryConnectorInsertInput)
-		req.Header.Set("x-hasura-role", "connector_publishing_automation")
-		req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
-
-		// Execute the GraphQL query and check the response.
-		if err := client.Run(ctx, req, &respData); err != nil {
-			return err
-		} else {
-			fmt.Printf("Successfully inserted the connector in the registry: %+v\n", respData)
-		}
-
+	} else {
+		fmt.Printf("Skipping the insertion of the connector %s/%s as a hub connector in the registry as it is an alias to the connector %s/%s\n", connector.Namespace, connector.Name, connectorMetadata.HasuraHubConnector.Namespace, connectorMetadata.HasuraHubConnector.Name)
 	}
 
 	return nil
 
-}
-
-type Context struct {
-	Env               string
-	RegistryGQLClient *graphql.Client
-	StorageClient     *storage.Client
-	Cloudinary        *cloudinary.Cloudinary
 }
 
 // runCI is the main function that runs the CI workflow
@@ -675,26 +513,6 @@ func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions 
 	return nil
 }
 
-// Type that uniquely identifies a connector
-type Connector struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-}
-
-type NewConnectorVersions map[Connector]map[string]string
-
-// ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
-type ModifiedLogos map[Connector]string
-
-// ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
-type ModifiedReadmes map[Connector]string
-
-// ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
-type NewLogos map[Connector]string
-
-// ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
-type NewReadmes map[Connector]string
-
 // uploadConnectorVersionPackage uploads the connector version package to the registry
 func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
 
@@ -778,87 +596,6 @@ func getConnectorVersionMetadata(tgzUrl string, connector Connector, connectorVe
 	return connectorVersionMetadata, tgzPath, nil
 }
 
-// Write a function that accepts a file path to a YAML file and returns
-// the contents of the file as a map[string]interface{}.
-// readYAMLFile accepts a file path to a YAML file and returns the contents of the file as a map[string]interface{}.
-func readYAMLFile(filePath string) (map[string]interface{}, error) {
-	// Open the file
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-
-	// Read the file contents
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
-	}
-
-	// Unmarshal the YAML contents into a map
-	var result map[string]interface{}
-	err = yaml.Unmarshal(data, &result)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal YAML: %w", err)
-	}
-
-	return result, nil
-}
-
-func getConnectorNamespace(connectorMetadata map[string]interface{}) (string, error) {
-	connectorOverview, ok := connectorMetadata["overview"].(map[string]interface{})
-	if !ok {
-		return "", fmt.Errorf("could not find connector overview in the connector's metadata")
-	}
-	connectorNamespace, ok := connectorOverview["namespace"].(string)
-	if !ok {
-		return "", fmt.Errorf("could not find the 'namespace' of the connector in the connector's overview in the connector's metadata.json")
-	}
-	return connectorNamespace, nil
-}
-
-// struct to store the response of teh GetConnectorInfo query
-type GetConnectorInfoResponse struct {
-	HubRegistryConnector []struct {
-		Name                 string `json:"name"`
-		MultitenantConnector *struct {
-			ID string `json:"id"`
-		} `json:"multitenant_connector"`
-	} `json:"hub_registry_connector"`
-}
-
-func getConnectorInfoFromRegistry(client graphql.Client, connectorNamespace string, connectorName string) (GetConnectorInfoResponse, error) {
-	var respData GetConnectorInfoResponse
-
-	ctx := context.Background()
-
-	req := graphql.NewRequest(`
-query GetConnectorInfo ($name: String!, $namespace: String!) {
-  hub_registry_connector(where: {_and: [{name: {_eq: $name}}, {namespace: {_eq: $namespace}}]}) {
-    name
-    multitenant_connector {
-      id
-    }
-  }
-}`)
-	req.Var("name", connectorName)
-	req.Var("namespace", connectorNamespace)
-
-	req.Header.Set("x-hasura-role", "connector_publishing_automation")
-	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
-
-	// Execute the GraphQL query and check the response.
-	if err := client.Run(ctx, req, &respData); err != nil {
-		return respData, err
-	} else {
-		if len(respData.HubRegistryConnector) == 0 {
-			return respData, nil
-		}
-	}
-
-	return respData, nil
-}
-
 // buildRegistryPayload builds the payload for the registry upsert API
 func buildRegistryPayload(
 	ciCtx Context,
@@ -925,60 +662,4 @@ func buildRegistryPayload(
 	}
 
 	return connectorVersion, nil
-}
-
-func updateRegistryGQL(client graphql.Client, payload []ConnectorVersion) error {
-	var respData map[string]interface{}
-
-	ctx := context.Background()
-
-	req := graphql.NewRequest(`
-mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_version_insert_input!]!) {
-  insert_hub_registry_connector_version(objects: $connectorVersion, on_conflict: {constraint: connector_version_namespace_name_version_key, update_columns: [image, package_definition_url, is_multitenant]}) {
-    affected_rows
-    returning {
-      id
-    }
-  }
-}`)
-	// add the payload to the request
-	req.Var("connectorVersion", payload)
-
-	req.Header.Set("x-hasura-role", "connector_publishing_automation")
-	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
-
-	// Execute the GraphQL query and check the response.
-	if err := client.Run(ctx, req, &respData); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func updateConnectorOverview(updates ConnectorOverviewUpdates) error {
-	var respData map[string]interface{}
-	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
-	ctx := context.Background()
-
-	req := graphql.NewRequest(`
-mutation UpdateConnector ($updates: [connector_overview_updates!]!) {
-  update_connector_overview_many(updates: $updates) {
-    affected_rows
-  }
-}`)
-
-	// add the payload to the request
-	req.Var("updates", updates.Updates)
-
-	req.Header.Set("x-hasura-role", "connector_publishing_automation")
-	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
-
-	// Execute the GraphQL query and check the response.
-	if err := client.Run(ctx, req, &respData); err != nil {
-		return err
-	} else {
-		fmt.Printf("Successfully updated the connector overview: %+v\n", respData)
-	}
-
-	return nil
 }
