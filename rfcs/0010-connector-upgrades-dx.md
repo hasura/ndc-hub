@@ -14,13 +14,17 @@ The target version must be greater than the current version.
 
 The plugin command is expected to perform any connector specific upgrades to the connector configuration.
 
+If the plugin command is not defined, the CLI will WARN that the connector does not natively support configuration upgrades and that manual upgrades may be necessary.
+
+Connector authors should always include a upgradeConfiguration command, even if it a noop.
+
 ## `upgradeConfiguration` command
 
 Should upgrade the context directory in place. The user is expected to use a version control system to handle changes.
 
 Note: connectors should capture the configuration version as a part of the configuration.
 
-Do not rely on the following files: connector.yaml, compose.yaml. Connectors must modify only files that the connector itself owns.
+Do not rely on or modify the following files: connector.yaml, compose.yaml. Connectors must read and modify only files that the connector itself owns.
 
 ## `connector-metadata.yaml` types
 
