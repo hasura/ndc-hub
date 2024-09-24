@@ -20,7 +20,7 @@ implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 Below, you'll find a matrix of all supported features for the Azure Cosmos DB for NoSQL connector:
 
 | Feature                         | Supported | Notes |
-| ------------------------------- | --------- | ----- |
+|---------------------------------|-----------|-------|
 | Native Queries + Logical Models | ✅        |       |
 | Simple Object Query             | ✅        |       |
 | Filter / Search                 | ✅        |       |
@@ -29,7 +29,7 @@ Below, you'll find a matrix of all supported features for the Azure Cosmos DB fo
 | Paginate                        | ✅        |       |
 | Nested Objects                  | ✅        |       |
 | Nested Arrays                   | ✅        |       |
-| Nested Filtering                | ❌        |       |
+| Nested Filtering                | ✅        |       |
 | Nested Sorting                  | ❌        |       |
 | Nested Relationships            | ❌        |       |
 
