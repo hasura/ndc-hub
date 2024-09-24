@@ -1,35 +1,40 @@
 {
     "overview": {
-	"namespace": "hasura",
-	"description": "The Cassandra Native Data Connector allows for connecting to a Cassandra instance giving you an instant GraphQL API on top of your Cassandra data.",
-	"title": "Cassandra Native Data Connector",
-	"logo": "logo.png",
-	"tags": [
-	    "database"
-	],
-	"latest_version": "v1.0.2"
+        "namespace": "hasura",
+        "description": "The Cassandra Native Data Connector allows for connecting to a Cassandra instance giving you an instant GraphQL API on top of your Cassandra data.",
+        "title": "Cassandra Native Data Connector",
+        "logo": "logo.png",
+        "tags": [
+            "database"
+        ],
+        "latest_version": "v1.0.3"
     },
     "author": {
-	"support_email": "support@hasura.io",
-	"homepage": "https://hasura.io",
-	"name": "Hasura"
+        "support_email": "support@hasura.io",
+        "homepage": "https://hasura.io",
+        "name": "Hasura"
     },
     "is_verified": true,
     "is_hosted_by_hasura": false,
     "source_code": {
-	"is_open_source": true,
-	"repository": "https://github.com/hasura/ndc-cassandra/",
-	"version": [
-	    {
-		"tag": "v1.0.1",
-		"hash": "c12a7356e20d01559e5824f7956234a9c6f43b1e",
-		"is_verified": true
-	    },
-	    {
-		"tag": "v1.0.2",
-		"hash": "c12a7356e20d01559e5824f7956234a9c6f43b1e",
-		"is_verified": true
-	    }	    
-	]
+        "is_open_source": true,
+        "repository": "https://github.com/hasura/ndc-cassandra/",
+        "version": [
+            {
+                "tag": "v1.0.1",
+                "hash": "c12a7356e20d01559e5824f7956234a9c6f43b1e",
+                "is_verified": true
+            },
+            {
+                "tag": "v1.0.2",
+                "hash": "c12a7356e20d01559e5824f7956234a9c6f43b1e",
+                "is_verified": true
+            },
+            {
+                "tag": "v1.0.3",
+                "hash": "f44814dff668c51f036568299fc485fac948668e",
+                "is_verified": true
+            }
+        ]
     }
 }
