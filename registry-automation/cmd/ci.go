@@ -153,13 +153,17 @@ func init() {
 
 }
 
-func buildContext() {
+func buildContext() Context {
 	// Connector registry Hasura GraphQL URL
 	registryGQLURL := os.Getenv("CONNECTOR_REGISTRY_GQL_URL")
+	var registryGQLClient *graphql.Client
+	var storageClient *storage.Client
+	var cloudinaryClient *cloudinary.Cloudinary
 	if registryGQLURL == "" {
 		log.Fatalf("CONNECTOR_REGISTRY_GQL_URL is not set")
 	} else {
 		ciCmdArgs.ConnectorRegistryGQLUrl = registryGQLURL
+		registryGQLClient = graphql.NewClient(registryGQLURL)
 	}
 
 	// Connector publication key
@@ -175,6 +179,13 @@ func buildContext() {
 	if gcpServiceAccountDetails == "" {
 		log.Fatalf("GCP_SERVICE_ACCOUNT_DETAILS is not set")
 	} else {
+		var err error
+		storageClient, err = storage.NewClient(context.Background(), option.WithCredentialsJSON([]byte(ciCmdArgs.GCPServiceAccountDetails)))
+		if err != nil {
+			log.Fatalf("Failed to create Google bucket client: %v", err)
+		}
+		defer storageClient.Close()
+
 		ciCmdArgs.GCPServiceAccountDetails = gcpServiceAccountDetails
 	}
 
@@ -191,7 +202,20 @@ func buildContext() {
 	if cloudinaryUrl == "" {
 		log.Fatalf("CLOUDINARY_URL is not set")
 	} else {
-		ciCmdArgs.CloudinaryUrl = cloudinaryUrl
+		var err error
+		cloudinaryClient, err = cloudinary.NewFromURL(cloudinaryUrl)
+		if err != nil {
+			log.Fatalf("Failed to create cloudinary client: %v", err)
+
+		}
+
+	}
+
+	return Context{
+		Env:               ciCmdArgs.PublicationEnv,
+		RegistryGQLClient: registryGQLClient,
+		StorageClient:     storageClient,
+		Cloudinary:        cloudinaryClient,
 	}
 
 }
@@ -363,7 +387,7 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 
 }
 
-func processNewConnector(client *storage.Client, connector NewConnector, metadataFile MetadataFile) {
+func processNewConnector(ciCtx Context, connector NewConnector, metadataFile MetadataFile) {
 	// Process the newly added connector
 	// Get the string value from metadataFile
 
@@ -373,7 +397,7 @@ func processNewConnector(client *storage.Client, connector NewConnector, metadat
 	}
 
 	// Check if the connector already exists in the registry
-	connectorInfo, err := getConnectorInfoFromRegistry(connector.Name, connector.Namespace)
+	connectorInfo, err := getConnectorInfoFromRegistry(*ciCtx.RegistryGQLClient, connector.Name, connector.Namespace)
 	if err != nil {
 		log.Fatalf("Failed to get the connector info from the registry: %v", err)
 	}
@@ -383,7 +407,7 @@ func processNewConnector(client *storage.Client, connector NewConnector, metadat
 	}
 
 	// Insert the connector in the registry
-	err = insertConnectorInRegistry(connectorMetadata)
+	err = insertConnectorInRegistry(*ciCtx.RegistryGQLClient, connectorMetadata, connector)
 	if err != nil {
 		log.Fatalf("Failed to insert the connector in the registry: %v", err)
 	}
@@ -396,9 +420,9 @@ type HubRegistryConnectorInsertInput struct {
 	Namespace string `json:"namespace"`
 }
 
-func insertConnectorInRegistry(connectorMetadata ConnectorMetadata, connector NewConnector) error {
+func insertConnectorInRegistry(client graphql.Client, connectorMetadata ConnectorMetadata, connector NewConnector) error {
 	var respData map[string]interface{}
-	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
+
 	ctx := context.Background()
 
 	// This if condition checks if the hub connector in the metadata file is the same as the connector in the PR, if yes, we proceed to
@@ -437,20 +461,21 @@ mutation InsertHubRegistryConnector ($connector:hub_registry_connector_insert_in
 
 }
 
+type Context struct {
+	Env               string
+	RegistryGQLClient *graphql.Client
+	StorageClient     *storage.Client
+	Cloudinary        *cloudinary.Cloudinary
+}
+
 // runCI is the main function that runs the CI workflow
 func runCI(cmd *cobra.Command, args []string) {
-	buildContext()
+	ctx := buildContext()
 	changedFilesContent, err := os.Open(ciCmdArgs.ChangedFilesPath)
 	if err != nil {
 		log.Fatalf("Failed to open the file: %v, err: %v", ciCmdArgs.ChangedFilesPath, err)
 	}
 	defer changedFilesContent.Close()
-
-	client, err := storage.NewClient(context.Background(), option.WithCredentialsJSON([]byte(ciCmdArgs.GCPServiceAccountDetails)))
-	if err != nil {
-		log.Fatalf("Failed to create Google bucket client: %v", err)
-	}
-	defer client.Close()
 
 	// Read the changed file's contents. This file contains all the changed files in the PR
 	changedFilesByteValue, err := io.ReadAll(changedFilesContent)
@@ -480,7 +505,7 @@ func runCI(cmd *cobra.Command, args []string) {
 		fmt.Println("New connectors to be added to the registry: ", newlyAddedConnectors)
 
 		for connector, metadataFile := range newlyAddedConnectors {
-			processNewConnector(client, connector, metadataFile)
+			processNewConnector(ctx, connector, metadataFile)
 		}
 
 	}
@@ -491,7 +516,7 @@ func runCI(cmd *cobra.Command, args []string) {
 		return
 	} else {
 		if len(newlyAddedConnectorVersions) > 0 {
-			processNewlyAddedConnectorVersions(client, newlyAddedConnectorVersions)
+			processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions)
 		}
 
 		if len(modifiedReadmes) > 0 {
@@ -593,7 +618,7 @@ func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
 
 }
 
-func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnectorVersions NewConnectorVersions) {
+func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersions NewConnectorVersions) {
 	// Iterate over the added or modified connectors and upload the connector versions
 	var connectorVersions []ConnectorVersion
 	var uploadConnectorVersionErr error
@@ -602,7 +627,7 @@ func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnec
 	for connectorName, versions := range newlyAddedConnectorVersions {
 		for version, connectorVersionPath := range versions {
 			var connectorVersion ConnectorVersion
-			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
+			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(ciCtx, connectorName, version, connectorVersionPath)
 
 			if uploadConnectorVersionErr != nil {
 				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, uploadConnectorVersionErr)
@@ -618,16 +643,16 @@ func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnec
 
 	if encounteredError {
 		// attempt to cleanup the uploaded connector versions
-		_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
+		_ = cleanupUploadedConnectorVersions(ciCtx.StorageClient, connectorVersions) // ignore errors while cleaning up
 		// delete the uploaded connector versions from the registry
 		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
 
 	} else {
 		fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
-		err := updateRegistryGQL(connectorVersions)
+		err := updateRegistryGQL(*ciCtx.RegistryGQLClient, connectorVersions)
 		if err != nil {
 			// attempt to cleanup the uploaded connector versions
-			_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
+			_ = cleanupUploadedConnectorVersions(ciCtx.StorageClient, connectorVersions) // ignore errors while cleaning up
 			log.Fatalf("Failed to update the registry: %v", err)
 		}
 	}
@@ -671,7 +696,7 @@ type NewLogos map[Connector]string
 type NewReadmes map[Connector]string
 
 // uploadConnectorVersionPackage uploads the connector version package to the registry
-func uploadConnectorVersionPackage(client *storage.Client, connector Connector, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
+func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
 
 	var connectorVersion ConnectorVersion
 
@@ -693,7 +718,7 @@ func uploadConnectorVersionPackage(client *storage.Client, connector Connector, 
 		return connectorVersion, err
 	}
 
-	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connector.Namespace, connector.Name, version, connectorMetadataTgzPath)
+	uploadedTgzUrl, err := uploadConnectorVersionDefinition(ciCtx, connector.Namespace, connector.Name, version, connectorMetadataTgzPath)
 	if err != nil {
 		return connectorVersion, fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connector.Name, version, err)
 	} else {
@@ -702,13 +727,13 @@ func uploadConnectorVersionPackage(client *storage.Client, connector Connector, 
 	}
 
 	// Build payload for registry upsert
-	return buildRegistryPayload(connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl)
+	return buildRegistryPayload(ciCtx, connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl)
 }
 
-func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
+func uploadConnectorVersionDefinition(ciCtx Context, connectorNamespace, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
 	bucketName := ciCmdArgs.GCPBucketName
 	objectName := generateGCPObjectName(connectorNamespace, connectorName, connectorVersion)
-	uploadedTgzUrl, err := uploadFile(client, bucketName, objectName, connectorMetadataTgzPath)
+	uploadedTgzUrl, err := uploadFile(ciCtx.StorageClient, bucketName, objectName, connectorMetadataTgzPath)
 
 	if err != nil {
 		return "", err
@@ -802,9 +827,9 @@ type GetConnectorInfoResponse struct {
 	} `json:"hub_registry_connector"`
 }
 
-func getConnectorInfoFromRegistry(connectorNamespace string, connectorName string) (GetConnectorInfoResponse, error) {
+func getConnectorInfoFromRegistry(client graphql.Client, connectorNamespace string, connectorName string) (GetConnectorInfoResponse, error) {
 	var respData GetConnectorInfoResponse
-	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
+
 	ctx := context.Background()
 
 	req := graphql.NewRequest(`
@@ -836,6 +861,7 @@ query GetConnectorInfo ($name: String!, $namespace: String!) {
 
 // buildRegistryPayload builds the payload for the registry upsert API
 func buildRegistryPayload(
+	ciCtx Context,
 	connectorNamespace string,
 	connectorName string,
 	version string,
@@ -860,7 +886,7 @@ func buildRegistryPayload(
 
 	}
 
-	connectorInfo, err := getConnectorInfoFromRegistry(connectorNamespace, connectorName)
+	connectorInfo, err := getConnectorInfoFromRegistry(*ciCtx.RegistryGQLClient, connectorNamespace, connectorName)
 
 	if err != nil {
 		return connectorVersion, err
@@ -901,9 +927,9 @@ func buildRegistryPayload(
 	return connectorVersion, nil
 }
 
-func updateRegistryGQL(payload []ConnectorVersion) error {
+func updateRegistryGQL(client graphql.Client, payload []ConnectorVersion) error {
 	var respData map[string]interface{}
-	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
+
 	ctx := context.Background()
 
 	req := graphql.NewRequest(`
