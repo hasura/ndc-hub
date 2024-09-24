@@ -4,11 +4,13 @@ How does a user upgrade across connector versions? For example: from postgres v0
 
 ## Solution
 
+DDN CLI will upgrade parts of the users project that it owns (such as the connector.yaml definition and docker compose.yaml). A new plugin command `upgradeConfiguration` is introduced for the connector to upgrade connector configuration.
+
 `ddn connector upgrade --connector <path-to-connector.yaml> [--version <hub-version>]` will
 - upgrade the connector to the specified version or to the latest version
 - upgrade the connector.yaml and compose.yaml files in place
 - atomically replace the .hasura-connector folder
-- call a new plugin command `upgradeConfiguration`
+- call the plugin command `upgradeConfiguration` on the *target version* of the connector
 
 The target version must be greater than the current version.
 
