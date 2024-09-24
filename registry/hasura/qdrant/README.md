@@ -45,8 +45,8 @@ Below, you'll find a matrix of all supported features for the Qdrant connector:
 5. Have a [Qdrant](https://qdrant.tech/) hosted database, or a locally running Qdrant database — for supplying data to
    your API.
 
-The steps below explain how to Initialize and configure a connector for local development. You can learn how to deploy a
-connector — after it's been configured —
+The steps below explain how to initialize and configure a connector on your local machine (typically for development
+purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
 [here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
 
 ## Using the Qdrant connector

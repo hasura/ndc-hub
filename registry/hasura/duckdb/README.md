@@ -45,8 +45,8 @@ Below, you'll find a matrix of all supported features for the DuckDB connector:
 5. Have a [MotherDuck](https://motherduck.com/) hosted DuckDB database, or a persitent DuckDB database file — for
    supplying data to your API.
 
-The steps below explain how to initialize and configure a connector for local development. You can learn how to deploy a
-connector — after it's been configured —
+The steps below explain how to initialize and configure a connector on your local machine (typically for development
+purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
 [here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
 
 ## Using the DuckDB connector

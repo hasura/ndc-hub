@@ -54,8 +54,8 @@ Below, you'll find a matrix of all supported features for the Elasticsearch conn
 3. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
 4. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
 
-The steps below explain how to initialize and configure a connector for local development. You can learn how to deploy a
-connector — after it's been configured —
+The steps below explain how to initialize and configure a connector on your local machine (typically for development
+purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
 [here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
 
 ## Using the Elasticsearch connector
