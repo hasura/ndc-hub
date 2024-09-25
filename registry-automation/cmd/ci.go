@@ -318,6 +318,7 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	// Collect the added or modified connectors
 	processChangedFiles := processChangedFiles(changedFiles)
+	log.Printf("Processing the changed files in the PR: %v", processChangedFiles)
 
 	newlyAddedConnectorVersions := processChangedFiles.NewConnectorVersions
 	modifiedLogos := processChangedFiles.ModifiedLogos
@@ -352,6 +353,7 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	if len(newlyAddedConnectorVersions) > 0 {
 		var isNewConnector bool = len(newlyAddedConnectors) > 0
+		log.Printf("is new connector added", isNewConnector)
 		newConnectorVersionsToBeAdded = processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions, isNewConnector)
 	}
 
@@ -471,6 +473,7 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 	for connectorName, versions := range newlyAddedConnectorVersions {
 		for version, connectorVersionPath := range versions {
 			var connectorVersion ConnectorVersion
+			log.Printf("before uploadConnectorVersionPackage")
 			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(ciCtx, connectorName, version, connectorVersionPath, isNewConnector)
 
 			if uploadConnectorVersionErr != nil {
@@ -632,6 +635,7 @@ func buildRegistryPayload(
 
 	// Check if the connector exists in the registry first
 	if len(connectorInfo.HubRegistryConnector) == 0 && !isNewConnector {
+			log.Printf("connector doesn't exist in the registry or newly added")
 			return connectorVersion, fmt.Errorf("Inserting a new connector is not supported yet")
 	}
 
