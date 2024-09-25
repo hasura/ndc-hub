@@ -1,0 +1,28 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect Hasura DDN to a Prometheus API server",
+    "title": "Prometheus Data Connector",
+    "logo": "logo.svg",
+    "tags": ["database"],
+    "latest_version": "v0.0.2"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-prometheus",
+    "version": [
+      {
+        "tag": "v0.0.2",
+        "hash": "9eb51c3e4c76abd437e6f6f33ffbb8870474e56c",
+        "is_verified": true
+      }
+    ]
+  }
+}
