@@ -114,166 +114,140 @@ func buildContext() Context {
 
 }
 
-// processChangedFiles processes the files in the PR and extracts the connector name and version
-// This function checks for the following things:
-// 1. If a new connector version is added, it adds the connector version to the `newlyAddedConnectorVersions` map.
-// 2. If the logo file is modified, it adds the connector name and the path to the modified logo to the `modifiedLogos` map.
-// 3. If the README file is modified, it adds the connector name and the path to the modified README to the `modifiedReadmes` map.
+type fileProcessor struct {
+	regex   *regexp.Regexp
+	process func(matches []string, file string)
+}
+
+// processChangedFiles categorizes changes in connector files within a registry system.
+// It handles new and modified files including metadata, logos, READMEs, and connector versions.
+//
+// The function takes a ChangedFiles struct containing slices of added and modified filenames,
+// and returns a ProcessedChangedFiles struct with categorized changes.
+//
+// Files are processed based on their path and type:
+//   - metadata.json: New connectors
+//   - logo.(png|svg): New or modified logos
+//   - README.md: New or modified READMEs
+//   - connector-packaging.json: New connector versions
+//
+// Any files not matching these patterns are logged as skipped.
+//
+// Example usage:
+//
+//	changedFiles := ChangedFiles{
+//		Added: []string{"registry/namespace1/connector1/metadata.json"},
+//		Modified: []string{"registry/namespace2/connector2/README.md"},
+//	}
+//	result := processChangedFiles(changedFiles)
 func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
+	result := ProcessedChangedFiles{
+		NewConnectorVersions: make(map[Connector]map[string]string),
+		ModifiedLogos:        make(map[Connector]string),
+		ModifiedReadmes:      make(map[Connector]string),
+		NewConnectors:        make(map[NewConnector]MetadataFile),
+		NewLogos:             make(map[Connector]string),
+		NewReadmes:           make(map[Connector]string),
+	}
 
-	newlyAddedConnectorVersions := make(map[Connector]map[string]string)
-	modifiedLogos := make(map[Connector]string)
-	modifiedReadmes := make(map[Connector]string)
-	newConnectors := make(map[NewConnector]MetadataFile)
-	newLogos := make(map[Connector]string)
-	newReadmes := make(map[Connector]string)
+	processors := []fileProcessor{
+		{
+			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/metadata.json$`),
+			process: func(matches []string, file string) {
+				connector := NewConnector{Name: matches[2], Namespace: matches[1]}
+				result.NewConnectors[connector] = MetadataFile(file)
+				fmt.Printf("Processing metadata file for connector: %s\n", connector.Name)
+			},
+		},
+		{
+			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/logo\.(png|svg)$`),
+			process: func(matches []string, file string) {
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				result.NewLogos[connector] = file
+				fmt.Printf("Processing logo file for connector: %s\n", connector.Name)
+			},
+		},
+		{
+			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/README\.md$`),
+			process: func(matches []string, file string) {
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				result.NewReadmes[connector] = file
+				fmt.Printf("Processing README file for connector: %s\n", connector.Name)
+			},
+		},
+		{
+			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/releases/([^/]+)/connector-packaging\.json$`),
+			process: func(matches []string, file string) {
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				version := matches[3]
+				if _, exists := result.NewConnectorVersions[connector]; !exists {
+					result.NewConnectorVersions[connector] = make(map[string]string)
+				}
+				result.NewConnectorVersions[connector][version] = file
+			},
+		},
+	}
 
-	var connectorVersionPackageRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/releases/([^/]+)/connector-packaging\.json$`)
-	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/logo\.(png|svg)$`)
-	var readmeMdRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/README\.md$`)
-	var connectorMetadataRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/metadata.json$`)
+	processFile := func(file string, isModified bool) {
+		for _, processor := range processors {
+			if matches := processor.regex.FindStringSubmatch(file); matches != nil {
+				if isModified {
+					connector := Connector{Name: matches[2], Namespace: matches[1]}
+					if processor.regex.String() == processors[1].regex.String() {
+						result.ModifiedLogos[connector] = file
+					} else if processor.regex.String() == processors[2].regex.String() {
+						result.ModifiedReadmes[connector] = file
+					}
+				} else {
+					processor.process(matches, file)
+				}
+				return
+			}
+		}
+		fmt.Printf("Skipping %s file: %s\n", map[bool]string{true: "modified", false: "newly added"}[isModified], file)
+	}
 
 	for _, file := range changedFiles.Added {
-
-		if connectorMetadataRegex.MatchString(file) {
-			// Process the metadata file
-			// print the name of the connector and the version
-			matches := connectorMetadataRegex.FindStringSubmatch(file)
-			if len(matches) == 3 {
-				connectorNamespace := matches[1]
-				connectorName := matches[2]
-				connector := NewConnector{
-					Name:      connectorName,
-					Namespace: connectorNamespace,
-				}
-				newConnectors[connector] = MetadataFile(file)
-				fmt.Printf("Processing metadata file for connector: %s\n", connectorName)
-			}
-		} else if logoPngRegex.MatchString(file) {
-			// Process the logo file
-			// print the name of the connector and the version
-			matches := logoPngRegex.FindStringSubmatch(file)
-			if len(matches) == 4 {
-
-				connectorNamespace := matches[1]
-				connectorName := matches[2]
-				connector := Connector{
-					Name:      connectorName,
-					Namespace: connectorNamespace,
-				}
-				newLogos[connector] = file
-				fmt.Printf("Processing logo file for connector: %s\n", connectorName)
-			}
-
-		} else if readmeMdRegex.MatchString(file) {
-			// Process the README file
-			// print the name of the connector and the version
-			matches := readmeMdRegex.FindStringSubmatch(file)
-
-			if len(matches) == 3 {
-
-				connectorNamespace := matches[1]
-				connectorName := matches[2]
-				connector := Connector{
-					Name:      connectorName,
-					Namespace: connectorNamespace,
-				}
-
-				newReadmes[connector] = file
-
-				fmt.Printf("Processing README file for connector: %s\n", connectorName)
-			}
-		} else if connectorVersionPackageRegex.MatchString(file) {
-
-			matches := connectorVersionPackageRegex.FindStringSubmatch(file)
-			if len(matches) == 4 {
-				connectorNamespace := matches[1]
-				connectorName := matches[2]
-				connectorVersion := matches[3]
-
-				connector := Connector{
-					Name:      connectorName,
-					Namespace: connectorNamespace,
-				}
-
-				if _, exists := newlyAddedConnectorVersions[connector]; !exists {
-					newlyAddedConnectorVersions[connector] = make(map[string]string)
-				}
-
-				newlyAddedConnectorVersions[connector][connectorVersion] = file
-			}
-
-		} else {
-			fmt.Println("Skipping newly added file: ", file)
-		}
-
+		processFile(file, false)
 	}
 
 	for _, file := range changedFiles.Modified {
-		if logoPngRegex.MatchString(file) {
-			// Process the logo file
-			// print the name of the connector and the version
-			matches := logoPngRegex.FindStringSubmatch(file)
-			if len(matches) == 4 {
-
-				connectorNamespace := matches[1]
-				connectorName := matches[2]
-				connector := Connector{
-					Name:      connectorName,
-					Namespace: connectorNamespace,
-				}
-				modifiedLogos[connector] = file
-				fmt.Printf("Processing logo file for connector: %s\n", connectorName)
-			}
-
-		} else if readmeMdRegex.MatchString(file) {
-			// Process the README file
-			// print the name of the connector and the version
-			matches := readmeMdRegex.FindStringSubmatch(file)
-
-			if len(matches) == 3 {
-
-				connectorNamespace := matches[1]
-				connectorName := matches[2]
-				connector := Connector{
-					Name:      connectorName,
-					Namespace: connectorNamespace,
-				}
-
-				modifiedReadmes[connector] = file
-
-				fmt.Printf("Processing README file for connector: %s\n", connectorName)
-			}
-		} else {
-			fmt.Println("Skipping modified file: ", file)
-		}
-
+		processFile(file, true)
 	}
 
-	return ProcessedChangedFiles{
-		NewConnectorVersions: newlyAddedConnectorVersions,
-		ModifiedLogos:        modifiedLogos,
-		ModifiedReadmes:      modifiedReadmes,
-		NewConnectors:        newConnectors,
-		NewLogos:             newLogos,
-		NewReadmes:           newReadmes,
-	}
-
+	return result
 }
 
-func processNewConnector(ciCtx Context, connector NewConnector, metadataFile MetadataFile) error {
+func processNewConnector(ciCtx Context, connector NewConnector, metadataFile MetadataFile) (ConnectorOverviewInsert, *HubRegistryConnectorInsertInput, error) {
 	// Process the newly added connector
 	// Get the string value from metadataFile
+	var connectorOverviewAndAuthor ConnectorOverviewInsert
+	var hubRegistryConnectorInsertInput *HubRegistryConnectorInsertInput
 
 	connectorMetadata, err := readJSONFile[ConnectorMetadata](string(metadataFile))
 	if err != nil {
-		log.Fatalf("Failed to parse the connector metadata file: %v", err)
+		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
+	}
+
+	docs, err := readFile(fmt.Sprintf("registry/%s/%s/README.md", connector.Namespace, connector.Name))
+
+	if err != nil {
+
+		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Failed to read the README file of the connector: %s : %v", connector.Name, err)
+	}
+
+	logoPath := fmt.Sprintf("registry/%s/%s/logo.png", connector.Namespace, connector.Name)
+
+	uploadedLogoUrl, err := uploadLogoToCloudinary(ciCtx.Cloudinary, Connector{Name: connector.Name, Namespace: connector.Namespace}, logoPath)
+	if err != nil {
+		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, err
 	}
 
 	// Get connector info from the registry
 	connectorInfo, err := getConnectorInfoFromRegistry(*ciCtx.RegistryGQLClient, connector.Name, connector.Namespace)
 	if err != nil {
-		log.Fatalf("Failed to get the connector info from the registry: %v", err)
+		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput,
+			fmt.Errorf("Failed to get the connector info from the registry: %v", err)
 	}
 
 	// Check if the connector already exists in the registry
@@ -283,7 +257,8 @@ func processNewConnector(ciCtx Context, connector NewConnector, metadataFile Met
 			fmt.Println("The connector is going to be overwritten in the registry.")
 
 		} else {
-			return fmt.Errorf("Attempting to create a new hub connector, but the connector already exists in the registry: %s/%s", connector.Namespace, connector.Name)
+
+			return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Attempting to create a new hub connector, but the connector already exists in the registry: %s/%s", connector.Namespace, connector.Name)
 		}
 
 	}
@@ -294,15 +269,40 @@ func processNewConnector(ciCtx Context, connector NewConnector, metadataFile Met
 	// to an existing connector in the registry and we skip inserting it as a new hub connector in the registry. Example: `postgres-cosmos` is
 	// just an alias to the `postgres` connector in the registry.
 	if (connectorMetadata.HasuraHubConnector.Namespace == connector.Namespace) && (connectorMetadata.HasuraHubConnector.Name == connector.Name) {
-		err = insertHubRegistryConnector(*ciCtx.RegistryGQLClient, connectorMetadata, connector)
+		hubRegistryConnectorInsertInput := HubRegistryConnectorInsertInput{
+			Name:      connector.Name,
+			Namespace: connector.Namespace,
+			Title:     connectorMetadata.Overview.Title,
+		}
+		err = insertHubRegistryConnector(*ciCtx.RegistryGQLClient, hubRegistryConnectorInsertInput)
 		if err != nil {
-			return fmt.Errorf("Failed to insert the hub registry connector in the registry: %v", err)
+			return connectorOverviewAndAuthor, &hubRegistryConnectorInsertInput, fmt.Errorf("Failed to insert the hub registry connector in the registry: %v", err)
 		}
 	} else {
 		fmt.Printf("Skipping the insertion of the connector %s/%s as a hub connector in the registry as it is an alias to the connector %s/%s\n", connector.Namespace, connector.Name, connectorMetadata.HasuraHubConnector.Namespace, connectorMetadata.HasuraHubConnector.Name)
 	}
 
-	return nil
+	connectorOverviewAndAuthor = ConnectorOverviewInsert{
+		Name:        connector.Name,
+		Namespace:   connector.Namespace,
+		Docs:        string(docs),
+		Logo:        uploadedLogoUrl,
+		Title:       connectorMetadata.Overview.Title,
+		Description: connectorMetadata.Overview.Description,
+		IsVerified:  connectorMetadata.IsVerified,
+		IsHosted:    connectorMetadata.IsHostedByHasura,
+		Author: struct {
+			Data ConnectorAuthor `json:"data"`
+		}{
+			Data: ConnectorAuthor{
+				Name:         connectorMetadata.Author.Name,
+				SupportEmail: connectorMetadata.Author.SupportEmail,
+				Website:      connectorMetadata.Author.Homepage,
+			},
+		},
+	}
+
+	return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, nil
 
 }
 
@@ -341,40 +341,62 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	if len(newlyAddedConnectors) > 0 {
 		fmt.Println("New connectors to be added to the registry: ", newlyAddedConnectors)
+		newConnectorOverviewsToBeAdded := make([](ConnectorOverviewInsert), 0)
+		hubRegistryConnectorsToBeAdded := make([](HubRegistryConnectorInsertInput), 0)
 
 		for connector, metadataFile := range newlyAddedConnectors {
-			processNewConnector(ctx, connector, metadataFile)
+			connectorOverviewAndAuthor, hubRegistryConnector, err := processNewConnector(ctx, connector, metadataFile)
+
+			if err != nil {
+				log.Fatalf("Failed to process the new connector: %s/%s, Error: %v", connector.Namespace, connector.Name, err)
+			}
+			newConnectorOverviewsToBeAdded = append(newConnectorOverviewsToBeAdded, connectorOverviewAndAuthor)
+			hubRegistryConnectorsToBeAdded = append(hubRegistryConnectorsToBeAdded, *hubRegistryConnector)
+
 		}
 
 	}
 
-	// check if the map is empty
-	if len(newlyAddedConnectorVersions) == 0 && len(modifiedLogos) == 0 && len(modifiedReadmes) == 0 {
-		fmt.Println("No connectors to be added or modified in the registry")
-		return
-	} else {
-		if len(newlyAddedConnectorVersions) > 0 {
-			processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions)
-		}
+	if len(newlyAddedConnectorVersions) > 0 {
+		processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions)
+	}
 
-		if len(modifiedReadmes) > 0 {
-			err := processModifiedReadmes(modifiedReadmes)
-			if err != nil {
-				log.Fatalf("Failed to process the modified READMEs: %v", err)
-			}
-			fmt.Println("Successfully updated the READMEs in the registry.")
+	if len(modifiedReadmes) > 0 {
+		err := processModifiedReadmes(modifiedReadmes)
+		if err != nil {
+			log.Fatalf("Failed to process the modified READMEs: %v", err)
 		}
+		fmt.Println("Successfully updated the READMEs in the registry.")
+	}
 
-		if len(modifiedLogos) > 0 {
-			err := processModifiedLogos(modifiedLogos)
-			if err != nil {
-				log.Fatalf("Failed to process the modified logos: %v", err)
-			}
-			fmt.Println("Successfully updated the logos in the registry.")
+	if len(modifiedLogos) > 0 {
+		err := processModifiedLogos(modifiedLogos)
+		if err != nil {
+			log.Fatalf("Failed to process the modified logos: %v", err)
 		}
+		fmt.Println("Successfully updated the logos in the registry.")
 	}
 
 	fmt.Println("Successfully processed the changed files in the PR")
+}
+
+func uploadLogoToCloudinary(cloudinary *cloudinary.Cloudinary, connector Connector, logoPath string) (string, error) {
+	logoContent, err := readFile(logoPath)
+	if err != nil {
+		fmt.Printf("Failed to read the logo file: %v", err)
+		return "", err
+	}
+
+	imageReader := bytes.NewReader(logoContent)
+
+	uploadResult, err := cloudinary.Upload.Upload(context.Background(), imageReader, uploader.UploadParams{
+		PublicID: fmt.Sprintf("%s-%s", connector.Namespace, connector.Name),
+		Format:   "png",
+	})
+	if err != nil {
+		return "", fmt.Errorf("Failed to upload the logo to cloudinary for the connector: %s, Error: %v\n", connector.Name, err)
+	}
+	return uploadResult.SecureURL, nil
 }
 
 func processModifiedLogos(modifiedLogos ModifiedLogos) error {
@@ -388,23 +410,9 @@ func processModifiedLogos(modifiedLogos ModifiedLogos) error {
 
 	for connector, logoPath := range modifiedLogos {
 		// open the logo file
-		logoContent, err := readFile(logoPath)
+		uploadedLogoUrl, err := uploadLogoToCloudinary(cloudinary, connector, logoPath)
 		if err != nil {
-			fmt.Printf("Failed to read the logo file: %v", err)
 			return err
-		}
-
-		imageReader := bytes.NewReader(logoContent)
-
-		uploadResult, err := cloudinary.Upload.Upload(context.Background(), imageReader, uploader.UploadParams{
-			PublicID: fmt.Sprintf("%s-%s", connector.Namespace, connector.Name),
-			Format:   "png",
-		})
-		if err != nil {
-			fmt.Printf("Failed to upload the logo to cloudinary for the connector: %s, Error: %v\n", connector.Name, err)
-			return err
-		} else {
-			fmt.Printf("Successfully uploaded the logo to cloudinary for the connector: %s\n", connector.Name)
 		}
 
 		var connectorOverviewUpdate ConnectorOverviewUpdate
@@ -415,7 +423,7 @@ func processModifiedLogos(modifiedLogos ModifiedLogos) error {
 			*connectorOverviewUpdate.Set.Logo = ""
 		}
 
-		*connectorOverviewUpdate.Set.Logo = string(uploadResult.SecureURL)
+		*connectorOverviewUpdate.Set.Logo = uploadedLogoUrl
 
 		connectorOverviewUpdate.Where.ConnectorName = connector.Name
 		connectorOverviewUpdate.Where.ConnectorNamespace = connector.Namespace

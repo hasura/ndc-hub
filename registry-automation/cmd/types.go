@@ -132,6 +132,11 @@ type ProcessedChangedFiles struct {
 	NewReadmes           NewReadmes
 }
 
+type State struct {
+	UploadedConnectorVersions map[Connector]map[string]string
+	UploadedNewConnectors     map[NewConnector]MetadataFile
+}
+
 type Context struct {
 	Env               string
 	RegistryGQLClient *graphql.Client

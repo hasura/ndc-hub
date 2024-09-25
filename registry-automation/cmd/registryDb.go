@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+
 	"github.com/machinebox/graphql"
 )
 
@@ -22,7 +23,7 @@ type GetConnectorInfoResponse struct {
 	} `json:"hub_registry_connector"`
 }
 
-func insertHubRegistryConnector(client graphql.Client, connectorMetadata ConnectorMetadata, connector NewConnector) error {
+func insertHubRegistryConnector(client graphql.Client, hubRegistryConnectorInsertInput HubRegistryConnectorInsertInput) error {
 	var respData map[string]interface{}
 
 	ctx := context.Background()
@@ -34,11 +35,6 @@ mutation InsertHubRegistryConnector ($connector:hub_registry_connector_insert_in
     title
   }
 }`)
-	hubRegistryConnectorInsertInput := HubRegistryConnectorInsertInput{
-		Name:      connector.Name,
-		Title:     connectorMetadata.Overview.Title,
-		Namespace: connector.Namespace,
-	}
 
 	req.Var("connector", hubRegistryConnectorInsertInput)
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
@@ -128,6 +124,55 @@ mutation UpdateConnector ($updates: [connector_overview_updates!]!) {
 
 	// add the payload to the request
 	req.Var("updates", updates.Updates)
+
+	req.Header.Set("x-hasura-role", "connector_publishing_automation")
+	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
+
+	// Execute the GraphQL query and check the response.
+	if err := client.Run(ctx, req, &respData); err != nil {
+		return err
+	} else {
+		fmt.Printf("Successfully updated the connector overview: %+v\n", respData)
+	}
+
+	return nil
+}
+
+type ConnectorOverviewInsert struct {
+	Namespace   string `json:"namespace"`
+	Name        string `json:"name"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Logo        string `json:"logo"`
+	Docs        string `json:"docs"`
+	IsVerified  bool   `json:"is_verified"`
+	IsHosted    bool   `json:"is_hosted_by_hasura"`
+	Author      struct {
+		Data ConnectorAuthor `json:"data"`
+	} `json:"author"`
+}
+
+type ConnectorAuthor struct {
+	Name         string `json:"name"`
+	SupportEmail string `json:"support_email"`
+	Website      string `json:"website"`
+}
+
+func insertConnectorOveviewAndAuthor(connectorOverview ConnectorOverviewInsert) error {
+	var respData map[string]interface{}
+	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
+	ctx := context.Background()
+
+	req := graphql.NewRequest(`
+mutation InsertConnectorOverviewAndAuthor ($overview: connector_overview_insert_input!) {
+  insert_connector_overview(objects: [$overview]) {
+    affected_rows
+  }
+
+}`)
+
+	// add the payload to the request
+	req.Var("connector", connectorOverview)
 
 	req.Header.Set("x-hasura-role", "connector_publishing_automation")
 	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
