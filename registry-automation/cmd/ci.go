@@ -633,13 +633,18 @@ func buildRegistryPayload(
 	if err != nil {
 		return connectorVersion, err
 	}
-	log.Printf("check condition")
+	log.Printf("before check condition")
+
+	log.Printf("is length of HubRegistryConnector is 0", len(connectorInfo.HubRegistryConnector) == 0)
+	log.Printf("isNewConnector", isNewConnector)
 
 	// Check if the connector exists in the registry first
 	if len(connectorInfo.HubRegistryConnector) == 0 && !isNewConnector {
 			log.Printf("connector doesn't exist in the registry or newly added")
 			return connectorVersion, fmt.Errorf("Inserting a new connector is not supported yet")
 	}
+
+	log.Printf("after check condition")
 
 	var connectorVersionType string
 
