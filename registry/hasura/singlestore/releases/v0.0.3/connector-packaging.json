@@ -1,0 +1,11 @@
+{
+  "version": "0.0.3",
+  "uri": "https://github.com/singlestore-labs/singlestore-hasura-connector/releases/download/v0.0.3/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "69b44fa9549c041bb1d0570847f18180402eef3d3ee1281b20fae45693444d5b"
+  },
+  "source": {
+    "hash": "72ed900d5cc6819614fa27bba7bdba8977eedc6d"
+  }
+}

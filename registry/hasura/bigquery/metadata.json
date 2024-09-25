@@ -1,0 +1,41 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a BigQuery database and expose it to Hasura v3 Project",
+    "title": "BigQuery Connector",
+    "logo": "logo.png",
+    "tags": ["database"],
+    "latest_version": "v0.1.1"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "packages": [
+    {
+      "version": "0.1.1",
+      "uri": "https://github.com/hasura/ndc-bigquery/releases/download/v0.1.1/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "39ab09c4b96fa2ab285272e89c6d445fb7d5c0c33fd356cbe5bde99690a83781"
+      },
+      "source": {
+        "hash": "10ac176c590840971354a611c156aef6bc9915c4"
+      }
+    }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-bigquery/",
+    "version": [
+      {
+        "tag": "v0.1.1",
+        "hash": "10ac176c590840971354a611c156aef6bc9915c4",
+        "is_verified": true
+      }
+    ]
+  }
+}

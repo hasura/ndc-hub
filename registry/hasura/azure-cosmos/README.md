@@ -17,18 +17,18 @@ This connector is built using the [TypeScript Data Connector SDK](https://github
 Below, you'll find a matrix of all supported features for the Azure Cosmos DB for NoSQL connector:
 
 | Feature                         | Supported | Notes |
-| ------------------------------- | --------- | ----- |
-| Native Queries + Logical Models |    ✅     |       |
-| Simple Object Query             |    ✅     |       |
-| Filter / Search                 |    ✅     |       |
-| Simple Aggregation              |    ✅     |       |
-| Sort                            |    ✅     |       |
-| Paginate                        |    ✅     |       |
-| Nested Objects                  |    ✅     |       |
-| Nested Arrays                   |    ✅     |       |
-| Nested Filtering                |    ❌     |       |
-| Nested Sorting                  |    ❌     |       |
-| Nested Relationships            |    ❌     |       |
+|---------------------------------|-----------|-------|
+| Native Queries + Logical Models | ✅        |       |
+| Simple Object Query             | ✅        |       |
+| Filter / Search                 | ✅        |       |
+| Simple Aggregation              | ✅        |       |
+| Sort                            | ✅        |       |
+| Paginate                        | ✅        |       |
+| Nested Objects                  | ✅        |       |
+| Nested Arrays                   | ✅        |       |
+| Nested Filtering                | ✅        |       |
+| Nested Sorting                  | ❌        |       |
+| Nested Relationships            | ❌        |       |
 
 
 ## Before you get Started

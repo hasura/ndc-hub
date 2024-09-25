@@ -1,6 +1,6 @@
 # SingleStore Data Connector
 
-<a href="https://www.singlestore.com/"><img src="https://github.com/singlestore-labs/singlestore-hasura-connector/blob/main/docs/singlestore_logo_horizontal_color_on-white_rgb.png" align="right" width="200"></a>
+<a href="https://www.singlestore.com/"><img src="https://github.com/singlestore-labs/singlestore-hasura-connector/blob/main/docs/logo_primary_singlestore_black.png" align="right" width="200"></a>
 
 <!-- TODO: update when connector will be published -->
 [![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/latest/connectors/singesltore/)
