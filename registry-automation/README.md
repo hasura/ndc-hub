@@ -30,7 +30,7 @@
 ```bash
 
 
-2. Run the following command:
+2. Run the following command from the `registry-automation` directory:
 
 
 ```bash
