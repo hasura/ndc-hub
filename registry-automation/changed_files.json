@@ -1,0 +1,9 @@
+{
+    "added_files": [
+        "registry/hasura/newtestconnector/releases/v0.1.0/connector-packaging.json"
+    ],
+    "modified_files": [
+        "registry/hasura/newtestconnector/metadata.json"
+    ],
+    "deleted_files": []
+}

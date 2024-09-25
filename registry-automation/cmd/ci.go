@@ -351,7 +351,8 @@ func runCI(cmd *cobra.Command, args []string) {
 	}
 
 	if len(newlyAddedConnectorVersions) > 0 {
-		newConnectorVersionsToBeAdded = processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions)
+		var isNewConnector bool = len(newlyAddedConnectors) > 0
+		newConnectorVersionsToBeAdded = processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions, isNewConnector)
 	}
 
 	if len(modifiedReadmes) > 0 {
@@ -461,7 +462,7 @@ func processModifiedReadmes(modifiedReadmes ModifiedReadmes) ([]ConnectorOvervie
 
 }
 
-func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersions NewConnectorVersions) []ConnectorVersion {
+func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersions NewConnectorVersions, isNewConnector bool) []ConnectorVersion {
 	// Iterate over the added or modified connectors and upload the connector versions
 	var connectorVersions []ConnectorVersion
 	var uploadConnectorVersionErr error
@@ -470,7 +471,7 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 	for connectorName, versions := range newlyAddedConnectorVersions {
 		for version, connectorVersionPath := range versions {
 			var connectorVersion ConnectorVersion
-			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(ciCtx, connectorName, version, connectorVersionPath)
+			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(ciCtx, connectorName, version, connectorVersionPath, isNewConnector)
 
 			if uploadConnectorVersionErr != nil {
 				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, uploadConnectorVersionErr)
@@ -513,7 +514,7 @@ func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions 
 }
 
 // uploadConnectorVersionPackage uploads the connector version package to the registry
-func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
+func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version string, changedConnectorVersionPath string, isNewConnector bool) (ConnectorVersion, error) {
 
 	var connectorVersion ConnectorVersion
 
@@ -544,7 +545,7 @@ func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version s
 	}
 
 	// Build payload for registry upsert
-	return buildRegistryPayload(ciCtx, connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl)
+	return buildRegistryPayload(ciCtx, connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl, isNewConnector)
 }
 
 func uploadConnectorVersionDefinition(ciCtx Context, connectorNamespace, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
@@ -603,6 +604,7 @@ func buildRegistryPayload(
 	version string,
 	connectorVersionMetadata map[string]interface{},
 	uploadedConnectorDefinitionTgzUrl string,
+	isNewConnector bool,
 ) (ConnectorVersion, error) {
 	var connectorVersion ConnectorVersion
 	var connectorVersionDockerImage string = ""
@@ -629,8 +631,8 @@ func buildRegistryPayload(
 	}
 
 	// Check if the connector exists in the registry first
-	if len(connectorInfo.HubRegistryConnector) == 0 {
-		return connectorVersion, fmt.Errorf("Inserting a new connector is not supported yet")
+	if len(connectorInfo.HubRegistryConnector) == 0 && !isNewConnector {
+			return connectorVersion, fmt.Errorf("Inserting a new connector is not supported yet")
 	}
 
 	var connectorVersionType string
