@@ -4,6 +4,7 @@ on:
   pull_request_target:
     branches:
       - main
+      - kc/new-connector-publication-automation
     types: [opened, synchronize, reopened]
     paths:
       - registry/**
