@@ -179,7 +179,7 @@ func registryDbMutation(client graphql.Client, newConnectors NewConnectorsInsert
 	var respData map[string]interface{}
 	ctx := context.Background()
 	mutationQuery := `
-mutation InsertHubRegistryConnector (
+mutation HubRegistryMutationRequest (
   $hub_registry_connectors:[hub_registry_connector_insert_input!]!,
   $connector_overview_inserts: [connector_overview_insert_input!]!,
   $connector_overview_updates: [connector_overview_updates!]!,
