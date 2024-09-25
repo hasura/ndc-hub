@@ -1,5 +1,7 @@
 module github.com/hasura/ndc-hub/registry-automation
+
 go 1.21.4
+
 require (
 	github.com/cloudinary/cloudinary-go/v2 v2.8.0
 	github.com/spf13/cobra v1.8.0
