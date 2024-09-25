@@ -154,6 +154,7 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 		{
 			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/metadata.json$`),
 			process: func(matches []string, file string) {
+				// IsNew is set to true because we are processing newly added metadata.json
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.NewConnectors[connector] = MetadataFile(file)
 				fmt.Printf("Processing metadata file for connector: %s\n", connector.Name)
@@ -327,12 +328,13 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	var newConnectorsToBeAdded NewConnectorsInsertInput
 	var newConnectorVersionsToBeAdded []ConnectorVersion
-	var connectorOverviewUpdates []ConnectorOverviewUpdate
+
+	newConnectorOverviewsToBeAdded := make([](ConnectorOverviewInsert), 0)
+	hubRegistryConnectorsToBeAdded := make([](HubRegistryConnectorInsertInput), 0)
+	connectorOverviewUpdates := make([]ConnectorOverviewUpdate, 0)
 
 	if len(newlyAddedConnectors) > 0 {
 		fmt.Println("New connectors to be added to the registry: ", newlyAddedConnectors)
-		newConnectorOverviewsToBeAdded := make([](ConnectorOverviewInsert), 0)
-		hubRegistryConnectorsToBeAdded := make([](HubRegistryConnectorInsertInput), 0)
 
 		for connector, metadataFile := range newlyAddedConnectors {
 			connectorOverviewAndAuthor, hubRegistryConnector, err := processNewConnector(ctx, connector, metadataFile)
@@ -351,7 +353,11 @@ func runCI(cmd *cobra.Command, args []string) {
 	}
 
 	if len(newlyAddedConnectorVersions) > 0 {
-		newConnectorVersionsToBeAdded = processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions)
+		newlyAddedConnectors := make(map[Connector]bool)
+		for connector := range newlyAddedConnectorVersions {
+			newlyAddedConnectors[connector] = true
+		}
+		newConnectorVersionsToBeAdded = processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions, newlyAddedConnectors)
 	}
 
 	if len(modifiedReadmes) > 0 {
@@ -373,6 +379,10 @@ func runCI(cmd *cobra.Command, args []string) {
 	}
 
 	err = registryDbMutation(*ctx.RegistryGQLClient, newConnectorsToBeAdded, connectorOverviewUpdates, newConnectorVersionsToBeAdded)
+
+	if err != nil {
+		log.Fatalf("Failed to update the registry: %v", err)
+	}
 
 	fmt.Println("Successfully processed the changed files in the PR")
 }
@@ -461,7 +471,7 @@ func processModifiedReadmes(modifiedReadmes ModifiedReadmes) ([]ConnectorOvervie
 
 }
 
-func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersions NewConnectorVersions) []ConnectorVersion {
+func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersions NewConnectorVersions, newConnectorsAdded map[Connector]bool) []ConnectorVersion {
 	// Iterate over the added or modified connectors and upload the connector versions
 	var connectorVersions []ConnectorVersion
 	var uploadConnectorVersionErr error
@@ -470,7 +480,8 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 	for connectorName, versions := range newlyAddedConnectorVersions {
 		for version, connectorVersionPath := range versions {
 			var connectorVersion ConnectorVersion
-			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(ciCtx, connectorName, version, connectorVersionPath)
+			isNewConnector := newConnectorsAdded[connectorName]
+			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(ciCtx, connectorName, version, connectorVersionPath, isNewConnector)
 
 			if uploadConnectorVersionErr != nil {
 				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, uploadConnectorVersionErr)
@@ -513,7 +524,7 @@ func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions 
 }
 
 // uploadConnectorVersionPackage uploads the connector version package to the registry
-func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
+func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version string, changedConnectorVersionPath string, isNewConnector bool) (ConnectorVersion, error) {
 
 	var connectorVersion ConnectorVersion
 
@@ -544,7 +555,7 @@ func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version s
 	}
 
 	// Build payload for registry upsert
-	return buildRegistryPayload(ciCtx, connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl)
+	return buildRegistryPayload(ciCtx, connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl, isNewConnector)
 }
 
 func uploadConnectorVersionDefinition(ciCtx Context, connectorNamespace, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
@@ -603,6 +614,7 @@ func buildRegistryPayload(
 	version string,
 	connectorVersionMetadata map[string]interface{},
 	uploadedConnectorDefinitionTgzUrl string,
+	isNewConnector bool,
 ) (ConnectorVersion, error) {
 	var connectorVersion ConnectorVersion
 	var connectorVersionDockerImage string = ""
@@ -628,9 +640,25 @@ func buildRegistryPayload(
 		return connectorVersion, err
 	}
 
+	var isMultitenant bool
+
 	// Check if the connector exists in the registry first
 	if len(connectorInfo.HubRegistryConnector) == 0 {
-		return connectorVersion, fmt.Errorf("Inserting a new connector is not supported yet")
+
+		if isNewConnector {
+			isMultitenant = false
+		} else {
+			return connectorVersion, fmt.Errorf("Unexpected: Couldn't get the connector info of the connector: %s", connectorName)
+
+		}
+
+	} else {
+		if len(connectorInfo.HubRegistryConnector) == 1 {
+			// check if the connector is multitenant
+			isMultitenant = connectorInfo.HubRegistryConnector[0].MultitenantConnector != nil
+
+		}
+
 	}
 
 	var connectorVersionType string
@@ -656,7 +684,7 @@ func buildRegistryPayload(
 		Version:              version,
 		Image:                connectorVersionImage,
 		PackageDefinitionURL: uploadedConnectorDefinitionTgzUrl,
-		IsMultitenant:        connectorInfo.HubRegistryConnector[0].MultitenantConnector != nil,
+		IsMultitenant:        isMultitenant,
 		Type:                 connectorVersionType,
 	}
 
