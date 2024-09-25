@@ -74,7 +74,7 @@ func buildContext() Context {
 		log.Fatalf("GCP_SERVICE_ACCOUNT_DETAILS is not set")
 	} else {
 		var err error
-		storageClient, err = storage.NewClient(context.Background(), option.WithCredentialsJSON([]byte(ciCmdArgs.GCPServiceAccountDetails)))
+		storageClient, err = storage.NewClient(context.Background(), option.WithCredentialsJSON([]byte(gcpServiceAccountDetails)))
 		if err != nil {
 			log.Fatalf("Failed to create Google bucket client: %v", err)
 		}
