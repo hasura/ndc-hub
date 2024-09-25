@@ -145,7 +145,7 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 		NewConnectorVersions: make(map[Connector]map[string]string),
 		ModifiedLogos:        make(map[Connector]string),
 		ModifiedReadmes:      make(map[Connector]string),
-		NewConnectors:        make(map[NewConnector]MetadataFile),
+		NewConnectors:        make(map[Connector]MetadataFile),
 		NewLogos:             make(map[Connector]string),
 		NewReadmes:           make(map[Connector]string),
 	}
@@ -154,7 +154,7 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 		{
 			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/metadata.json$`),
 			process: func(matches []string, file string) {
-				connector := NewConnector{Name: matches[2], Namespace: matches[1]}
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.NewConnectors[connector] = MetadataFile(file)
 				fmt.Printf("Processing metadata file for connector: %s\n", connector.Name)
 			},
@@ -218,7 +218,7 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 	return result
 }
 
-func processNewConnector(ciCtx Context, connector NewConnector, metadataFile MetadataFile) (ConnectorOverviewInsert, HubRegistryConnectorInsertInput, error) {
+func processNewConnector(ciCtx Context, connector Connector, metadataFile MetadataFile) (ConnectorOverviewInsert, HubRegistryConnectorInsertInput, error) {
 	// Process the newly added connector
 	// Get the string value from metadataFile
 	var connectorOverviewAndAuthor ConnectorOverviewInsert

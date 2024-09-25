@@ -112,16 +112,9 @@ type ConnectorRegistryArgs struct {
 	CloudinaryUrl            string
 }
 
-type NewConnector struct {
-	// Name of the connector, e.g. "mongodb"
-	Name string
-	// Namespace of the connector, e.g. "hasura"
-	Namespace string
-}
-
 type MetadataFile string
 
-type NewConnectors map[NewConnector]MetadataFile
+type NewConnectors map[Connector]MetadataFile
 
 type ProcessedChangedFiles struct {
 	NewConnectorVersions NewConnectorVersions
@@ -130,11 +123,6 @@ type ProcessedChangedFiles struct {
 	NewConnectors        NewConnectors
 	NewLogos             NewLogos
 	NewReadmes           NewReadmes
-}
-
-type State struct {
-	UploadedConnectorVersions map[Connector]map[string]string
-	UploadedNewConnectors     map[NewConnector]MetadataFile
 }
 
 type Context struct {
