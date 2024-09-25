@@ -218,11 +218,11 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 	return result
 }
 
-func processNewConnector(ciCtx Context, connector NewConnector, metadataFile MetadataFile) (ConnectorOverviewInsert, *HubRegistryConnectorInsertInput, error) {
+func processNewConnector(ciCtx Context, connector NewConnector, metadataFile MetadataFile) (ConnectorOverviewInsert, HubRegistryConnectorInsertInput, error) {
 	// Process the newly added connector
 	// Get the string value from metadataFile
 	var connectorOverviewAndAuthor ConnectorOverviewInsert
-	var hubRegistryConnectorInsertInput *HubRegistryConnectorInsertInput
+	var hubRegistryConnectorInsertInput HubRegistryConnectorInsertInput
 
 	connectorMetadata, err := readJSONFile[ConnectorMetadata](string(metadataFile))
 	if err != nil {
@@ -263,23 +263,10 @@ func processNewConnector(ciCtx Context, connector NewConnector, metadataFile Met
 
 	}
 
-	// Insert hub registry connector in the registry
-	// This if condition checks if the hub connector in the metadata file is the same as the connector in the PR, if yes, we proceed to
-	// insert it as a hub connector in the registry. If the value is not the same, it means that the current connector is just an alias
-	// to an existing connector in the registry and we skip inserting it as a new hub connector in the registry. Example: `postgres-cosmos` is
-	// just an alias to the `postgres` connector in the registry.
-	if (connectorMetadata.HasuraHubConnector.Namespace == connector.Namespace) && (connectorMetadata.HasuraHubConnector.Name == connector.Name) {
-		hubRegistryConnectorInsertInput := HubRegistryConnectorInsertInput{
-			Name:      connector.Name,
-			Namespace: connector.Namespace,
-			Title:     connectorMetadata.Overview.Title,
-		}
-		err = insertHubRegistryConnector(*ciCtx.RegistryGQLClient, hubRegistryConnectorInsertInput)
-		if err != nil {
-			return connectorOverviewAndAuthor, &hubRegistryConnectorInsertInput, fmt.Errorf("Failed to insert the hub registry connector in the registry: %v", err)
-		}
-	} else {
-		fmt.Printf("Skipping the insertion of the connector %s/%s as a hub connector in the registry as it is an alias to the connector %s/%s\n", connector.Namespace, connector.Name, connectorMetadata.HasuraHubConnector.Namespace, connectorMetadata.HasuraHubConnector.Name)
+	hubRegistryConnectorInsertInput = HubRegistryConnectorInsertInput{
+		Name:      connector.Name,
+		Namespace: connector.Namespace,
+		Title:     connectorMetadata.Overview.Title,
 	}
 
 	connectorOverviewAndAuthor = ConnectorOverviewInsert{
@@ -303,7 +290,6 @@ func processNewConnector(ciCtx Context, connector NewConnector, metadataFile Met
 	}
 
 	return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, nil
-
 }
 
 // runCI is the main function that runs the CI workflow
@@ -339,6 +325,10 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	newlyAddedConnectors := processChangedFiles.NewConnectors
 
+	var newConnectorsToBeAdded NewConnectorsInsertInput
+	var newConnectorVersionsToBeAdded []ConnectorVersion
+	var connectorOverviewUpdates []ConnectorOverviewUpdate
+
 	if len(newlyAddedConnectors) > 0 {
 		fmt.Println("New connectors to be added to the registry: ", newlyAddedConnectors)
 		newConnectorOverviewsToBeAdded := make([](ConnectorOverviewInsert), 0)
@@ -351,31 +341,38 @@ func runCI(cmd *cobra.Command, args []string) {
 				log.Fatalf("Failed to process the new connector: %s/%s, Error: %v", connector.Namespace, connector.Name, err)
 			}
 			newConnectorOverviewsToBeAdded = append(newConnectorOverviewsToBeAdded, connectorOverviewAndAuthor)
-			hubRegistryConnectorsToBeAdded = append(hubRegistryConnectorsToBeAdded, *hubRegistryConnector)
+			hubRegistryConnectorsToBeAdded = append(hubRegistryConnectorsToBeAdded, hubRegistryConnector)
 
 		}
+
+		newConnectorsToBeAdded.HubRegistryConnectors = hubRegistryConnectorsToBeAdded
+		newConnectorsToBeAdded.ConnectorOverviews = newConnectorOverviewsToBeAdded
 
 	}
 
 	if len(newlyAddedConnectorVersions) > 0 {
-		processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions)
+		newConnectorVersionsToBeAdded = processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions)
 	}
 
 	if len(modifiedReadmes) > 0 {
-		err := processModifiedReadmes(modifiedReadmes)
+		readMeUpdates, err := processModifiedReadmes(modifiedReadmes)
 		if err != nil {
 			log.Fatalf("Failed to process the modified READMEs: %v", err)
 		}
+		connectorOverviewUpdates = append(connectorOverviewUpdates, readMeUpdates...)
 		fmt.Println("Successfully updated the READMEs in the registry.")
 	}
 
 	if len(modifiedLogos) > 0 {
-		err := processModifiedLogos(modifiedLogos)
+		logoUpdates, err := processModifiedLogos(modifiedLogos)
 		if err != nil {
 			log.Fatalf("Failed to process the modified logos: %v", err)
 		}
+		connectorOverviewUpdates = append(connectorOverviewUpdates, logoUpdates...)
 		fmt.Println("Successfully updated the logos in the registry.")
 	}
+
+	err = registryDbMutation(*ctx.RegistryGQLClient, newConnectorsToBeAdded, connectorOverviewUpdates, newConnectorVersionsToBeAdded)
 
 	fmt.Println("Successfully processed the changed files in the PR")
 }
@@ -399,20 +396,20 @@ func uploadLogoToCloudinary(cloudinary *cloudinary.Cloudinary, connector Connect
 	return uploadResult.SecureURL, nil
 }
 
-func processModifiedLogos(modifiedLogos ModifiedLogos) error {
+func processModifiedLogos(modifiedLogos ModifiedLogos) ([]ConnectorOverviewUpdate, error) {
 	// Iterate over the modified logos and update the logos in the registry
 	var connectorOverviewUpdates []ConnectorOverviewUpdate
 	// upload the logo to cloudinary
 	cloudinary, err := cloudinary.NewFromURL(ciCmdArgs.CloudinaryUrl)
 	if err != nil {
-		return err
+		return connectorOverviewUpdates, err
 	}
 
 	for connector, logoPath := range modifiedLogos {
 		// open the logo file
 		uploadedLogoUrl, err := uploadLogoToCloudinary(cloudinary, connector, logoPath)
 		if err != nil {
-			return err
+			return connectorOverviewUpdates, err
 		}
 
 		var connectorOverviewUpdate ConnectorOverviewUpdate
@@ -432,11 +429,11 @@ func processModifiedLogos(modifiedLogos ModifiedLogos) error {
 
 	}
 
-	return updateConnectorOverview(ConnectorOverviewUpdates{Updates: connectorOverviewUpdates})
+	return connectorOverviewUpdates, nil
 
 }
 
-func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
+func processModifiedReadmes(modifiedReadmes ModifiedReadmes) ([]ConnectorOverviewUpdate, error) {
 	// Iterate over the modified READMEs and update the READMEs in the registry
 	var connectorOverviewUpdates []ConnectorOverviewUpdate
 
@@ -444,7 +441,7 @@ func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
 		// open the README file
 		readmeContent, err := readFile(readmePath)
 		if err != nil {
-			return err
+			return connectorOverviewUpdates, err
 
 		}
 
@@ -460,11 +457,11 @@ func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
 
 	}
 
-	return updateConnectorOverview(ConnectorOverviewUpdates{Updates: connectorOverviewUpdates})
+	return connectorOverviewUpdates, nil
 
 }
 
-func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersions NewConnectorVersions) {
+func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersions NewConnectorVersions) []ConnectorVersion {
 	// Iterate over the added or modified connectors and upload the connector versions
 	var connectorVersions []ConnectorVersion
 	var uploadConnectorVersionErr error
@@ -492,17 +489,11 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 		_ = cleanupUploadedConnectorVersions(ciCtx.StorageClient, connectorVersions) // ignore errors while cleaning up
 		// delete the uploaded connector versions from the registry
 		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
-
-	} else {
-		fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
-		err := updateRegistryGQL(*ciCtx.RegistryGQLClient, connectorVersions)
-		if err != nil {
-			// attempt to cleanup the uploaded connector versions
-			_ = cleanupUploadedConnectorVersions(ciCtx.StorageClient, connectorVersions) // ignore errors while cleaning up
-			log.Fatalf("Failed to update the registry: %v", err)
-		}
 	}
+
 	fmt.Println("Successfully added connector versions to the registry.")
+
+	return connectorVersions
 
 }
 
