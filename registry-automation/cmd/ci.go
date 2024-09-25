@@ -546,6 +546,7 @@ func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version s
 		// print success message with the name of the connector and the version
 		fmt.Printf("Successfully uploaded the connector version definition in google cloud registry for the connector: %v version: %v\n", connector.Name, version)
 	}
+	log.Printf("before buildRegistryPayload")
 
 	// Build payload for registry upsert
 	return buildRegistryPayload(ciCtx, connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl, isNewConnector)
@@ -632,6 +633,7 @@ func buildRegistryPayload(
 	if err != nil {
 		return connectorVersion, err
 	}
+	log.Printf("check condition")
 
 	// Check if the connector exists in the registry first
 	if len(connectorInfo.HubRegistryConnector) == 0 && !isNewConnector {
