@@ -285,9 +285,7 @@ func processNewConnector(ciCtx Context, connector Connector, metadataFile Metada
 		Description: connectorMetadata.Overview.Description,
 		IsVerified:  connectorMetadata.IsVerified,
 		IsHosted:    connectorMetadata.IsHostedByHasura,
-		Author: struct {
-			Data ConnectorAuthor `json:"data"`
-		}{
+		Author: ConnectorAuthorNestedInsert{
 			Data: ConnectorAuthor{
 				Name:         connectorMetadata.Author.Name,
 				SupportEmail: connectorMetadata.Author.SupportEmail,

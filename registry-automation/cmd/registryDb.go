@@ -44,6 +44,7 @@ affected_rows
   }
 }
 `)
+
 	// add the payload to the request
 	req.Var("hub_registry_connectors", newConnectors.HubRegistryConnectors)
 	req.Var("connectors_overviews", newConnectors.ConnectorOverviews)
@@ -154,18 +155,26 @@ mutation UpdateConnector ($updates: [connector_overview_updates!]!) {
 	return nil
 }
 
+type ConnectorAuthorNestedInsertOnConflict struct {
+	Constraint string   `json:"constraint"`
+	UpdateCols []string `json:"update_columns,omitempty"`
+}
+
+type ConnectorAuthorNestedInsert struct {
+	Data       ConnectorAuthor                        `json:"data"`
+	OnConflict *ConnectorAuthorNestedInsertOnConflict `json:"on_conflict,omitempty"`
+}
+
 type ConnectorOverviewInsert struct {
-	Namespace   string `json:"namespace"`
-	Name        string `json:"name"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Logo        string `json:"logo"`
-	Docs        string `json:"docs"`
-	IsVerified  bool   `json:"is_verified"`
-	IsHosted    bool   `json:"is_hosted_by_hasura"`
-	Author      struct {
-		Data ConnectorAuthor `json:"data"`
-	} `json:"author"`
+	Namespace   string                      `json:"namespace"`
+	Name        string                      `json:"name"`
+	Title       string                      `json:"title"`
+	Description string                      `json:"description"`
+	Logo        string                      `json:"logo"`
+	Docs        string                      `json:"docs"`
+	IsVerified  bool                        `json:"is_verified"`
+	IsHosted    bool                        `json:"is_hosted_by_hasura"`
+	Author      ConnectorAuthorNestedInsert `json:"author"`
 }
 
 type ConnectorAuthor struct {
@@ -234,7 +243,7 @@ mutation HubRegistryMutationRequest (
   insert_hub_registry_connector(objects: $hub_registry_connectors, on_conflict: {constraint: connector_pkey}) {
 affected_rows
   }
-  insert_connector_overview(objects: $connector_overview_inserts, on_conflict: {constraint: connector_overview_pkey}) {
+  insert_connector_overview(objects: $connector_overview_inserts, on_conflict: {constraint: connector_overview_pkey, update_columns: [docs, logo]}) {
     affected_rows
   }
   insert_hub_registry_connector_version(objects: $connector_version_inserts, on_conflict: {constraint: connector_version_namespace_name_version_key, update_columns: [image, package_definition_url, is_multitenant]}) {
@@ -246,6 +255,15 @@ affected_rows
   }
 }
 `
+
+	// update newConnectors.ConnectorOverviews to have on_conflict
+	for i, _ := range newConnectors.ConnectorOverviews {
+		newConnectors.ConnectorOverviews[i].Author.OnConflict = &ConnectorAuthorNestedInsertOnConflict{
+			Constraint: "connector_author_connector_title_key",
+			UpdateCols: []string{},
+		}
+	}
+
 	req := graphql.NewRequest(mutationQuery)
 	req.Var("hub_registry_connectors", newConnectors.HubRegistryConnectors)
 	req.Var("connector_overview_inserts", newConnectors.ConnectorOverviews)
