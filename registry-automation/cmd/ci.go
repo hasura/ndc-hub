@@ -384,7 +384,14 @@ func runCI(cmd *cobra.Command, args []string) {
 		fmt.Println("Successfully updated the logos in the registry.")
 	}
 
-	err = registryDbMutation(ctx.RegistryGQLClient, newConnectorsToBeAdded, connectorOverviewUpdates, newConnectorVersionsToBeAdded)
+	if ctx.Env == "production" {
+		err = registryDbMutation(ctx.RegistryGQLClient, newConnectorsToBeAdded, connectorOverviewUpdates, newConnectorVersionsToBeAdded)
+
+	} else if ctx.Env == "staging" {
+		err = registryDbMutationStaging(ctx.RegistryGQLClient, newConnectorsToBeAdded, connectorOverviewUpdates, newConnectorVersionsToBeAdded)
+	} else {
+		log.Fatalf("Unexpected: invalid publication environment: %s", ctx.Env)
+	}
 
 	if err != nil {
 		log.Fatalf("Failed to update the registry: %v", err)

@@ -218,3 +218,48 @@ affected_rows
 	return nil
 
 }
+
+// registryDbMutation is a function to insert data into the registry database, all the mutations are done in a single transaction.
+func registryDbMutationStaging(client GraphQLClientInterface, newConnectors NewConnectorsInsertInput, connectorOverviewUpdates []ConnectorOverviewUpdate, connectorVersionInserts []ConnectorVersion) error {
+	var respData map[string]interface{}
+	ctx := context.Background()
+	mutationQuery := `
+mutation HubRegistryMutationRequest (
+  $hub_registry_connectors:[hub_registry_connector_insert_input!]!,
+  $connector_overview_inserts: [connector_overview_insert_input!]!,
+  $connector_overview_updates: [connector_overview_updates!]!,
+  $connector_version_inserts: [hub_registry_connector_version_insert_input!]!
+){
+
+  insert_hub_registry_connector(objects: $hub_registry_connectors, on_conflict: {constraint: connector_pkey}) {
+affected_rows
+  }
+  insert_connector_overview(objects: $connector_overview_inserts, on_conflict: {constraint: connector_overview_pkey}) {
+    affected_rows
+  }
+  insert_hub_registry_connector_version(objects: $connector_version_inserts, on_conflict: {constraint: connector_version_namespace_name_version_key, update_columns: [image, package_definition_url, is_multitenant]}) {
+    affected_rows
+  }
+
+  update_connector_overview_many(updates: $connector_overview_updates) {
+    affected_rows
+  }
+}
+`
+	req := graphql.NewRequest(mutationQuery)
+	req.Var("hub_registry_connectors", newConnectors.HubRegistryConnectors)
+	req.Var("connector_overview_inserts", newConnectors.ConnectorOverviews)
+	req.Var("connector_overview_updates", connectorOverviewUpdates)
+	req.Var("connector_version_inserts", connectorVersionInserts)
+
+	req.Header.Set("x-hasura-role", "connector_publishing_automation")
+	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
+
+	// Execute the GraphQL query and check the response.
+	if err := client.Run(ctx, req, &respData); err != nil {
+		return err
+	}
+
+	return nil
+
+}
