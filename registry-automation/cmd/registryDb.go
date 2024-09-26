@@ -257,7 +257,7 @@ affected_rows
 `
 
 	// update newConnectors.ConnectorOverviews to have on_conflict
-	for i, _ := range newConnectors.ConnectorOverviews {
+	for i := range newConnectors.ConnectorOverviews {
 		newConnectors.ConnectorOverviews[i].Author.OnConflict = &ConnectorAuthorNestedInsertOnConflict{
 			Constraint: "connector_author_connector_title_key",
 			UpdateCols: []string{},
