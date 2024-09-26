@@ -53,6 +53,9 @@ func buildContext() Context {
 	var registryGQLClient *graphql.Client
 	var storageClient *storage.Client
 	var cloudinaryClient *cloudinary.Cloudinary
+	var cloudinaryWrapper *CloudinaryWrapper
+	var storageWrapper *StorageClientWrapper
+
 	if registryGQLURL == "" {
 		log.Fatalf("CONNECTOR_REGISTRY_GQL_URL is not set")
 	} else {
@@ -80,6 +83,8 @@ func buildContext() Context {
 		}
 		defer storageClient.Close()
 
+		storageWrapper = &StorageClientWrapper{storageClient}
+
 		ciCmdArgs.GCPServiceAccountDetails = gcpServiceAccountDetails
 	}
 
@@ -102,14 +107,15 @@ func buildContext() Context {
 			log.Fatalf("Failed to create cloudinary client: %v", err)
 
 		}
+		cloudinaryWrapper = &CloudinaryWrapper{cloudinaryClient}
 
 	}
 
 	return Context{
 		Env:               ciCmdArgs.PublicationEnv,
 		RegistryGQLClient: registryGQLClient,
-		StorageClient:     storageClient,
-		Cloudinary:        cloudinaryClient,
+		StorageClient:     storageWrapper,
+		Cloudinary:        cloudinaryWrapper,
 	}
 
 }
@@ -245,7 +251,7 @@ func processNewConnector(ciCtx Context, connector Connector, metadataFile Metada
 	}
 
 	// Get connector info from the registry
-	connectorInfo, err := getConnectorInfoFromRegistry(*ciCtx.RegistryGQLClient, connector.Name, connector.Namespace)
+	connectorInfo, err := getConnectorInfoFromRegistry(ciCtx.RegistryGQLClient, connector.Name, connector.Namespace)
 	if err != nil {
 		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput,
 			fmt.Errorf("Failed to get the connector info from the registry: %v", err)
@@ -370,7 +376,7 @@ func runCI(cmd *cobra.Command, args []string) {
 	}
 
 	if len(modifiedLogos) > 0 {
-		logoUpdates, err := processModifiedLogos(modifiedLogos)
+		logoUpdates, err := processModifiedLogos(modifiedLogos, ctx.Cloudinary)
 		if err != nil {
 			log.Fatalf("Failed to process the modified logos: %v", err)
 		}
@@ -378,7 +384,7 @@ func runCI(cmd *cobra.Command, args []string) {
 		fmt.Println("Successfully updated the logos in the registry.")
 	}
 
-	err = registryDbMutation(*ctx.RegistryGQLClient, newConnectorsToBeAdded, connectorOverviewUpdates, newConnectorVersionsToBeAdded)
+	err = registryDbMutation(ctx.RegistryGQLClient, newConnectorsToBeAdded, connectorOverviewUpdates, newConnectorVersionsToBeAdded)
 
 	if err != nil {
 		log.Fatalf("Failed to update the registry: %v", err)
@@ -387,7 +393,7 @@ func runCI(cmd *cobra.Command, args []string) {
 	fmt.Println("Successfully processed the changed files in the PR")
 }
 
-func uploadLogoToCloudinary(cloudinary *cloudinary.Cloudinary, connector Connector, logoPath string) (string, error) {
+func uploadLogoToCloudinary(cloudinary CloudinaryInterface, connector Connector, logoPath string) (string, error) {
 	logoContent, err := readFile(logoPath)
 	if err != nil {
 		fmt.Printf("Failed to read the logo file: %v", err)
@@ -396,7 +402,7 @@ func uploadLogoToCloudinary(cloudinary *cloudinary.Cloudinary, connector Connect
 
 	imageReader := bytes.NewReader(logoContent)
 
-	uploadResult, err := cloudinary.Upload.Upload(context.Background(), imageReader, uploader.UploadParams{
+	uploadResult, err := cloudinary.Upload(context.Background(), imageReader, uploader.UploadParams{
 		PublicID: fmt.Sprintf("%s-%s", connector.Namespace, connector.Name),
 		Format:   "png",
 	})
@@ -406,18 +412,13 @@ func uploadLogoToCloudinary(cloudinary *cloudinary.Cloudinary, connector Connect
 	return uploadResult.SecureURL, nil
 }
 
-func processModifiedLogos(modifiedLogos ModifiedLogos) ([]ConnectorOverviewUpdate, error) {
+func processModifiedLogos(modifiedLogos ModifiedLogos, cloudinaryClient CloudinaryInterface) ([]ConnectorOverviewUpdate, error) {
 	// Iterate over the modified logos and update the logos in the registry
 	var connectorOverviewUpdates []ConnectorOverviewUpdate
-	// upload the logo to cloudinary
-	cloudinary, err := cloudinary.NewFromURL(ciCmdArgs.CloudinaryUrl)
-	if err != nil {
-		return connectorOverviewUpdates, err
-	}
 
 	for connector, logoPath := range modifiedLogos {
 		// open the logo file
-		uploadedLogoUrl, err := uploadLogoToCloudinary(cloudinary, connector, logoPath)
+		uploadedLogoUrl, err := uploadLogoToCloudinary(cloudinaryClient, connector, logoPath)
 		if err != nil {
 			return connectorOverviewUpdates, err
 		}
@@ -508,7 +509,7 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 
 }
 
-func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions []ConnectorVersion) error {
+func cleanupUploadedConnectorVersions(client StorageClientInterface, connectorVersions []ConnectorVersion) error {
 	// Iterate over the connector versions and delete the uploaded files
 	// from the google bucket
 	fmt.Println("Cleaning up the uploaded connector versions")
@@ -634,7 +635,7 @@ func buildRegistryPayload(
 
 	}
 
-	connectorInfo, err := getConnectorInfoFromRegistry(*ciCtx.RegistryGQLClient, connectorNamespace, connectorName)
+	connectorInfo, err := getConnectorInfoFromRegistry(ciCtx.RegistryGQLClient, connectorNamespace, connectorName)
 
 	if err != nil {
 		return connectorVersion, err

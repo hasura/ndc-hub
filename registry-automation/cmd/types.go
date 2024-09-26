@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"cloud.google.com/go/storage"
+	"context"
 	"encoding/json"
 	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/machinebox/graphql"
 )
 
@@ -125,11 +127,41 @@ type ProcessedChangedFiles struct {
 	NewReadmes           NewReadmes
 }
 
+type GraphQLClientInterface interface {
+	Run(ctx context.Context, req *graphql.Request, resp interface{}) error
+}
+
+type StorageClientWrapper struct {
+	*storage.Client
+}
+
+func (s *StorageClientWrapper) Bucket(name string) *storage.BucketHandle {
+	return s.Client.Bucket(name)
+}
+
+type StorageClientInterface interface {
+	Bucket(name string) *storage.BucketHandle
+}
+
+type CloudinaryInterface interface {
+	Upload(ctx context.Context, file interface{}, uploadParams uploader.UploadParams) (*uploader.UploadResult, error)
+}
+
+type CloudinaryWrapper struct {
+	*cloudinary.Cloudinary
+}
+
+func (c *CloudinaryWrapper) Upload(ctx context.Context, file interface{}, uploadParams uploader.UploadParams) (*uploader.UploadResult, error) {
+	return c.Cloudinary.Upload.Upload(ctx, file, uploadParams)
+}
+
+//
+
 type Context struct {
 	Env               string
-	RegistryGQLClient *graphql.Client
-	StorageClient     *storage.Client
-	Cloudinary        *cloudinary.Cloudinary
+	RegistryGQLClient GraphQLClientInterface
+	StorageClient     StorageClientInterface
+	Cloudinary        CloudinaryInterface
 }
 
 // Type that uniquely identifies a connector

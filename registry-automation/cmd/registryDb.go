@@ -66,7 +66,7 @@ affected_rows
 	return nil
 }
 
-func getConnectorInfoFromRegistry(client graphql.Client, connectorNamespace string, connectorName string) (GetConnectorInfoResponse, error) {
+func getConnectorInfoFromRegistry(client GraphQLClientInterface, connectorNamespace string, connectorName string) (GetConnectorInfoResponse, error) {
 	var respData GetConnectorInfoResponse
 
 	ctx := context.Background()
@@ -175,7 +175,7 @@ type ConnectorAuthor struct {
 }
 
 // registryDbMutation is a function to insert data into the registry database, all the mutations are done in a single transaction.
-func registryDbMutation(client graphql.Client, newConnectors NewConnectorsInsertInput, connectorOverviewUpdates []ConnectorOverviewUpdate, connectorVersionInserts []ConnectorVersion) error {
+func registryDbMutation(client GraphQLClientInterface, newConnectors NewConnectorsInsertInput, connectorOverviewUpdates []ConnectorOverviewUpdate, connectorVersionInserts []ConnectorVersion) error {
 	var respData map[string]interface{}
 	ctx := context.Background()
 	mutationQuery := `

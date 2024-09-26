@@ -2,7 +2,6 @@
 package cmd
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
 	"fmt"
 	"io"
@@ -10,7 +9,7 @@ import (
 )
 
 // deleteFile deletes a file from Google Cloud Storage
-func deleteFile(client *storage.Client, bucketName, objectName string) error {
+func deleteFile(client StorageClientInterface, bucketName, objectName string) error {
 	bucket := client.Bucket(bucketName)
 	object := bucket.Object(objectName)
 
@@ -19,7 +18,7 @@ func deleteFile(client *storage.Client, bucketName, objectName string) error {
 
 // uploadFile uploads a file to Google Cloud Storage
 // document this function with comments
-func uploadFile(client *storage.Client, bucketName, objectName, filePath string) (string, error) {
+func uploadFile(client StorageClientInterface, bucketName, objectName, filePath string) (string, error) {
 	bucket := client.Bucket(bucketName)
 	object := bucket.Object(objectName)
 	newCtx := context.Background()
