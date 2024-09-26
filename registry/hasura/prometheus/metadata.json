@@ -5,7 +5,7 @@
     "title": "Prometheus Data Connector",
     "logo": "logo.svg",
     "tags": ["database"],
-    "latest_version": "v0.0.3"
+    "latest_version": "v0.0.4"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -19,8 +19,8 @@
     "repository": "https://github.com/hasura/ndc-prometheus",
     "version": [
       {
-        "tag": "v0.0.3",
-        "hash": "a40bf3c53cfb674faf6035e9088efb0e30b8806d",
+        "tag": "v0.0.4",
+        "hash": "69915e6c9736f38a0952c5ce8ad9a2d180783a43",
         "is_verified": true
       }
     ]
