@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io"
 	"net/http"
 	"os"
@@ -119,4 +120,31 @@ func extractTarGz(src, dest string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s/.hasura-connector/connector-metadata.yaml", filepath), nil
+}
+
+// Write a function that accepts a file path to a YAML file and returns
+// the contents of the file as a map[string]interface{}.
+// readYAMLFile accepts a file path to a YAML file and returns the contents of the file as a map[string]interface{}.
+func readYAMLFile(filePath string) (map[string]interface{}, error) {
+	// Open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	// Read the file contents
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// Unmarshal the YAML contents into a map
+	var result map[string]interface{}
+	err = yaml.Unmarshal(data, &result)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal YAML: %w", err)
+	}
+
+	return result, nil
 }

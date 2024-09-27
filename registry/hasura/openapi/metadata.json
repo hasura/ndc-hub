@@ -5,7 +5,7 @@
     "title": "OpenAPI Lambda Connector",
     "logo": "logo.png",
     "tags": [],
-    "latest_version": "v0.1.5"
+    "latest_version": "v0.2.0"
   },
   "author": {
     "support_email": "support@hasura.io",
