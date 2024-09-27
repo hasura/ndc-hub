@@ -7,7 +7,7 @@
     "tags": [
       "search"
     ],
-    "latest_version": "v1.0.2"
+    "latest_version": "v1.0.3"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -82,6 +82,17 @@
       "source": {
         "hash": "19c1dfbce44db9fb9a71e9ca68c93de2d5fade6c"
       }
+    },
+    {
+      "version": "1.0.3",
+      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.0.3/connector-definition.tgz",
+      "checksum": {
+        "type": "sha256",
+        "value": "42090a8ad64abe5002b2053041c308ab66dde430186eeb7b6ee76eb9bf8095be"
+      },
+      "source": {
+        "hash": "4993fed05687b9464c64d44140cd801471ef32b9"
+      }
     }
   ],
   "source_code": {
@@ -116,6 +127,11 @@
       {
         "tag": "v1.0.2",
         "hash": "19c1dfbce44db9fb9a71e9ca68c93de2d5fade6c",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.0.3",
+        "hash": "4993fed05687b9464c64d44140cd801471ef32b9",
         "is_verified": true
       }
     ]
