@@ -331,11 +331,12 @@ func runCI(cmd *cobra.Command, args []string) {
 	newlyAddedConnectors := processChangedFiles.NewConnectors
 
 	var newConnectorsToBeAdded NewConnectorsInsertInput
-	var newConnectorVersionsToBeAdded []ConnectorVersion
-
+	newConnectorsToBeAdded.HubRegistryConnectors = make([]HubRegistryConnectorInsertInput, 0)
+	newConnectorsToBeAdded.ConnectorOverviews = make([]ConnectorOverviewInsert, 0)
 	newConnectorOverviewsToBeAdded := make([](ConnectorOverviewInsert), 0)
 	hubRegistryConnectorsToBeAdded := make([](HubRegistryConnectorInsertInput), 0)
 	connectorOverviewUpdates := make([]ConnectorOverviewUpdate, 0)
+	newConnectorVersionsToBeAdded := make([]ConnectorVersion, 0)
 
 	if len(newlyAddedConnectors) > 0 {
 		fmt.Println("New connectors to be added to the registry: ", newlyAddedConnectors)
