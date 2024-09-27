@@ -16,7 +16,6 @@ import (
 	"github.com/machinebox/graphql"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
-	"gopkg.in/yaml.v2"
 )
 
 // ciCmd represents the ci command
@@ -24,83 +23,6 @@ var ciCmd = &cobra.Command{
 	Use:   "ci",
 	Short: "Run the CI workflow for hub registry publication",
 	Run:   runCI,
-}
-
-type ChangedFiles struct {
-	Added    []string `json:"added_files"`
-	Modified []string `json:"modified_files"`
-	Deleted  []string `json:"deleted_files"`
-}
-
-// ConnectorVersion represents a version of a connector, this type is
-// used to insert a new version of a connector in the registry.
-type ConnectorVersion struct {
-	// Namespace of the connector, e.g. "hasura"
-	Namespace string `json:"namespace"`
-	// Name of the connector, e.g. "mongodb"
-	Name string `json:"name"`
-	// Semantic version of the connector version, e.g. "v1.0.0"
-	Version string `json:"version"`
-	// Docker image of the connector version (optional)
-	// This field is only required if the connector version is of type `PrebuiltDockerImage`
-	Image *string `json:"image,omitempty"`
-	// URL to the connector's metadata
-	PackageDefinitionURL string `json:"package_definition_url"`
-	// Is the connector version multitenant?
-	IsMultitenant bool `json:"is_multitenant"`
-	// Type of the connector packaging `PrebuiltDockerImage`/`ManagedDockerBuild`
-	Type string `json:"type"`
-}
-
-// Create a struct with the following fields:
-// type string
-// image *string (optional)
-type ConnectionVersionMetadata struct {
-	Type  string  `yaml:"type"`
-	Image *string `yaml:"image,omitempty"`
-}
-
-type WhereClause struct {
-	ConnectorName      string
-	ConnectorNamespace string
-}
-
-func (wc WhereClause) MarshalJSON() ([]byte, error) {
-	where := map[string]interface{}{
-		"_and": []map[string]interface{}{
-			{"name": map[string]string{"_eq": wc.ConnectorName}},
-			{"namespace": map[string]string{"_eq": wc.ConnectorNamespace}},
-		},
-	}
-	return json.Marshal(where)
-}
-
-type ConnectorOverviewUpdate struct {
-	Set struct {
-		Docs *string `json:"docs,omitempty"`
-		Logo *string `json:"logo,omitempty"`
-	} `json:"_set"`
-	Where WhereClause `json:"where"`
-}
-
-type ConnectorOverviewUpdates struct {
-	Updates []ConnectorOverviewUpdate `json:"updates"`
-}
-
-const (
-	ManagedDockerBuild  = "ManagedDockerBuild"
-	PrebuiltDockerImage = "PrebuiltDockerImage"
-)
-
-// Make a struct with the fields expected in the command line arguments
-type ConnectorRegistryArgs struct {
-	ChangedFilesPath         string
-	PublicationEnv           string
-	ConnectorRegistryGQLUrl  string
-	ConnectorPublicationKey  string
-	GCPServiceAccountDetails string
-	GCPBucketName            string
-	CloudinaryUrl            string
 }
 
 var ciCmdArgs ConnectorRegistryArgs
@@ -125,13 +47,20 @@ func init() {
 
 }
 
-func buildContext() {
+func buildContext() Context {
 	// Connector registry Hasura GraphQL URL
 	registryGQLURL := os.Getenv("CONNECTOR_REGISTRY_GQL_URL")
+	var registryGQLClient *graphql.Client
+	var storageClient *storage.Client
+	var cloudinaryClient *cloudinary.Cloudinary
+	var cloudinaryWrapper *CloudinaryWrapper
+	var storageWrapper *StorageClientWrapper
+
 	if registryGQLURL == "" {
 		log.Fatalf("CONNECTOR_REGISTRY_GQL_URL is not set")
 	} else {
 		ciCmdArgs.ConnectorRegistryGQLUrl = registryGQLURL
+		registryGQLClient = graphql.NewClient(registryGQLURL)
 	}
 
 	// Connector publication key
@@ -147,6 +76,15 @@ func buildContext() {
 	if gcpServiceAccountDetails == "" {
 		log.Fatalf("GCP_SERVICE_ACCOUNT_DETAILS is not set")
 	} else {
+		var err error
+		storageClient, err = storage.NewClient(context.Background(), option.WithCredentialsJSON([]byte(gcpServiceAccountDetails)))
+		if err != nil {
+			log.Fatalf("Failed to create Google bucket client: %v", err)
+		}
+		defer storageClient.Close()
+
+		storageWrapper = &StorageClientWrapper{storageClient}
+
 		ciCmdArgs.GCPServiceAccountDetails = gcpServiceAccountDetails
 	}
 
@@ -163,114 +101,210 @@ func buildContext() {
 	if cloudinaryUrl == "" {
 		log.Fatalf("CLOUDINARY_URL is not set")
 	} else {
-		ciCmdArgs.CloudinaryUrl = cloudinaryUrl
+		var err error
+		cloudinaryClient, err = cloudinary.NewFromURL(cloudinaryUrl)
+		if err != nil {
+			log.Fatalf("Failed to create cloudinary client: %v", err)
+
+		}
+		cloudinaryWrapper = &CloudinaryWrapper{cloudinaryClient}
+
+	}
+
+	return Context{
+		Env:               ciCmdArgs.PublicationEnv,
+		RegistryGQLClient: registryGQLClient,
+		StorageClient:     storageWrapper,
+		Cloudinary:        cloudinaryWrapper,
 	}
 
 }
 
-// processChangedFiles processes the files in the PR and extracts the connector name and version
-// This function checks for the following things:
-// 1. If a new connector version is added, it adds the connector version to the `newlyAddedConnectorVersions` map.
-// 2. If the logo file is modified, it adds the connector name and the path to the modified logo to the `modifiedLogos` map.
-// 3. If the README file is modified, it adds the connector name and the path to the modified README to the `modifiedReadmes` map.
-func processChangedFiles(changedFiles ChangedFiles) (NewConnectorVersions, ModifiedLogos, ModifiedReadmes) {
+type fileProcessor struct {
+	regex   *regexp.Regexp
+	process func(matches []string, file string)
+}
 
-	newlyAddedConnectorVersions := make(map[Connector]map[string]string)
-	modifiedLogos := make(map[Connector]string)
-	modifiedReadmes := make(map[Connector]string)
+// processChangedFiles categorizes changes in connector files within a registry system.
+// It handles new and modified files including metadata, logos, READMEs, and connector versions.
+//
+// The function takes a ChangedFiles struct containing slices of added and modified filenames,
+// and returns a ProcessedChangedFiles struct with categorized changes.
+//
+// Files are processed based on their path and type:
+//   - metadata.json: New connectors
+//   - logo.(png|svg): New or modified logos
+//   - README.md: New or modified READMEs
+//   - connector-packaging.json: New connector versions
+//
+// Any files not matching these patterns are logged as skipped.
+//
+// Example usage:
+//
+//	changedFiles := ChangedFiles{
+//		Added: []string{"registry/namespace1/connector1/metadata.json"},
+//		Modified: []string{"registry/namespace2/connector2/README.md"},
+//	}
+//	result := processChangedFiles(changedFiles)
+func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
+	result := ProcessedChangedFiles{
+		NewConnectorVersions: make(map[Connector]map[string]string),
+		ModifiedLogos:        make(map[Connector]string),
+		ModifiedReadmes:      make(map[Connector]string),
+		NewConnectors:        make(map[Connector]MetadataFile),
+		NewLogos:             make(map[Connector]string),
+		NewReadmes:           make(map[Connector]string),
+	}
 
-	var connectorVersionPackageRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/releases/([^/]+)/connector-packaging\.json$`)
-	var logoPngRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/logo\.(png|svg)$`)
-	var readmeMdRegex = regexp.MustCompile(`^registry/([^/]+)/([^/]+)/README\.md$`)
+	processors := []fileProcessor{
+		{
+			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/metadata.json$`),
+			process: func(matches []string, file string) {
+				// IsNew is set to true because we are processing newly added metadata.json
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				result.NewConnectors[connector] = MetadataFile(file)
+				fmt.Printf("Processing metadata file for connector: %s\n", connector.Name)
+			},
+		},
+		{
+			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/logo\.(png|svg)$`),
+			process: func(matches []string, file string) {
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				result.NewLogos[connector] = file
+				fmt.Printf("Processing logo file for connector: %s\n", connector.Name)
+			},
+		},
+		{
+			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/README\.md$`),
+			process: func(matches []string, file string) {
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				result.NewReadmes[connector] = file
+				fmt.Printf("Processing README file for connector: %s\n", connector.Name)
+			},
+		},
+		{
+			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/releases/([^/]+)/connector-packaging\.json$`),
+			process: func(matches []string, file string) {
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				version := matches[3]
+				if _, exists := result.NewConnectorVersions[connector]; !exists {
+					result.NewConnectorVersions[connector] = make(map[string]string)
+				}
+				result.NewConnectorVersions[connector][version] = file
+			},
+		},
+	}
+
+	processFile := func(file string, isModified bool) {
+		for _, processor := range processors {
+			if matches := processor.regex.FindStringSubmatch(file); matches != nil {
+				if isModified {
+					connector := Connector{Name: matches[2], Namespace: matches[1]}
+					if processor.regex.String() == processors[1].regex.String() {
+						result.ModifiedLogos[connector] = file
+					} else if processor.regex.String() == processors[2].regex.String() {
+						result.ModifiedReadmes[connector] = file
+					}
+				} else {
+					processor.process(matches, file)
+				}
+				return
+			}
+		}
+		fmt.Printf("Skipping %s file: %s\n", map[bool]string{true: "modified", false: "newly added"}[isModified], file)
+	}
 
 	for _, file := range changedFiles.Added {
-
-		// Check if the file is a connector version package
-		if connectorVersionPackageRegex.MatchString(file) {
-
-			matches := connectorVersionPackageRegex.FindStringSubmatch(file)
-			if len(matches) == 4 {
-				connectorNamespace := matches[1]
-				connectorName := matches[2]
-				connectorVersion := matches[3]
-
-				connector := Connector{
-					Name:      connectorName,
-					Namespace: connectorNamespace,
-				}
-
-				if _, exists := newlyAddedConnectorVersions[connector]; !exists {
-					newlyAddedConnectorVersions[connector] = make(map[string]string)
-				}
-
-				newlyAddedConnectorVersions[connector][connectorVersion] = file
-			}
-
-		} else {
-			fmt.Println("Skipping newly added file: ", file)
-		}
-
+		processFile(file, false)
 	}
 
 	for _, file := range changedFiles.Modified {
-		if logoPngRegex.MatchString(file) {
-			// Process the logo file
-			// print the name of the connector and the version
-			matches := logoPngRegex.FindStringSubmatch(file)
-			if len(matches) == 4 {
+		processFile(file, true)
+	}
 
-				connectorNamespace := matches[1]
-				connectorName := matches[2]
-				connector := Connector{
-					Name:      connectorName,
-					Namespace: connectorNamespace,
-				}
-				modifiedLogos[connector] = file
-				fmt.Printf("Processing logo file for connector: %s\n", connectorName)
-			}
+	return result
+}
 
-		} else if readmeMdRegex.MatchString(file) {
-			// Process the README file
-			// print the name of the connector and the version
-			matches := readmeMdRegex.FindStringSubmatch(file)
+func processNewConnector(ciCtx Context, connector Connector, metadataFile MetadataFile) (ConnectorOverviewInsert, HubRegistryConnectorInsertInput, error) {
+	// Process the newly added connector
+	// Get the string value from metadataFile
+	var connectorOverviewAndAuthor ConnectorOverviewInsert
+	var hubRegistryConnectorInsertInput HubRegistryConnectorInsertInput
 
-			if len(matches) == 3 {
+	connectorMetadata, err := readJSONFile[ConnectorMetadata](string(metadataFile))
+	if err != nil {
+		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
+	}
 
-				connectorNamespace := matches[1]
-				connectorName := matches[2]
-				connector := Connector{
-					Name:      connectorName,
-					Namespace: connectorNamespace,
-				}
+	docs, err := readFile(fmt.Sprintf("registry/%s/%s/README.md", connector.Namespace, connector.Name))
 
-				modifiedReadmes[connector] = file
+	if err != nil {
 
-				fmt.Printf("Processing README file for connector: %s\n", connectorName)
-			}
+		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Failed to read the README file of the connector: %s : %v", connector.Name, err)
+	}
+
+	logoPath := fmt.Sprintf("registry/%s/%s/logo.png", connector.Namespace, connector.Name)
+
+	uploadedLogoUrl, err := uploadLogoToCloudinary(ciCtx.Cloudinary, Connector{Name: connector.Name, Namespace: connector.Namespace}, logoPath)
+	if err != nil {
+		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, err
+	}
+
+	// Get connector info from the registry
+	connectorInfo, err := getConnectorInfoFromRegistry(ciCtx.RegistryGQLClient, connector.Name, connector.Namespace)
+	if err != nil {
+		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput,
+			fmt.Errorf("Failed to get the connector info from the registry: %v", err)
+	}
+
+	// Check if the connector already exists in the registry
+	if len(connectorInfo.HubRegistryConnector) > 0 {
+		if ciCtx.Env == "staging" {
+			fmt.Printf("Connector already exists in the registry: %s/%s\n", connector.Namespace, connector.Name)
+			fmt.Println("The connector is going to be overwritten in the registry.")
+
 		} else {
-			fmt.Println("Skipping modified file: ", file)
+
+			return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Attempting to create a new hub connector, but the connector already exists in the registry: %s/%s", connector.Namespace, connector.Name)
 		}
 
 	}
 
-	return newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes
+	hubRegistryConnectorInsertInput = HubRegistryConnectorInsertInput{
+		Name:      connector.Name,
+		Namespace: connector.Namespace,
+		Title:     connectorMetadata.Overview.Title,
+	}
 
+	connectorOverviewAndAuthor = ConnectorOverviewInsert{
+		Name:        connector.Name,
+		Namespace:   connector.Namespace,
+		Docs:        string(docs),
+		Logo:        uploadedLogoUrl,
+		Title:       connectorMetadata.Overview.Title,
+		Description: connectorMetadata.Overview.Description,
+		IsVerified:  connectorMetadata.IsVerified,
+		IsHosted:    connectorMetadata.IsHostedByHasura,
+		Author: ConnectorAuthorNestedInsert{
+			Data: ConnectorAuthor{
+				Name:         connectorMetadata.Author.Name,
+				SupportEmail: connectorMetadata.Author.SupportEmail,
+				Website:      connectorMetadata.Author.Homepage,
+			},
+		},
+	}
+
+	return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, nil
 }
 
 // runCI is the main function that runs the CI workflow
 func runCI(cmd *cobra.Command, args []string) {
-	buildContext()
+	ctx := buildContext()
 	changedFilesContent, err := os.Open(ciCmdArgs.ChangedFilesPath)
 	if err != nil {
 		log.Fatalf("Failed to open the file: %v, err: %v", ciCmdArgs.ChangedFilesPath, err)
 	}
 	defer changedFilesContent.Close()
-
-	client, err := storage.NewClient(context.Background(), option.WithCredentialsJSON([]byte(ciCmdArgs.GCPServiceAccountDetails)))
-	if err != nil {
-		log.Fatalf("Failed to create Google bucket client: %v", err)
-	}
-	defer client.Close()
 
 	// Read the changed file's contents. This file contains all the changed files in the PR
 	changedFilesByteValue, err := io.ReadAll(changedFilesContent)
@@ -288,65 +322,110 @@ func runCI(cmd *cobra.Command, args []string) {
 	// Separate the modified files according to the type of file
 
 	// Collect the added or modified connectors
-	newlyAddedConnectorVersions, modifiedLogos, modifiedReadmes := processChangedFiles(changedFiles)
+	processChangedFiles := processChangedFiles(changedFiles)
 
-	// check if the map is empty
-	if len(newlyAddedConnectorVersions) == 0 && len(modifiedLogos) == 0 && len(modifiedReadmes) == 0 {
-		fmt.Println("No connectors to be added or modified in the registry")
-		return
+	newlyAddedConnectorVersions := processChangedFiles.NewConnectorVersions
+	modifiedLogos := processChangedFiles.ModifiedLogos
+	modifiedReadmes := processChangedFiles.ModifiedReadmes
+
+	newlyAddedConnectors := processChangedFiles.NewConnectors
+
+	var newConnectorsToBeAdded NewConnectorsInsertInput
+	var newConnectorVersionsToBeAdded []ConnectorVersion
+
+	newConnectorOverviewsToBeAdded := make([](ConnectorOverviewInsert), 0)
+	hubRegistryConnectorsToBeAdded := make([](HubRegistryConnectorInsertInput), 0)
+	connectorOverviewUpdates := make([]ConnectorOverviewUpdate, 0)
+
+	if len(newlyAddedConnectors) > 0 {
+		fmt.Println("New connectors to be added to the registry: ", newlyAddedConnectors)
+
+		for connector, metadataFile := range newlyAddedConnectors {
+			connectorOverviewAndAuthor, hubRegistryConnector, err := processNewConnector(ctx, connector, metadataFile)
+
+			if err != nil {
+				log.Fatalf("Failed to process the new connector: %s/%s, Error: %v", connector.Namespace, connector.Name, err)
+			}
+			newConnectorOverviewsToBeAdded = append(newConnectorOverviewsToBeAdded, connectorOverviewAndAuthor)
+			hubRegistryConnectorsToBeAdded = append(hubRegistryConnectorsToBeAdded, hubRegistryConnector)
+
+		}
+
+		newConnectorsToBeAdded.HubRegistryConnectors = hubRegistryConnectorsToBeAdded
+		newConnectorsToBeAdded.ConnectorOverviews = newConnectorOverviewsToBeAdded
+
+	}
+
+	if len(newlyAddedConnectorVersions) > 0 {
+		newlyAddedConnectors := make(map[Connector]bool)
+		for connector := range newlyAddedConnectorVersions {
+			newlyAddedConnectors[connector] = true
+		}
+		newConnectorVersionsToBeAdded = processNewlyAddedConnectorVersions(ctx, newlyAddedConnectorVersions, newlyAddedConnectors)
+	}
+
+	if len(modifiedReadmes) > 0 {
+		readMeUpdates, err := processModifiedReadmes(modifiedReadmes)
+		if err != nil {
+			log.Fatalf("Failed to process the modified READMEs: %v", err)
+		}
+		connectorOverviewUpdates = append(connectorOverviewUpdates, readMeUpdates...)
+		fmt.Println("Successfully updated the READMEs in the registry.")
+	}
+
+	if len(modifiedLogos) > 0 {
+		logoUpdates, err := processModifiedLogos(modifiedLogos, ctx.Cloudinary)
+		if err != nil {
+			log.Fatalf("Failed to process the modified logos: %v", err)
+		}
+		connectorOverviewUpdates = append(connectorOverviewUpdates, logoUpdates...)
+		fmt.Println("Successfully updated the logos in the registry.")
+	}
+
+	if ctx.Env == "production" {
+		err = registryDbMutation(ctx.RegistryGQLClient, newConnectorsToBeAdded, connectorOverviewUpdates, newConnectorVersionsToBeAdded)
+
+	} else if ctx.Env == "staging" {
+		err = registryDbMutationStaging(ctx.RegistryGQLClient, newConnectorsToBeAdded, connectorOverviewUpdates, newConnectorVersionsToBeAdded)
 	} else {
-		if len(newlyAddedConnectorVersions) > 0 {
-			processNewlyAddedConnectorVersions(client, newlyAddedConnectorVersions)
-		}
+		log.Fatalf("Unexpected: invalid publication environment: %s", ctx.Env)
+	}
 
-		if len(modifiedReadmes) > 0 {
-			err := processModifiedReadmes(modifiedReadmes)
-			if err != nil {
-				log.Fatalf("Failed to process the modified READMEs: %v", err)
-			}
-			fmt.Println("Successfully updated the READMEs in the registry.")
-		}
-
-		if len(modifiedLogos) > 0 {
-			err := processModifiedLogos(modifiedLogos)
-			if err != nil {
-				log.Fatalf("Failed to process the modified logos: %v", err)
-			}
-			fmt.Println("Successfully updated the logos in the registry.")
-		}
+	if err != nil {
+		log.Fatalf("Failed to update the registry: %v", err)
 	}
 
 	fmt.Println("Successfully processed the changed files in the PR")
 }
 
-func processModifiedLogos(modifiedLogos ModifiedLogos) error {
+func uploadLogoToCloudinary(cloudinary CloudinaryInterface, connector Connector, logoPath string) (string, error) {
+	logoContent, err := readFile(logoPath)
+	if err != nil {
+		fmt.Printf("Failed to read the logo file: %v", err)
+		return "", err
+	}
+
+	imageReader := bytes.NewReader(logoContent)
+
+	uploadResult, err := cloudinary.Upload(context.Background(), imageReader, uploader.UploadParams{
+		PublicID: fmt.Sprintf("%s-%s", connector.Namespace, connector.Name),
+		Format:   "png",
+	})
+	if err != nil {
+		return "", fmt.Errorf("Failed to upload the logo to cloudinary for the connector: %s, Error: %v\n", connector.Name, err)
+	}
+	return uploadResult.SecureURL, nil
+}
+
+func processModifiedLogos(modifiedLogos ModifiedLogos, cloudinaryClient CloudinaryInterface) ([]ConnectorOverviewUpdate, error) {
 	// Iterate over the modified logos and update the logos in the registry
 	var connectorOverviewUpdates []ConnectorOverviewUpdate
-	// upload the logo to cloudinary
-	cloudinary, err := cloudinary.NewFromURL(ciCmdArgs.CloudinaryUrl)
-	if err != nil {
-		return err
-	}
 
 	for connector, logoPath := range modifiedLogos {
 		// open the logo file
-		logoContent, err := readFile(logoPath)
+		uploadedLogoUrl, err := uploadLogoToCloudinary(cloudinaryClient, connector, logoPath)
 		if err != nil {
-			fmt.Printf("Failed to read the logo file: %v", err)
-			return err
-		}
-
-		imageReader := bytes.NewReader(logoContent)
-
-		uploadResult, err := cloudinary.Upload.Upload(context.Background(), imageReader, uploader.UploadParams{
-			PublicID: fmt.Sprintf("%s-%s", connector.Namespace, connector.Name),
-			Format:   "png",
-		})
-		if err != nil {
-			fmt.Printf("Failed to upload the logo to cloudinary for the connector: %s, Error: %v\n", connector.Name, err)
-			return err
-		} else {
-			fmt.Printf("Successfully uploaded the logo to cloudinary for the connector: %s\n", connector.Name)
+			return connectorOverviewUpdates, err
 		}
 
 		var connectorOverviewUpdate ConnectorOverviewUpdate
@@ -357,7 +436,7 @@ func processModifiedLogos(modifiedLogos ModifiedLogos) error {
 			*connectorOverviewUpdate.Set.Logo = ""
 		}
 
-		*connectorOverviewUpdate.Set.Logo = string(uploadResult.SecureURL)
+		*connectorOverviewUpdate.Set.Logo = uploadedLogoUrl
 
 		connectorOverviewUpdate.Where.ConnectorName = connector.Name
 		connectorOverviewUpdate.Where.ConnectorNamespace = connector.Namespace
@@ -366,11 +445,11 @@ func processModifiedLogos(modifiedLogos ModifiedLogos) error {
 
 	}
 
-	return updateConnectorOverview(ConnectorOverviewUpdates{Updates: connectorOverviewUpdates})
+	return connectorOverviewUpdates, nil
 
 }
 
-func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
+func processModifiedReadmes(modifiedReadmes ModifiedReadmes) ([]ConnectorOverviewUpdate, error) {
 	// Iterate over the modified READMEs and update the READMEs in the registry
 	var connectorOverviewUpdates []ConnectorOverviewUpdate
 
@@ -378,7 +457,7 @@ func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
 		// open the README file
 		readmeContent, err := readFile(readmePath)
 		if err != nil {
-			return err
+			return connectorOverviewUpdates, err
 
 		}
 
@@ -394,11 +473,11 @@ func processModifiedReadmes(modifiedReadmes ModifiedReadmes) error {
 
 	}
 
-	return updateConnectorOverview(ConnectorOverviewUpdates{Updates: connectorOverviewUpdates})
+	return connectorOverviewUpdates, nil
 
 }
 
-func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnectorVersions NewConnectorVersions) {
+func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersions NewConnectorVersions, newConnectorsAdded map[Connector]bool) []ConnectorVersion {
 	// Iterate over the added or modified connectors and upload the connector versions
 	var connectorVersions []ConnectorVersion
 	var uploadConnectorVersionErr error
@@ -407,7 +486,8 @@ func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnec
 	for connectorName, versions := range newlyAddedConnectorVersions {
 		for version, connectorVersionPath := range versions {
 			var connectorVersion ConnectorVersion
-			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(client, connectorName, version, connectorVersionPath)
+			isNewConnector := newConnectorsAdded[connectorName]
+			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(ciCtx, connectorName, version, connectorVersionPath, isNewConnector)
 
 			if uploadConnectorVersionErr != nil {
 				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, uploadConnectorVersionErr)
@@ -423,24 +503,18 @@ func processNewlyAddedConnectorVersions(client *storage.Client, newlyAddedConnec
 
 	if encounteredError {
 		// attempt to cleanup the uploaded connector versions
-		_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
+		_ = cleanupUploadedConnectorVersions(ciCtx.StorageClient, connectorVersions) // ignore errors while cleaning up
 		// delete the uploaded connector versions from the registry
 		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
-
-	} else {
-		fmt.Printf("Connector versions to be added to the registry: %+v\n", connectorVersions)
-		err := updateRegistryGQL(connectorVersions)
-		if err != nil {
-			// attempt to cleanup the uploaded connector versions
-			_ = cleanupUploadedConnectorVersions(client, connectorVersions) // ignore errors while cleaning up
-			log.Fatalf("Failed to update the registry: %v", err)
-		}
 	}
+
 	fmt.Println("Successfully added connector versions to the registry.")
+
+	return connectorVersions
 
 }
 
-func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions []ConnectorVersion) error {
+func cleanupUploadedConnectorVersions(client StorageClientInterface, connectorVersions []ConnectorVersion) error {
 	// Iterate over the connector versions and delete the uploaded files
 	// from the google bucket
 	fmt.Println("Cleaning up the uploaded connector versions")
@@ -455,22 +529,8 @@ func cleanupUploadedConnectorVersions(client *storage.Client, connectorVersions 
 	return nil
 }
 
-// Type that uniquely identifies a connector
-type Connector struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-}
-
-type NewConnectorVersions map[Connector]map[string]string
-
-// ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
-type ModifiedLogos map[Connector]string
-
-// ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
-type ModifiedReadmes map[Connector]string
-
 // uploadConnectorVersionPackage uploads the connector version package to the registry
-func uploadConnectorVersionPackage(client *storage.Client, connector Connector, version string, changedConnectorVersionPath string) (ConnectorVersion, error) {
+func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version string, changedConnectorVersionPath string, isNewConnector bool) (ConnectorVersion, error) {
 
 	var connectorVersion ConnectorVersion
 
@@ -492,7 +552,7 @@ func uploadConnectorVersionPackage(client *storage.Client, connector Connector, 
 		return connectorVersion, err
 	}
 
-	uploadedTgzUrl, err := uploadConnectorVersionDefinition(client, connector.Namespace, connector.Name, version, connectorMetadataTgzPath)
+	uploadedTgzUrl, err := uploadConnectorVersionDefinition(ciCtx, connector.Namespace, connector.Name, version, connectorMetadataTgzPath)
 	if err != nil {
 		return connectorVersion, fmt.Errorf("failed to upload the connector version definition - connector: %v version:%v - err: %v", connector.Name, version, err)
 	} else {
@@ -501,13 +561,13 @@ func uploadConnectorVersionPackage(client *storage.Client, connector Connector, 
 	}
 
 	// Build payload for registry upsert
-	return buildRegistryPayload(connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl)
+	return buildRegistryPayload(ciCtx, connector.Namespace, connector.Name, version, connectorVersionMetadata, uploadedTgzUrl, isNewConnector)
 }
 
-func uploadConnectorVersionDefinition(client *storage.Client, connectorNamespace, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
+func uploadConnectorVersionDefinition(ciCtx Context, connectorNamespace, connectorName string, connectorVersion string, connectorMetadataTgzPath string) (string, error) {
 	bucketName := ciCmdArgs.GCPBucketName
 	objectName := generateGCPObjectName(connectorNamespace, connectorName, connectorVersion)
-	uploadedTgzUrl, err := uploadFile(client, bucketName, objectName, connectorMetadataTgzPath)
+	uploadedTgzUrl, err := uploadFile(ciCtx.StorageClient, bucketName, objectName, connectorMetadataTgzPath)
 
 	if err != nil {
 		return "", err
@@ -552,94 +612,15 @@ func getConnectorVersionMetadata(tgzUrl string, connector Connector, connectorVe
 	return connectorVersionMetadata, tgzPath, nil
 }
 
-// Write a function that accepts a file path to a YAML file and returns
-// the contents of the file as a map[string]interface{}.
-// readYAMLFile accepts a file path to a YAML file and returns the contents of the file as a map[string]interface{}.
-func readYAMLFile(filePath string) (map[string]interface{}, error) {
-	// Open the file
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-
-	// Read the file contents
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
-	}
-
-	// Unmarshal the YAML contents into a map
-	var result map[string]interface{}
-	err = yaml.Unmarshal(data, &result)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal YAML: %w", err)
-	}
-
-	return result, nil
-}
-
-func getConnectorNamespace(connectorMetadata map[string]interface{}) (string, error) {
-	connectorOverview, ok := connectorMetadata["overview"].(map[string]interface{})
-	if !ok {
-		return "", fmt.Errorf("could not find connector overview in the connector's metadata")
-	}
-	connectorNamespace, ok := connectorOverview["namespace"].(string)
-	if !ok {
-		return "", fmt.Errorf("could not find the 'namespace' of the connector in the connector's overview in the connector's metadata.json")
-	}
-	return connectorNamespace, nil
-}
-
-// struct to store the response of teh GetConnectorInfo query
-type GetConnectorInfoResponse struct {
-	HubRegistryConnector []struct {
-		Name                 string `json:"name"`
-		MultitenantConnector *struct {
-			ID string `json:"id"`
-		} `json:"multitenant_connector"`
-	} `json:"hub_registry_connector"`
-}
-
-func getConnectorInfoFromRegistry(connectorNamespace string, connectorName string) (GetConnectorInfoResponse, error) {
-	var respData GetConnectorInfoResponse
-	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
-	ctx := context.Background()
-
-	req := graphql.NewRequest(`
-query GetConnectorInfo ($name: String!, $namespace: String!) {
-  hub_registry_connector(where: {_and: [{name: {_eq: $name}}, {namespace: {_eq: $namespace}}]}) {
-    name
-    multitenant_connector {
-      id
-    }
-  }
-}`)
-	req.Var("name", connectorName)
-	req.Var("namespace", connectorNamespace)
-
-	req.Header.Set("x-hasura-role", "connector_publishing_automation")
-	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
-
-	// Execute the GraphQL query and check the response.
-	if err := client.Run(ctx, req, &respData); err != nil {
-		return respData, err
-	} else {
-		if len(respData.HubRegistryConnector) == 0 {
-			return respData, nil
-		}
-	}
-
-	return respData, nil
-}
-
 // buildRegistryPayload builds the payload for the registry upsert API
 func buildRegistryPayload(
+	ciCtx Context,
 	connectorNamespace string,
 	connectorName string,
 	version string,
 	connectorVersionMetadata map[string]interface{},
 	uploadedConnectorDefinitionTgzUrl string,
+	isNewConnector bool,
 ) (ConnectorVersion, error) {
 	var connectorVersion ConnectorVersion
 	var connectorVersionDockerImage string = ""
@@ -659,15 +640,31 @@ func buildRegistryPayload(
 
 	}
 
-	connectorInfo, err := getConnectorInfoFromRegistry(connectorNamespace, connectorName)
+	connectorInfo, err := getConnectorInfoFromRegistry(ciCtx.RegistryGQLClient, connectorNamespace, connectorName)
 
 	if err != nil {
 		return connectorVersion, err
 	}
 
+	var isMultitenant bool
+
 	// Check if the connector exists in the registry first
 	if len(connectorInfo.HubRegistryConnector) == 0 {
-		return connectorVersion, fmt.Errorf("Inserting a new connector is not supported yet")
+
+		if isNewConnector {
+			isMultitenant = false
+		} else {
+			return connectorVersion, fmt.Errorf("Unexpected: Couldn't get the connector info of the connector: %s", connectorName)
+
+		}
+
+	} else {
+		if len(connectorInfo.HubRegistryConnector) == 1 {
+			// check if the connector is multitenant
+			isMultitenant = connectorInfo.HubRegistryConnector[0].MultitenantConnector != nil
+
+		}
+
 	}
 
 	var connectorVersionType string
@@ -693,65 +690,9 @@ func buildRegistryPayload(
 		Version:              version,
 		Image:                connectorVersionImage,
 		PackageDefinitionURL: uploadedConnectorDefinitionTgzUrl,
-		IsMultitenant:        connectorInfo.HubRegistryConnector[0].MultitenantConnector != nil,
+		IsMultitenant:        isMultitenant,
 		Type:                 connectorVersionType,
 	}
 
 	return connectorVersion, nil
-}
-
-func updateRegistryGQL(payload []ConnectorVersion) error {
-	var respData map[string]interface{}
-	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
-	ctx := context.Background()
-
-	req := graphql.NewRequest(`
-mutation InsertConnectorVersion($connectorVersion: [hub_registry_connector_version_insert_input!]!) {
-  insert_hub_registry_connector_version(objects: $connectorVersion, on_conflict: {constraint: connector_version_namespace_name_version_key, update_columns: [image, package_definition_url, is_multitenant]}) {
-    affected_rows
-    returning {
-      id
-    }
-  }
-}`)
-	// add the payload to the request
-	req.Var("connectorVersion", payload)
-
-	req.Header.Set("x-hasura-role", "connector_publishing_automation")
-	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
-
-	// Execute the GraphQL query and check the response.
-	if err := client.Run(ctx, req, &respData); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func updateConnectorOverview(updates ConnectorOverviewUpdates) error {
-	var respData map[string]interface{}
-	client := graphql.NewClient(ciCmdArgs.ConnectorRegistryGQLUrl)
-	ctx := context.Background()
-
-	req := graphql.NewRequest(`
-mutation UpdateConnector ($updates: [connector_overview_updates!]!) {
-  update_connector_overview_many(updates: $updates) {
-    affected_rows
-  }
-}`)
-
-	// add the payload to the request
-	req.Var("updates", updates.Updates)
-
-	req.Header.Set("x-hasura-role", "connector_publishing_automation")
-	req.Header.Set("x-connector-publication-key", ciCmdArgs.ConnectorPublicationKey)
-
-	// Execute the GraphQL query and check the response.
-	if err := client.Run(ctx, req, &respData); err != nil {
-		return err
-	} else {
-		fmt.Printf("Successfully updated the connector overview: %+v\n", respData)
-	}
-
-	return nil
 }
