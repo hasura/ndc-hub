@@ -2,39 +2,24 @@
 
 The NodeJS Lambda connector allows you to expose TypeScript functions as Commands in your Hasura DDN Supergraph.
 
-Here's an example function that defines and uses two object types. It is exported as a `@readonly` function so that it can be exposed from the Supergraph's GraphQL query schema.
+## Prerequisites
 
-```typescript
-type FullName = {
-  title: string
-  firstName: string
-  surname: string
-}
+1. Create a [Hasura Cloud account](https://console.hasura.io)
+2. Please ensure you have the [DDN CLI](https://hasura.io/docs/3.0/cli/installation) and
+   [Docker](https://docs.docker.com/engine/install/) installed
+3. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
+4. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
 
-type Greeting = {
-  polite: string
-  casual: string
-}
+The steps below explain how to initialize and configure a connector on your local machine (typically for development
+purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
+[here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
 
-/** @readonly */
-export function greet(name: FullName): Greeting {
-  return {
-    polite: `Hello ${name.title} ${name.surname}`,
-    casual: `G'day ${name.firstName}`
-  }
-}
-```
+## Using the NodeJS Lambda connector
 
-The NodeJS Lambda connector introspects the TypeScript types you use on your exported functions to determine the schema to use in your Supergraph. You are able to import any NodeJS npm package and use it.
-
-The NodeJS Lambda connector enables you to:
-
-* Add business logic to your Supergraph by writing normal NodeJS TypeScript code
-* Expose data from any external API by writing TypeScript code that invokes the API and returns the data
-* Implement complex database logic manually by connecting to your database via a native driver library imported from npm
-
-To learn more about this connector and how to use it, please see the [Hasura DDN Documentation](https://hasura.io/docs/3.0/connectors/typescript).
+Check out the
+[Hasura docs here](https://hasura.io/docs/3.0/business-logic/typescript#add-the-typescript-connector-to-a-project) to
+get started with the NodeJS Lambda connector.
 
 ## More Information
-* [Hasura DDN Documentation](https://hasura.io/docs/3.0/connectors/typescript)
-* [ndc-nodejs-lambda GitHub Repository](https://github.com/hasura/ndc-nodejs-lambda)
+
+- [ndc-nodejs-lambda GitHub Repository](https://github.com/hasura/ndc-nodejs-lambda)
