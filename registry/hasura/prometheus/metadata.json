@@ -5,7 +5,7 @@
     "title": "Prometheus Data Connector",
     "logo": "logo.svg",
     "tags": ["database"],
-    "latest_version": "v0.0.5"
+    "latest_version": "v0.1.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -24,8 +24,8 @@
         "is_verified": true
       },
       {
-        "tag": "v0.0.5",
-        "hash": "17f28520d21ef07f37bfd569e30673d1945a6314",
+        "tag": "v0.1.0",
+        "hash": "3d45dd1628d268906c8b56ecf235d6c280c29ca9",
         "is_verified": true
       }
     ]
