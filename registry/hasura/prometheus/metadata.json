@@ -19,6 +19,11 @@
     "repository": "https://github.com/hasura/ndc-prometheus",
     "version": [
       {
+        "tag": "v0.0.4",
+        "hash": "69915e6c9736f38a0952c5ce8ad9a2d180783a43",
+        "is_verified": true
+      },
+      {
         "tag": "v0.0.5",
         "hash": "17f28520d21ef07f37bfd569e30673d1945a6314",
         "is_verified": true
