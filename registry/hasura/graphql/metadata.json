@@ -5,7 +5,7 @@
     "title": "GraphQL Native Data Connector",
     "logo": "logo.svg",
     "tags": [],
-    "latest_version": "v0.1.3"
+    "latest_version": "v0.2.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -14,56 +14,15 @@
   },
   "is_verified": true,
   "is_hosted_by_hasura": false,
-  "packages": [
-    {
-      "version": "0.1.3",
-      "uri": "https://github.com/hasura/ndc-graphql/releases/download/v0.1.3/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "4045cfd23f6ed4bf747241f967a7717dd391b5fe8285ec486584427698cf9881"
-      },
-      "source": {
-        "hash": "4262e34d57255c622a47daa408eba8c25fb279f7"
-      }
-    },
-    {
-      "version": "0.1.2",
-      "uri": "https://github.com/hasura/ndc-graphql/releases/download/v0.1.2/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "85aa0294a4a13da85c2932254878814f60f8e9b61621232675b5dfa551248a77"
-      },
-      "source": {
-        "hash": "1cfb5d3e52d914acf4e5e96edd54d7fc744ec304"
-      }
-    },
-    {
-      "version": "0.1.1",
-      "uri": "https://github.com/hasura/ndc-graphql/releases/download/v0.1.1/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "8a5acec98e28953b22932d7a3734f7e7e535ac9478058b4d06ad9da5dc21ce1d"
-      },
-      "source": {
-        "hash": "85b80185e28eb7f6721fc50ecd2552f96633e5db"
-      }
-    },
-    {
-      "version": "0.1.0",
-      "uri": "https://github.com/hasura/ndc-graphql/releases/download/v0.1.0/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "30d6883c57b146812fb141feb3b4680a9ffe214cb13e04b0618a8da069d1286c"
-      },
-      "source": {
-        "hash": "8fb41a151b3852fadcfadbe17695605f77aaa240"
-      }
-    }
-  ],
   "source_code": {
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-graphql/",
     "version": [
+      {
+        "tag": "v0.2.0",
+        "hash": "6296807daffb437a2f4dd158cab4c58d51ecd37c",
+        "is_verified": true
+      },
       {
         "tag": "v0.1.3",
         "hash": "4262e34d57255c622a47daa408eba8c25fb279f7",
