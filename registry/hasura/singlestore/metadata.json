@@ -39,6 +39,11 @@
         "tag": "v0.0.4",
         "hash": "4a7e713a767d9899c6b81d455ba76b7b75602d06",
         "is_verified": false
+      },
+      {
+        "tag": "v0.0.4",
+        "hash": "f26ee20fedf4578a29ff3199561b2882d70f915a",
+        "is_verified": false
       }
     ]
   }
