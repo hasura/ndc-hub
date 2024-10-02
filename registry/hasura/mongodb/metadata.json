@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.1.0"
+    "latest_version": "v1.3.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -16,111 +16,20 @@
   },
   "is_verified": true,
   "is_hosted_by_hasura": false,
-  "packages": [
-    {
-      "version": "1.1.0",
-      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v1.1.0/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "e0b616454261c1d07b058578f26ba928c832b11805ade1474e274c945e12e088"
-      },
-      "source": {
-        "hash": "eab726516ecfcee76abeab1b92f3b5d6cba10976"
-      }
-    },
-    {
-      "version": "1.0.0",
-      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v1.0.0/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "0dc038620f40911a2c5662b61d8e2ac9605876c80b3eb3cbae5cc1ebcd5b611f"
-      },
-      "source": {
-        "hash": "4beb7ddabddc3035ca5cc7bd85493a71a2e34147"
-      }
-    },
-    {
-      "version": "0.1.0",
-      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.1.0/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "adb5ce24e053117ba33c16ecf54bdc5a678790f3b31801645911fdf7091a58e0"
-      },
-      "source": {
-        "hash": "175272912b86a11359a9b6b7fd72c7a6e2326bf1"
-      }
-    },
-    {
-      "version": "0.0.6",
-      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.0.6/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "24370c44a8ff92dce488569717956069f2a50de7a8f54547b140d85a17b52875"
-      },
-      "source": {
-        "hash": "6e842c308eeee38d3bc393e6b99157961ca3ed03"
-      }
-    },
-    {
-      "version": "0.0.5",
-      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.0.5/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "2064a98d223240b912720f0528c6b9a7107a42e4452407c2b75e77dcfdbd4227"
-      },
-      "source": {
-        "hash": "055154b5d84f05ff0049aa75a29b85caf89822f6"
-      }
-    },
-    {
-      "version": "0.0.4",
-      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.0.4/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "7b826a79686b48e58819751091fac62071df75ca9fd617b80709fe098a054f26"
-      },
-      "source": {
-        "hash": "38a4a56134a909001b645c659062ae393c2cebe0"
-      }
-    },
-    {
-      "version": "0.0.3",
-      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.0.3/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5"
-      },
-      "source": {
-        "hash": "b50094a368f8fbab7c37e4b83ef5dc1249a4a5d5"
-      }
-    },
-    {
-      "version": "0.0.2",
-      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.0.2/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "f014459e9dbcce8bafe1c33c74b1fa1720d544bc283cc819c81d719028219846"
-      },
-      "source": {
-        "hash": "90c336c4d1d949d62dd25b04742e650fb6d458e0"
-      }
-    },
-    {
-      "version": "0.0.1",
-      "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.0.1/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "2cd3584557be7e2870f3488a30cac6219924b3f7accd9f5f473285323843a0f4"
-      },
-      "source": {
-        "hash": "c32adbde478147518f65ff465c40a0703239288a"
-      }
-    }
-  ],
   "source_code": {
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-mongodb/",
     "version": [
+      {
+        "tag": "v1.3.0",
+        "hash": "47fc3c301203d0118940a317e7c634e768b8898a",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.2.0",
+        "hash": "2e0696e8bd587c18f067e683ec367f6ba350537f",
+        "is_verified": true
+      },
       {
         "tag": "v1.1.0",
         "hash": "eab726516ecfcee76abeab1b92f3b5d6cba10976",
