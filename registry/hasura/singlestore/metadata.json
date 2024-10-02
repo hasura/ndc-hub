@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v0.0.3"
+    "latest_version": "v0.0.4"
   },
   "author": {
     "support_email": "integrations@singlestore.com",
@@ -33,6 +33,11 @@
       {
         "tag": "v0.0.3",
         "hash": "72ed900d5cc6819614fa27bba7bdba8977eedc6d",
+        "is_verified": false
+      },
+      {
+        "tag": "v0.0.4",
+        "hash": "4a7e713a767d9899c6b81d455ba76b7b75602d06",
         "is_verified": false
       }
     ]
