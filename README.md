@@ -40,4 +40,4 @@ implementation][NDC reference].
 
 [NDC specification]: http://hasura.github.io/ndc-spec/
 [NDC reference]: https://github.com/hasura/ndc-spec/tree/main/ndc-reference
-[Connector packaging]: ./connector-metadata-types/README.md
+[Connector metadata packaging]: ./connector-metadata-types/README.md
