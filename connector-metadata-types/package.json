@@ -1,0 +1,17 @@
+{
+  "name": "connector-metadata-types",
+  "version": "1.0.0",
+  "description": "Contains the types used in the connector metadata",
+  "main": "index.js",
+  "scripts": {
+    "generate-schema": "ts-node schemaGenerator.ts > schema.json",
+    "compare-schema": "ts-node compareSchema.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.6.2",
+    "typescript-json-schema": "^0.65.1"
+  }
+}
