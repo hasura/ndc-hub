@@ -133,7 +133,7 @@ export type FilePath = {
 export type BinaryCliPluginDefinition = {
   type: "Binary";
   name: string;
-  platforms: BinaryCliPluginPlatform[];
+  platforms?: BinaryCliPluginPlatform[];
 };
 
 export type DockerComposeWatch = DockerComposeWatchItem[];
@@ -151,3 +151,4 @@ export type DockerComposeWatchItem = {
 
 - Add a new optional field `version` to the `ConnectorMetadataDefinition` type. This field will be used to version the connector metadata definition.
 - Include the CLI manifest information in the `cliPlugin` field, when type is `Binary`.
+- Add `platforms` field to the `BinaryCliPluginDefinition` type to specify the supported platforms for the binary CLI plugin.
