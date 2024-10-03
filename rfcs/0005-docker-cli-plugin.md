@@ -24,7 +24,7 @@ supportedEnvironmentVariables:
 - name: CONNECTION_URI
   description: The MySQL connection URI
 commands:
-  update:
+  update: 
     type: Dockerized
     dockerImage: ghcr.io/hasura/ndc-mysql-cli-plugin:v0.0.1
     commandArgs: [ "update" ]
@@ -74,7 +74,8 @@ type NativeToolchainCommands = {
 
 type EnvironmentVariableDefinition = {
   name: string
-  description: string defaultValue?: string
+  description: string
+  defaultValue?: string
 }
 
 type Commands = {

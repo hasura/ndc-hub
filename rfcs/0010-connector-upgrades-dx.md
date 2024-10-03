@@ -44,7 +44,7 @@ type PackagingDefinition = PrebuiltDockerImagePackaging | ManagedDockerBuildPack
 
 type PrebuiltDockerImagePackaging = {
   type: "PrebuiltDockerImage"
-  dockerImage: string
+  dockerImage: string 
 }
 
 type ManagedDockerBuildPackaging = {
@@ -57,9 +57,9 @@ type NativeToolchainDefinition = {
 
 
 type NativeToolchainCommands = {
-  start: string | DockerizedCommand | ShellScriptCommand
+  start: string | DockerizedCommand | ShellScriptCommand 
   update?: string | DockerizedCommand | ShellScriptCommand
-  watch: string | DockerizedCommand | ShellScriptCommand
+  watch: string | DockerizedCommand | ShellScriptCommand 
 }
 
 type EnvironmentVariableDefinition = {
@@ -69,7 +69,7 @@ type EnvironmentVariableDefinition = {
 }
 
 type Commands = {
-  update?: string | DockerizedCommand | ShellScriptCommand
+  update?: string | DockerizedCommand | ShellScriptCommand 
   watch?: string | DockerizedCommand | ShellScriptCommand
   printSchemaAndCapabilities?: string |  DockerizedCommand | ShellScriptCommand
 + upgradeConfiguration?: string |  DockerizedCommand | ShellScriptCommand
@@ -78,7 +78,7 @@ type Commands = {
 
 type DockerizedCommand = {
   type: "Dockerized"
-  dockerImage: string
+  dockerImage: string 
   commandArgs: string[]
 }
 
