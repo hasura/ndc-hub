@@ -22,6 +22,12 @@ jobs:
       with:
         node-version: '18'
 
+    - name: Debug file existence
+      run: |
+        pwd
+        ls -la
+        cat package-lock.json | head -n 5
+
     - name: Install dependencies
       run: npm ci
 
