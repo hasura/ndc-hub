@@ -11,11 +11,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-      working-directory: connector-metadata-types
+    - name: Checkout code
+    - uses: actions/checkout@v3
+
+    - name: Change to the connector directory
+      run: cd connector-metadata-types
 
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
 
