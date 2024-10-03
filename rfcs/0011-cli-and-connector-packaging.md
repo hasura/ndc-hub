@@ -5,12 +5,12 @@ Currently, there are two types of connector CLI plugins:
 1. Docker based CLI plugins
 2. Binary CLI plugins
 
-Some connectors choose to publish binary CLI plugins and part of the process of publishing a native CLI plugin is to open a PR in the [cli-plugins-index](https://github.com/hasura/cli-plugins-index) and merge it to make it available in the DDN ecosystem.
+Some connectors choose to publish binary CLI plugins and part of the process of publishing a binary CLI plugin is to open a PR in the [cli-plugins-index](https://github.com/hasura/cli-plugins-index) and merge it to make it available in the DDN ecosystem.
 
-This is not a great UX because it is very easy to miss the step of publishing the native CLI plugin and this leads to runtime errors because when
+This is not a great UX because it is very easy to miss the step of publishing the binary CLI plugin and this leads to runtime errors because when
 the connector is initialized, the next step is to introspect the data source. If the CLI plugin is not published, the introspection fails.
 
-So, this RFC proposes to include the native CLI plugin information within the `connector-metadata.yaml`,
+So, this RFC proposes to include the binary CLI plugin information within the `connector-metadata.yaml`,
 so that all the information required to run a connector is in one place.
 
 ## Solution
