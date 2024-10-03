@@ -14,28 +14,28 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Change to the connector directory
-      run: cd connector-metadata-types
-
     - name: Use Node.js
       uses: actions/setup-node@v4
+      working-directory: connector-metadata-types
       with:
         node-version: '18'
 
     - name: Debug file existence
+      working-directory: connector-metadata-types
       run: |
         pwd
         ls -la
         cat package-lock.json | head -n 5
 
     - name: Install dependencies
+      working-directory: connector-metadata-types
       run: npm ci
 
     - name: Generate and compare schema
       run: |
         npm run generate-schema
-        if ! git diff --quiet schema.json; then
+        if ! git diff --quiet connector-metadata-types/schema.json; then
           echo "Error: Generated schema does not match the existing schema."
-          git diff schema.json
+          git diff connector-metadata-types/schema.json
           exit 1
         fi
