@@ -33,7 +33,7 @@ jobs:
     - name: Generate and compare schema
       working-directory: connector-metadata-types
       run: |
-        npm run generate-schema > new-schema.json
+        npm run generate-schema new-schema.json
         if [ -f schema.json ]; then
           if cmp -s schema.json new-schema.json; then
             echo "Schema is up to date"

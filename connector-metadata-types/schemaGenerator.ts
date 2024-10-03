@@ -1,5 +1,6 @@
 import * as TJS from "typescript-json-schema";
 import * as path from "path";
+import fs from "fs";
 
 export function generateConnectorMetadataSchema(): TJS.Definition {
   // Specify the path to the file containing ConnectorMetadataDefinition
@@ -25,8 +26,17 @@ export function generateConnectorMetadataSchema(): TJS.Definition {
   return schema;
 }
 
-// If you want to run this file directly and output the schema
-if (require.main === module) {
+function writeSchemaToFile(filePath: string) {
   const schema = generateConnectorMetadataSchema();
-  console.log(JSON.stringify(schema, null, 2));
+  const jsonSchema = JSON.stringify(schema, null, 2);
+  fs.writeFileSync(filePath, jsonSchema);
+}
+
+if (require.main === module) {
+  const outputFile = process.argv[2];
+  if (!outputFile) {
+    console.error("Please provide an output file name");
+    process.exit(1);
+  }
+  writeSchemaToFile(path.resolve(outputFile));
 }
