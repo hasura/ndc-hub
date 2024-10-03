@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main, kc-cli-plugin-packaging-v1 ]
+    branches: [ main ]
 
 jobs:
   validate-schema:
@@ -18,13 +18,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-
-    - name: Debug file existence
-      working-directory: connector-metadata-types
-      run: |
-        pwd
-        ls -la
-        cat package-lock.json | head -n 5
 
     - name: Install dependencies
       working-directory: connector-metadata-types
