@@ -24,7 +24,7 @@ The following structure is proposed:
 
 ```typescript
 type ConnectorMetadataDefinition = {
-  version?: 1  // New
+  version?: 1
   packagingDefinition: PackagingDefinition
   nativeToolchainDefinition?: NativeToolchainDefinition
   supportedEnvironmentVariables: EnvironmentVariableDefinition[]
@@ -119,11 +119,10 @@ type File = {
 type BinaryCliPluginDefinition = {
   type: "Binary"
   name: string
-  platforms: BinaryCliPluginPlatform[]
+  platforms?: BinaryCliPluginPlatform[]
 }
 
 
-// From: https://github.com/compose-spec/compose-spec/blob/1938efd103f8e0817ca90e5f15177ec0317bbaf8/schema/compose-spec.json#L455
 type DockerComposeWatch = DockerComposeWatchItem[]
 
 type DockerComposeWatchItem = {
@@ -136,6 +135,5 @@ type DockerComposeWatchItem = {
 
 ### Summary of changes
 
-- Add a new `version` field to the `ConnectorMetadataDefinition` type.
-- Make `cliPlugin` field to be a mandatory field in the `ConnectorMetadataDefinition` type.
+- Add a new optional field `version` to the `ConnectorMetadataDefinition` type.
 - Include the CLI manifest information in the `cliPlugin` field, when type is `Binary`.
