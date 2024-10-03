@@ -1,5 +1,5 @@
 export type ConnectorMetadataDefinition = {
-  version?: 1; // New
+  version?: 1;
   packagingDefinition: PackagingDefinition;
   nativeToolchainDefinition?: NativeToolchainDefinition;
   supportedEnvironmentVariables: EnvironmentVariableDefinition[];
@@ -23,9 +23,9 @@ export type ManagedDockerBuildPackaging = {
 };
 
 export type NativeToolchainCommands = {
-  start: string | DockerizedCommand | ShellScriptCommand; // Compulsory
+  start: string | DockerizedCommand | ShellScriptCommand;
   update?: string | DockerizedCommand | ShellScriptCommand;
-  watch: string | DockerizedCommand | ShellScriptCommand; // Compulsory
+  watch: string | DockerizedCommand | ShellScriptCommand;
 };
 
 export type NativeToolchainDefinition = {
@@ -63,7 +63,6 @@ export type DockerCliPluginDefinition = {
 };
 
 export type BinaryCliPluginPlatform = {
-  // New
   /**
    * The selector identifies the target platform for this configuration.
    * It follows the format: <os>-<architecture>
@@ -109,7 +108,6 @@ export type BinaryCliPluginDefinition = {
   platforms: BinaryCliPluginPlatform[];
 };
 
-// From: https://github.com/compose-spec/compose-spec/blob/1938efd103f8e0817ca90e5f15177ec0317bbaf8/schema/compose-spec.json#L455
 export type DockerComposeWatch = DockerComposeWatchItem[];
 
 export type DockerComposeWatchItem = {
