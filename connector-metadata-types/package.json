@@ -4,7 +4,7 @@
   "description": "Contains the types used in the connector metadata",
   "main": "index.js",
   "scripts": {
-    "generate-schema": "ts-node schemaGenerator.ts > schema.json",
+    "generate-schema": "ts-node schemaGenerator.ts",
     "compare-schema": "ts-node compareSchema.ts"
   },
   "keywords": [],
