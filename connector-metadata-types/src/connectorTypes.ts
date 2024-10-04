@@ -1,13 +1,17 @@
 export type ConnectorMetadataDefinition = {
-  version?: 1;
+  version?: "v1";
   packagingDefinition: PackagingDefinition;
   nativeToolchainDefinition?: NativeToolchainDefinition;
   supportedEnvironmentVariables: EnvironmentVariableDefinition[];
   commands: Commands;
-  cliPlugin?: BinaryCliPluginDefinition | DockerCliPluginDefinition;
+  cliPlugin?: CliPluginDefinition;
   dockerComposeWatch: DockerComposeWatch;
   documentationPage?: string;
 };
+
+export type CliPluginDefinition =
+  | BinaryCliPluginDefinition
+  | DockerCliPluginDefinition;
 
 export type PackagingDefinition =
   | PrebuiltDockerImagePackaging
@@ -32,17 +36,20 @@ export type NativeToolchainDefinition = {
   commands: NativeToolchainCommands;
 };
 
+export type Command = string | DockerizedCommand | ShellScriptCommand;
+
 export type Commands = {
-  update?: string | DockerizedCommand | ShellScriptCommand;
-  watch?: string | DockerizedCommand | ShellScriptCommand;
-  printSchemaAndCapabilities?: string | DockerizedCommand | ShellScriptCommand;
-  upgradeConfiguration?: string | DockerizedCommand | ShellScriptCommand;
+  update?: Command;
+  watch?: Command;
+  printSchemaAndCapabilities?: Command;
+  upgradeConfiguration?: Command;
 };
 
 export type EnvironmentVariableDefinition = {
   name: string;
   description: string;
   defaultValue?: string;
+  required?: string;
 };
 
 export type DockerizedCommand = {
@@ -105,7 +112,7 @@ export type FilePath = {
 export type BinaryCliPluginDefinition = {
   type: "Binary";
   name: string;
-  platforms: BinaryCliPluginPlatform[];
+  platforms?: BinaryCliPluginPlatform[];
 };
 
 export type DockerComposeWatch = DockerComposeWatchItem[];

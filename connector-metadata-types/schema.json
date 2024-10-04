@@ -2,8 +2,8 @@
   "type": "object",
   "properties": {
     "version": {
-      "const": 1,
-      "type": "number"
+      "const": "v1",
+      "type": "string"
     },
     "packagingDefinition": {
       "anyOf": [
@@ -216,6 +216,9 @@
             "type": "string"
           },
           "defaultValue": {
+            "type": "string"
+          },
+          "required": {
             "type": "string"
           }
         },
@@ -501,7 +504,6 @@
           },
           "required": [
             "name",
-            "platforms",
             "type"
           ]
         },
