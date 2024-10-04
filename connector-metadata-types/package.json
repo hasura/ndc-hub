@@ -4,13 +4,14 @@
   "description": "Contains the types used in the connector metadata",
   "main": "index.js",
   "scripts": {
-    "generate-schema": "ts-node schemaGenerator.ts",
-    "compare-schema": "ts-node compareSchema.ts"
+    "build": "tsc",
+    "generate-schema": "ts-node src/schemaGenerator.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
     "typescript": "^5.6.2",
     "typescript-json-schema": "^0.65.1"
   }
