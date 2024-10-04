@@ -1,0 +1,11 @@
+{
+    "version": "0.2.2",
+    "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.2.2/package.tar.gz",
+    "checksum": {
+        "type": "sha256",
+        "value": "2dbe5251872bf39d3a08261f7042307bae2ea8c831eec1982177b765c1e7013d"
+    },
+    "source": {
+        "hash": "c33ff7efdcdef2c337aa40e2e776a4c2fdaca68b"
+    }
+}
