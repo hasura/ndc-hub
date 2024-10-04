@@ -475,28 +475,16 @@
                     "items": {
                       "type": "object",
                       "properties": {
-                        "lastModified": {
-                          "type": "number"
-                        },
-                        "name": {
+                        "from": {
                           "type": "string"
                         },
-                        "webkitRelativePath": {
-                          "type": "string"
-                        },
-                        "size": {
-                          "type": "number"
-                        },
-                        "type": {
+                        "to": {
                           "type": "string"
                         }
                       },
                       "required": [
-                        "lastModified",
-                        "name",
-                        "size",
-                        "type",
-                        "webkitRelativePath"
+                        "from",
+                        "to"
                       ]
                     }
                   }
