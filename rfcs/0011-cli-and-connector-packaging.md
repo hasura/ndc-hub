@@ -122,7 +122,7 @@ export type BinaryCliPluginPlatform = {
    */
   bin: string;
 
-  files: File[];
+  files: FilePath[];
 };
 
 export type FilePath = {
