@@ -109,10 +109,20 @@ export type FilePath = {
   to: string;
 };
 
-export type BinaryCliPluginDefinition = {
-  type: "Binary";
-  name: string;
+export type BinaryCliPluginDefinition =
+  | BinaryExternalCliPluginDefinition
+  | BinaryInlineCliPluginDefinition;
+
+export type BinaryInlineCliPluginDefinition = {
+  type?: "BinaryInline";
   platforms?: BinaryCliPluginPlatform[];
+};
+
+// When this type is found, it will fetch the plugin definition from https://github.com/hasura/cli-plugins-index
+export type BinaryExternalCliPluginDefinition = {
+  type?: "Binary";
+  name: string;
+  version: string;
 };
 
 export type DockerComposeWatch = DockerComposeWatchItem[];
