@@ -5,7 +5,7 @@
     "title": "Go Connector",
     "logo": "logo.svg",
     "tags": [],
-    "latest_version": "v1.5.0"
+    "latest_version": "v1.5.1"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -19,8 +19,8 @@
     "repository": "https://github.com/hasura/ndc-sdk-go",
     "version": [
       {
-        "tag": "v1.5.0",
-        "hash": "6d47f478310d4b10e226049b7cd9f590817366b3",
+        "tag": "v1.5.1",
+        "hash": "e6a7fd89d13f0a8b12732ee88ae5bbe775ec60ba",
         "is_verified": true
       },
       {
