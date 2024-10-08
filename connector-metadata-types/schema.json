@@ -488,29 +488,10 @@
                   "bin": {
                     "description": "The name of the binary file. This is the name of the binary file that will be placed in the bin directory.",
                     "type": "string"
-                  },
-                  "files": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "from": {
-                          "type": "string"
-                        },
-                        "to": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "from",
-                        "to"
-                      ]
-                    }
                   }
                 },
                 "required": [
                   "bin",
-                  "files",
                   "selector",
                   "sha256",
                   "uri"

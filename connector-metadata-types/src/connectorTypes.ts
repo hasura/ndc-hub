@@ -100,8 +100,6 @@ export type BinaryCliPluginPlatform = {
    * The name of the binary file. This is the name of the binary file that will be placed in the bin directory.
    */
   bin: string;
-
-  files: FilePath[];
 };
 
 export type FilePath = {
