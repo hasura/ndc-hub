@@ -102,11 +102,6 @@ export type BinaryCliPluginPlatform = {
   bin: string;
 };
 
-export type FilePath = {
-  from: string;
-  to: string;
-};
-
 export type BinaryCliPluginDefinition =
   | BinaryExternalCliPluginDefinition
   | BinaryInlineCliPluginDefinition;
