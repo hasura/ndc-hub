@@ -114,8 +114,8 @@ export type BinaryCliPluginDefinition =
   | BinaryInlineCliPluginDefinition;
 
 export type BinaryInlineCliPluginDefinition = {
-  type?: "BinaryInline";
-  platforms?: BinaryCliPluginPlatform[];
+  type: "BinaryInline";
+  platforms: BinaryCliPluginPlatform[];
 };
 
 // When this type is found, it will fetch the plugin definition from https://github.com/hasura/cli-plugins-index
