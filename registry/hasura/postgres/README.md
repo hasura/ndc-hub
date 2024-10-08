@@ -12,7 +12,7 @@ for more information about specific features that are available for the PostgreS
 
 ## Deployment
 
-The connector is hosted by Hasura and can be used from the [Hasura v3 Console](https://console.hasura.io).
+The connector is hosted by Hasura and can be used from the [Hasura DDN Console](https://console.hasura.io).
 
 ## Usage
 
