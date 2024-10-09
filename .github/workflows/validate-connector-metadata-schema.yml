@@ -1,0 +1,43 @@
+name: Validate Connector Metadata JSON Schema
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-schema:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      working-directory: connector-metadata-types
+      run: npm ci
+
+    - name: Generate and compare schema
+      working-directory: connector-metadata-types
+      run: |
+        npm run generate-schema new-schema.json
+        if [ -f schema.json ]; then
+          if cmp -s schema.json new-schema.json; then
+            echo "Schema is up to date"
+          else
+            echo "Error: Generated schema does not match the existing schema"
+            echo "Diff between schema.json and new-schema.json:"
+            diff -u schema.json new-schema.json || true
+            exit 1
+          fi
+        else
+          echo "Error: schema.json does not exist"
+          exit 1
+        fi
+        rm new-schema.json
