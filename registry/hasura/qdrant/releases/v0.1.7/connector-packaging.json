@@ -1,0 +1,11 @@
+{
+  "version": "v0.1.7",
+  "uri": "https://github.com/hasura/ndc-qdrant/releases/download/v0.1.7/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "6ed4b6252e9f3f91d68deb4195a11b70fe14691b155af792ec91f8aee743b587"
+  },
+  "source": {
+    "hash": "848a9022df832b4595473f8bae4b3a66564f0bda"
+  }
+}
