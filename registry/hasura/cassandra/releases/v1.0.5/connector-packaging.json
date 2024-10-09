@@ -3,7 +3,7 @@
     "uri": "https://github.com/hasura/ndc-cassandra/releases/download/v1.0.5/connector-definition.tgz",
     "checksum": {
         "type": "sha256",
-        "value": "daba602c4facf0c26dc25b663f842753181e37a3750f97f4e59ef89e3d772fbe"
+        "value": "5e392c055c6a2a6619ea7d2a85f9ccca70bafccb3b60b581fdcea74a186f1832"
     },
     "source": {
 	"hash": "541027b278c7ec2a7b1f14724fc73e5f150be1cf"
