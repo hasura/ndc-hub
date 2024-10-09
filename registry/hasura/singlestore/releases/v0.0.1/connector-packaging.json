@@ -1,11 +1,11 @@
 {
-    "version": "0.0.1",
-    "uri": "https://github.com/singlestore-labs/singlestore-hasura-connector/releases/download/v0.0.1/connector-definition.tgz",
-    "checksum": {
-        "type": "sha256",
-        "value": "7cc9f73cb966c2b69ef54d5f0e346407d3555ed1ac08f361f16157540bb80041"
-    },
-    "source": {
-        "hash": "a9caa889c13a251040003c0934c7e67fccfd7de4"
-    }
+  "version": "v0.0.1",
+  "uri": "https://github.com/singlestore-labs/singlestore-hasura-connector/releases/download/v0.0.1/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "7cc9f73cb966c2b69ef54d5f0e346407d3555ed1ac08f361f16157540bb80041"
+  },
+  "source": {
+    "hash": "a9caa889c13a251040003c0934c7e67fccfd7de4"
+  }
 }

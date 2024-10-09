@@ -1,11 +1,11 @@
 {
-    "version": "0.2.0",
-    "uri": "https://github.com/hasura/ndc-azure-cosmos-connector/releases/download/v0.2.0/connector-definition.tgz",
-    "checksum": {
-        "type": "sha256",
-        "value": "4457e122a608f055fae0cc312b6850c0213ddbbfbce1b0af8356b5c00f2f322f"
-    },
-    "source": {
-        "hash": "5478d2a3b282d7a61961a8de8f7df3ebbb29c5c4"
-    }
+  "version": "v0.2.0",
+  "uri": "https://github.com/hasura/ndc-azure-cosmos-connector/releases/download/v0.2.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "4457e122a608f055fae0cc312b6850c0213ddbbfbce1b0af8356b5c00f2f322f"
+  },
+  "source": {
+    "hash": "5478d2a3b282d7a61961a8de8f7df3ebbb29c5c4"
+  }
 }
