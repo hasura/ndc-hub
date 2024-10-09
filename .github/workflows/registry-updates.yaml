@@ -63,21 +63,21 @@ jobs:
         run: |
           cat changed_files.json
 
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.21.x
+      # - name: Setup Go
+      #   uses: actions/setup-go@v4
+      #   with:
+      #     go-version: 1.21.x
 
-      - name: Run registry automation program
-        env:
-          CHANGED_FILES_PATH: "changed_files.json"
-          PUBLICATION_ENV: "staging"
-          CONNECTOR_REGISTRY_GQL_URL: ${{ secrets.CONNECTOR_REGISTRY_GQL_URL }}
-          GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
-          GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
-          CONNECTOR_PUBLICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
-          CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
-        run: |
-          mv changed_files.json registry-automation/changed_files.json
-          cd registry-automation
-          go run main.go ci
+      # - name: Run registry automation program
+      #   env:
+      #     CHANGED_FILES_PATH: "changed_files.json"
+      #     PUBLICATION_ENV: "staging"
+      #     CONNECTOR_REGISTRY_GQL_URL: ${{ secrets.CONNECTOR_REGISTRY_GQL_URL }}
+      #     GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+      #     GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
+      #     CONNECTOR_PUBLICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
+      #     CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+      #   run: |
+      #     mv changed_files.json registry-automation/changed_files.json
+      #     cd registry-automation
+      #     go run main.go ci
