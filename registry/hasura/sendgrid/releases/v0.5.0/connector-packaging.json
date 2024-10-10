@@ -1,0 +1,11 @@
+{
+  "version": "v0.5.0",
+  "uri": "https://github.com/hasura/ndc-sendgrid/releases/download/v0.5.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "ef9b4beb8c3db01856e04524c8debab3b8495421416d20c40faa63cdac73f07e"
+  },
+  "source": {
+    "hash": "b373cbc42968e9619d2ecfda8ef08f1d0f970619"
+  }
+}
