@@ -1,0 +1,11 @@
+{
+  "version": "v0.6.5",
+  "uri": "https://github.com/hasura/ndc-sdk-go/releases/download/v0.6.5/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "83aa8fb301c562af143c18faaa51d1ba849e960196ff3abe3407275916f6ad71"
+  },
+  "source": {
+    "hash": "c9e64bdf5972aca5f9c350ff6e6b05eff32af7c9"
+  }
+}

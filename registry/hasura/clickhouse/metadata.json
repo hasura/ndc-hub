@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.2"
+    "latest_version": "v1.0.4"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -20,6 +20,16 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-clickhouse/",
     "version": [
+      {
+        "tag": "v1.0.4",
+        "hash": "2702f3f3cd1b399a42d451f9fcfe75d641b1cfeb",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.0.3",
+        "hash": "e359aed45779b3c249c164f76cd6450c272739ce",
+        "is_verified": true
+      },
       {
         "tag": "v1.0.2",
         "hash": "ec2463375b9244e008005d44a2b82288867c2d4e",

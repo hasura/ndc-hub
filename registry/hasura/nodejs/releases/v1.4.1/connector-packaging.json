@@ -1,5 +1,5 @@
 {
-  "version": "1.4.1",
+  "version": "v1.4.1",
   "uri": "https://github.com/hasura/ndc-nodejs-lambda/releases/download/v1.4.1/connector-definition.tgz",
   "checksum": {
     "type": "sha256",
