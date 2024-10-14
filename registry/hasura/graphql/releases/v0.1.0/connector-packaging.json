@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "v0.1.0",
   "uri": "https://github.com/hasura/ndc-graphql/releases/download/v0.1.0/connector-definition.tgz",
   "checksum": {
     "type": "sha256",

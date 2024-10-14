@@ -1,0 +1,11 @@
+{
+  "version": "v0.0.14",
+  "uri": "https://github.com/hasura/ndc-turso/releases/download/v0.0.14/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "8ac58c78f836c89ea97e2bc3dab636c23dbd6976f9183c00cd2d3cd5b99a6efe"
+  },
+  "source": {
+    "hash": "6087a7aa26fea73421bdbc74fb7820e8ca9c3bf7"
+  }
+}

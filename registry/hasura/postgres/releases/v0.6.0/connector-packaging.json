@@ -1,0 +1,11 @@
+{
+  "version": "v0.6.0",
+  "uri": "https://github.com/hasura/ndc-postgres/releases/download/v0.6.0/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "49b491928898f5ed251ea67dccb4eeca99fbdcc0855ce6331d7e5cb2a2cf339e"
+  },
+  "source": {
+    "hash": "582c771c06b0ee5b4a5541ebc75dd483a6376c48"
+  }
+}

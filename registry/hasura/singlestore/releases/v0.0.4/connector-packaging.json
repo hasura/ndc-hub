@@ -1,5 +1,5 @@
 {
-  "version": "0.0.4",
+  "version": "v0.0.4",
   "uri": "https://github.com/singlestore-labs/singlestore-hasura-connector/releases/download/v0.0.4/connector-definition.tgz",
   "checksum": {
     "type": "sha256",

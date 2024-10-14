@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "v1.2.0",
   "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v1.2.0/connector-definition.tgz",
   "checksum": {
     "type": "sha256",
