@@ -1,0 +1,11 @@
+{
+  "version": "v0.2.1",
+  "uri": "https://github.com/hasura/ndc-clickhouse/releases/download/v0.2.1/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "5e88d1b7fb14638ceeaf5b6fac775b6cc68d62d8537fc25cd8e87cdf4dfb443e"
+  },
+  "source": {
+    "hash": "521365decd10db124c9865bd29fc4e60025a6892"
+  }
+}

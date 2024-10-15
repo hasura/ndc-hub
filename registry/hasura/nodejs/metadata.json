@@ -1,0 +1,73 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The NodeJS Lambda connector allows you to expose TypeScript functions as NDC functions/procedures for use in your Hasura DDN subgraphs.",
+    "title": "NodeJS Lambda Connector",
+    "logo": "logo.png",
+    "tags": [],
+    "latest_version": "v1.8.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-nodejs-lambda/",
+    "version": [
+      {
+        "tag": "v1.8.0",
+        "hash": "c1442716e822f7748e06aa25dd4f348e536d60cd",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.7.0",
+        "hash": "1adf00b7c36dd811d5e15894c1a141149db6325f",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.6.0",
+        "hash": "2fb76722db449b5525d1dcce33cf48ee0cf44ad8",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.5.0",
+        "hash": "2a9a04d0a1c8116d9b864a83d81817ccddae355d",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.4.1",
+        "hash": "9b5f795aca98854205ba5646162d1df7f060d642",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.4.0",
+        "hash": "53ae3870e4f332310a7b6e359188371aa16714cf",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.3.0",
+        "hash": "faf8cc78db442e53ca0cf6cdf79c9feb0cfc8052",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.2.0",
+        "hash": "a13236051b836e4506463ff8c7e152f69c787680",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.1.0",
+        "hash": "32e33529d5cfc5c1dbc4245e384f22099654d02d",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.0.0",
+        "hash": "c7ef1aa899e1f83cc2935c2f91f4b9010411d716",
+        "is_verified": true
+      }
+    ]
+  }
+}

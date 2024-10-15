@@ -1,0 +1,73 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a SQL Server database and expose it to Hasura v3 Project",
+    "title": "SQL Server Connector",
+    "logo": "logo.png",
+    "tags": ["database"],
+    "latest_version": "v0.2.2"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "packages": [
+    {
+      "version": "0.1.2",
+      "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.1.2/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "102c642b2e0ddea1eaa471c5189ecd3423a20f91ad83995e09f9d4721dd85732"
+      },
+      "source": {
+        "hash": "bc0fd3d126f6c142587e014aa900fc6bc90cd59d"
+      }
+    },
+    {
+      "version": "0.1.1",
+      "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.1.1/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "340f11a2dbc180af838327c09949ac0dc14c94eb87b0d6b5a28c765ec928b1a9"
+      },
+      "source": {
+        "hash": "638a2b608f7a9c4625de7df35c61c909d2ce16b1"
+      }
+    },
+    {
+      "version": "0.1.0",
+      "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.1.0/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "5f47a1df3055b694ffaf13058e201ac0fa83db53ce2044cd15eeaaa841565cb4"
+      },
+      "source": {
+        "hash": "e26d6bd1a22540dcf5c5b29460260c2d23ff2657"
+      }
+    }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-sqlserver/",
+    "version": [
+      {
+        "tag": "v0.1.2",
+        "hash": "bc0fd3d126f6c142587e014aa900fc6bc90cd59d",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.1.1",
+        "hash": "638a2b608f7a9c4625de7df35c61c909d2ce16b1",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.1.0",
+        "hash": "e26d6bd1a22540dcf5c5b29460260c2d23ff2657",
+        "is_verified": true
+      }
+    ]
+  }
+}

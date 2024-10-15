@@ -1,0 +1,11 @@
+{
+  "version": "v1.0.2",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.2/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "86be6695432bef7cfcdccfc376c18f3c89ffefe6d139869ab4739709dd980141"
+  },
+  "source": {
+    "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
+  }
+}

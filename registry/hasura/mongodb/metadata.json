@@ -1,0 +1,80 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a MongoDB database and expose it to Hasura v3 Project",
+    "title": "MongoDB Connector",
+    "logo": "logo.png",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.3.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-mongodb/",
+    "version": [
+      {
+        "tag": "v1.3.0",
+        "hash": "47fc3c301203d0118940a317e7c634e768b8898a",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.2.0",
+        "hash": "2e0696e8bd587c18f067e683ec367f6ba350537f",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.1.0",
+        "hash": "eab726516ecfcee76abeab1b92f3b5d6cba10976",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.0.0",
+        "hash": "4beb7ddabddc3035ca5cc7bd85493a71a2e34147",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.1.0",
+        "hash": "175272912b86a11359a9b6b7fd72c7a6e2326bf1",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.0.6",
+        "hash": "6e842c308eeee38d3bc393e6b99157961ca3ed03",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.0.5",
+        "hash": "055154b5d84f05ff0049aa75a29b85caf89822f6",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.0.4",
+        "hash": "38a4a56134a909001b645c659062ae393c2cebe0",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.0.3",
+        "hash": "b50094a368f8fbab7c37e4b83ef5dc1249a4a5d5",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.0.2",
+        "hash": "90c336c4d1d949d62dd25b04742e650fb6d458e0",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.0.1",
+        "hash": "c32adbde478147518f65ff465c40a0703239288a",
+        "is_verified": true
+      }
+    ]
+  }
+}

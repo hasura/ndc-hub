@@ -1,0 +1,59 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a Snowflake database and expose it to Hasura v3 Project",
+    "title": "Snowflake Connector",
+    "logo": "logo.svg",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.0.1"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "packages": [
+    {
+      "version": "0.1.0",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv0.1.0/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "564757bc44bebe56560fe21a1306507d160caf084d69556bded4a7ed392e1b41"
+      },
+      "source": {
+        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
+      }
+    },
+    {
+      "version": "1.0.1",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv1.0.1/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "01791312a91e41e59dd638f7efed7472a37c3d1fe174cc71a844a5cde65e23a5"
+      },
+      "source": {
+        "hash": "fbeb926e1d5550bec78a042a36d5ac2a8fba4c9f"
+      }
+    }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-jvm-mono",
+    "version": [
+      {
+        "tag": "snowflake/v0.1.0",
+        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e",
+        "is_verified": true
+      },
+      {
+        "tag": "snowflake/v1.0.1",
+        "hash": "fbeb926e1d5550bec78a042a36d5ac2a8fba4c9f",
+        "is_verified": true
+      }
+    ]
+  }
+}

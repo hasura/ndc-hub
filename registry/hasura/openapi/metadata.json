@@ -1,0 +1,43 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The OpenAPI Lambda Connector allows you to import already existing APIs specified by the Open API Spec into you Hasura DDN subgraphs",
+    "title": "OpenAPI Lambda Connector",
+    "logo": "logo.png",
+    "tags": [],
+    "latest_version": "v0.2.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-open-api-lambda/",
+    "version": [
+      {
+        "tag": "v0.0.1-alpha",
+        "hash": "3cc70a7c4715c72e8dcb56c78c66967c5f687148",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.0.2-alpha",
+        "hash": "35ba5da05dba1602fea40a3a8fba3652fd1c3e12",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.1.0",
+        "hash": "d0c628e9206d397373f42faaf3733f6ada94b56c",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.1.1",
+        "hash": "4b70712933de7a7ed475407ccd0be7bed1611ae8",
+        "is_verified": true
+      }
+    ]
+  }
+}

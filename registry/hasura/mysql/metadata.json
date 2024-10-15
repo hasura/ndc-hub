@@ -1,0 +1,75 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a MySQL database and expose it to Hasura v3 Project",
+    "title": "MySQL Connector",
+    "logo": "logo.svg",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.0.2"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "packages": [
+    {
+      "version": "0.1.0",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv0.1.0/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "09b51f9be725099345159880d21efb712776bfd09291a0daa81d7e7b1418ca2c"
+      },
+      "source": {
+        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
+      }
+    },
+    {
+      "version": "1.0.1",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.1/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "4503cb8961e3c2c8aede3183187fb69862ac1442a89085d35cf1d4a4989d6db9"
+      },
+      "source": {
+        "hash": "fbeb926e1d5550bec78a042a36d5ac2a8fba4c9f"
+      }
+    },
+    {
+      "version": "1.0.2",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.2/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "86be6695432bef7cfcdccfc376c18f3c89ffefe6d139869ab4739709dd980141"
+      },
+      "source": {
+        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
+      }
+    }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-jvm-mono",
+    "version": [
+      {
+        "tag": "mysql/v0.1.0",
+        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.1",
+        "hash": "fbeb926e1d5550bec78a042a36d5ac2a8fba4c9f",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.2",
+        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e",
+        "is_verified": true
+      }
+    ]
+  }
+}

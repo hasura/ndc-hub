@@ -1,0 +1,35 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The Qdrant Data Connector allows for connecting to a Qdrant instance giving you an instant GraphQL API on top of your Qdrant Vector Data.",
+    "title": "Qdrant Data Connector",
+    "logo": "logo.png",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.3.0"
+  },
+  "author": {
+    "support_email": "Community Supported",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": false,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-qdrant",
+    "version": [
+      {
+        "tag": "v0.2.1",
+        "hash": "2effed689bd2f97c9649d1b8f9966533ed1d82a0",
+        "is_verified": false
+      },
+      {
+        "tag": "v0.3.0",
+        "hash": "5eda2128fcbe710741f07a404a6eb69214da2731",
+        "is_verified": false
+      }
+    ]
+  }
+}

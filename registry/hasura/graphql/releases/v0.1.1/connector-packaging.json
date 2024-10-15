@@ -1,0 +1,11 @@
+{
+  "version": "v0.1.1",
+  "uri": "https://github.com/hasura/ndc-graphql/releases/download/v0.1.1/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "8a5acec98e28953b22932d7a3734f7e7e535ac9478058b4d06ad9da5dc21ce1d"
+  },
+  "source": {
+    "hash": "85b80185e28eb7f6721fc50ecd2552f96633e5db"
+  }
+}

@@ -1,0 +1,30 @@
+{
+    "overview": {
+        "namespace": "hasura",
+        "description": "The Cassandra Native Data Connector allows for connecting to a Cassandra instance giving you an instant GraphQL API on top of your Cassandra data.",
+        "title": "Cassandra Native Data Connector",
+        "logo": "logo.png",
+        "tags": [
+            "database"
+        ],
+        "latest_version": "v1.0.7"
+    },
+    "author": {
+        "support_email": "support@hasura.io",
+        "homepage": "https://hasura.io",
+        "name": "Hasura"
+    },
+    "is_verified": true,
+    "is_hosted_by_hasura": false,
+    "source_code": {
+        "is_open_source": true,
+        "repository": "https://github.com/hasura/ndc-cassandra/",
+        "version": [
+            {
+                "tag": "v1.0.7",
+                "hash": "79d7ef00c57f5b58e5e4f27e8ec89ffc2a685ec7",
+                "is_verified": true
+            }
+        ]
+    }
+}

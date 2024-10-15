@@ -1,0 +1,35 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a DuckDB database and expose them to Hasura v3 Project",
+    "title": "(MotherDuck) DuckDB Native Data Connector",
+    "logo": "logo.svg",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.1.0"
+  },
+  "author": {
+    "support_email": "Community Supported",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": false,
+  "is_hosted_by_hasura": true,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-duckdb",
+    "version": [
+      {
+        "tag": "v0.0.17",
+        "hash": "875c5fb4539febea0e5dad569fd8b64557870c1c",
+        "is_verified": false
+      },
+      {
+        "tag": "v0.1.0",
+        "hash": "580d059cf6250da21e7fdb9bcfc78f6803c626f5",
+        "is_verified": false
+      }
+    ]
+  }
+}

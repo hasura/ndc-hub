@@ -1,0 +1,11 @@
+{
+  "version": "v1.0.0",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/phoenix%2Fv1.0.0/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "dea7bcd0784bce3a2b8f7a573f793f24f511f793c2b117636235ff883c351e68"
+  },
+  "source": {
+    "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
+  }
+}
