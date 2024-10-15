@@ -30,7 +30,7 @@ After the CLI initializes the connector, you'll need to:
 - Add your [models](https://hasura.io/docs/3.0/cli/commands/ddn_model_add) and
   [commands](https://hasura.io/docs/3.0/cli/commands/ddn_command_add).
 - Create a [new build](https://hasura.io/docs/3.0/cli/commands/ddn_supergraph_build_local).
-- Test it by [running your project along with the connector](https://hasura.io/docs/3.0/cli/commands/ddn_run#examples
+- Test it by [running your project along with the connector](https://hasura.io/docs/3.0/cli/commands/ddn_run#examples)
 
 See all available variables [here](https://github.com/hasura/ndc-stripe#environment-variables).
 
