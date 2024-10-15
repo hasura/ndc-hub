@@ -2,8 +2,8 @@
   "overview": {
     "namespace": "hasura",
     "description": "The Stripe Data Connector provides an instant adapter for Engine v3 to request Stripe resources via GraphQL",
-    "title": "Stripe Data Connector",
-    "logo": "logo.svg",
+    "title": "Stripe Connector",
+    "logo": "logo.png",
     "tags": [],
     "latest_version": "v0.2.3"
   },
