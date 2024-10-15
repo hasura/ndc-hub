@@ -88,7 +88,8 @@ export type BinaryCliPluginPlatform = {
     | "windows-amd64"
     | "linux-amd64";
   /**
-   * The URI of the binary file. This should be a URL from which the binary can be downloaded,
+   * The URI of the CLI plugin archive, it should be in tar format.
+   This should be a URL from which the binary can be downloaded,
    * without any authentication.
    */
   uri: string;

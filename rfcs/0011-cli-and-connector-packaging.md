@@ -116,20 +116,20 @@ export type BinaryCliPluginPlatform = {
     | "windows-amd64"
     | "linux-amd64";
   /**
-   * The URI of the binary file. This should be a URL from which the binary can be downloaded,
+   * The URI of the CLI plugin archive, it should be in tar format.
+   This should be a URL from which the binary can be downloaded,
    * without any authentication.
    */
   uri: string;
   /**
-   * The SHA256 hash of the binary file. This is used to verify the integrity of the downloaded binary.
+   * The SHA256 hash of the binary file.
+   This is used to verify the integrity of the downloaded binary.
    */
   sha256: string;
   /**
    * The name of the binary file. This is the name of the binary file that will be placed in the bin directory.
    */
   bin: string;
-
-  files: FilePath[];
 };
 
 export type FilePath = {
@@ -166,6 +166,8 @@ export type DockerComposeWatchItem = {
 
 
 ### Summary of changes
+
+- The `uri` specified in the `BinaryCliPluginPlatform` should download a tar package, where all the files required to run the plugin are present. For example, you may need to provide some `.dll` files for the windows binary to work correctly, supporting header files for a plugin which is not statically linked.
 
 - Add a new optional field `version` to the `ConnectorMetadataDefinition` type. This field will be used to version the connector metadata definition.
 - Introduce a new type `BinaryInlineCliPluginDefinition` to specify the binary CLI plugin information in the `connector-metadata.yaml`, this type contains the platform information.
