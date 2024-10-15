@@ -1,0 +1,11 @@
+{
+  "version": "v0.2.3",
+  "uri": "https://github.com/hasura/ndc-stripe/releases/download/v0.2.3/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "01c3b462cfc89e78cbf72f8713c59c67d2c13b3054a16f39a584e293bee6ab10"
+  },
+  "source": {
+    "hash": "71956bc9cc3eb1c08c0f22441a8c9d106dc6cea8"
+  }
+}
