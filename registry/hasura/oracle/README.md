@@ -1,7 +1,7 @@
 # Oracle Connector
 
 [![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/getting-started/overview/)
-[![ndc-hub](https://img.shields.io/badge/ndc--hub-sqlserver-blue.svg?style=flat)](https://hasura.io/connectors/sqlserver)
+[![ndc-hub](https://img.shields.io/badge/ndc--hub-oracle-blue.svg?style=flat)](https://hasura.io/connectors/oracle)
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg?style=flat)](./readme.md)
 

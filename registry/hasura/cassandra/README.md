@@ -1,7 +1,7 @@
 # Cassandra Connector
 
 [![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/getting-started/overview/)
-[![ndc-hub](https://img.shields.io/badge/ndc--hub-sqlserver-blue.svg?style=flat)](https://hasura.io/connectors/sqlserver)
+[![ndc-hub](https://img.shields.io/badge/ndc--hub-cassandra-blue.svg?style=flat)](https://hasura.io/connectors/cassandra)
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg?style=flat)](./readme.md)
 
@@ -59,18 +59,16 @@ ddn connector init -i
 
 When the wizard runs, you'll be prompted to enter the following env vars necessary for your connector to function:
 
-| Name                  | Description                             | Required |
-|-----------------------|-----------------------------------------|----------|
-| CASSANDRA_HOST        | Cassandra Host                          | true     |
-| CASSANDRA_KEYSPACE    | Cassandra KeySpace                      | true     |
-| CASSANDRA_USERNAME    | Cassandra username                      | true     |
-| CASSANDRA_PASSWORD    | Cassandra password                      | true     |
-| CASSANDRA_PORT        | Cassandra port                          | false    |
-| CASSANDRA_DC          | Cassandra Data Center                   | false    |
-| CASSANDRA_SSL_CA_PATH | Cassandra self-signed root cert path    | false    |
-| CASSANDRA_SSL         | Cassandra SSL                           | false    |
-
-
+| Name                  | Description                          | Required |
+| --------------------- | ------------------------------------ | -------- |
+| CASSANDRA_HOST        | Cassandra Host                       | true     |
+| CASSANDRA_KEYSPACE    | Cassandra KeySpace                   | true     |
+| CASSANDRA_USERNAME    | Cassandra username                   | true     |
+| CASSANDRA_PASSWORD    | Cassandra password                   | true     |
+| CASSANDRA_PORT        | Cassandra port                       | false    |
+| CASSANDRA_DC          | Cassandra Data Center                | false    |
+| CASSANDRA_SSL_CA_PATH | Cassandra self-signed root cert path | false    |
+| CASSANDRA_SSL         | Cassandra SSL                        | false    |
 
 After the CLI initializes the connector, you'll need to:
 
