@@ -478,7 +478,7 @@
                     "type": "string"
                   },
                   "uri": {
-                    "description": "The URI of the CLI plugin archive, it should be in tar format.\nThis should be a URL from which the binary can be downloaded,\nwithout any authentication.",
+                    "description": "The URI of the CLI plugin archive, it can either be in the tar.gz format\nor zip format (for windows).\nThis archive should be a URL from which the binary can be downloaded,\nwithout any authentication.",
                     "type": "string"
                   },
                   "sha256": {
