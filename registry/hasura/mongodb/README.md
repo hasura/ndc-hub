@@ -17,7 +17,7 @@ but does not currently support mutations, column relationship arguments in queri
 
 ## Using the MongoDB connector
 
-Check out the [Hasura docs here](https://hasura.io/docs/3.0/getting-started/build/connect-to-data/connect-a-source/?db=MongoDB) to get started with the ClickHouse connector.
+Check out the [Hasura docs here](https://hasura.io/docs/3.0/getting-started/build/connect-to-data/connect-a-source/?db=MongoDB) to get started with the MongoDB connector.
 
 ## Troubleshooting
 
