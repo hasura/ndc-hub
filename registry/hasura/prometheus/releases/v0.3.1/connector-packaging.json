@@ -1,0 +1,11 @@
+{
+  "version": "v0.3.1",
+  "uri": "https://github.com/hasura/ndc-prometheus/releases/download/v0.3.1/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "218dea726017cc865b9ba746e5150427df5519bb52eb09fbcce38cde1d681598"
+  },
+  "source": {
+    "hash": "7a1911709873636e821af8313492e747ea717c14"
+  }
+}
