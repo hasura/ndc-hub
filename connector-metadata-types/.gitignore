@@ -1,0 +1,11 @@
+# Dependency directories
+node_modules/
+
+# TypeScript compiled output
+dist/
+build/
+*.js
+*.js.map
+
+# TypeScript configuration
+tsconfig.tsbuildinfo
