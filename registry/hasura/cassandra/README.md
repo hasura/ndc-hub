@@ -22,7 +22,7 @@ Below, you'll find a matrix of all supported features for the Cassandra connecto
 
 | Feature                         | Supported | Notes |
 | ------------------------------- | --------- | ----- |
-| Native Queries + Logical Models | ✅        |       |
+| Native Queries + Logical Models | ❌        |       |
 | Native Mutations                | ❌        |       |
 | Simple Object Query             | ✅        |       |
 | Filter / Search                 | ✅        |       |
