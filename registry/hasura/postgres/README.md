@@ -14,6 +14,27 @@ for more information about specific features that are available for the PostgreS
 
 The connector is hosted by Hasura and can be used from the [Hasura v3 Console](https://console.hasura.io).
 
+## Features
+
+Below, you'll find a matrix of all supported features for the PostgreSQL connector:
+
+| Feature                | Supported |
+| ---------------------- | --------- |
+| Native Queries         | ✅        |
+| Native Mutations       | ✅        |
+| Simple Object Query    | ✅        |
+| Filter / Search        | ✅        |
+| Simple Aggregation     | ✅        |
+| Sort                   | ✅        |
+| Paginate               | ✅        |
+| Table Relationships    | ✅        |
+| Views                  | ✅        |
+| Mutations              | ✅        |
+| Distinct               | ✅        |
+| Enums                  | ✅        |
+| Default Values         | ✅        |
+| User-defined Functions | ❌        |
+
 ## Usage
 
 The Hasura PostgreSQL connector can be deployed using the [Hasura CLI](https://hasura.io/docs/3.0/cli/overview) by following either the [Quick Start Guide](https://hasura.io/docs/3.0/getting-started/overview/) or [deploying the connector](https://hasura.io/docs/3.0/connectors/deployment).
