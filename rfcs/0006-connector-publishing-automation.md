@@ -59,7 +59,7 @@ file should contain the relevant information to access the package definition.
 
 ```json
 {
-    "version": "0.0.1",
+    "version": "v0.0.1",
     "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v0.0.1/connector-definition.tgz",
     "checksum": {
         "type": "sha256",
