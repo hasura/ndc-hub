@@ -134,7 +134,7 @@ A user submission will look like this example:
   // New stanza
   "packages": [
     {
-      "version": "1.2.3",
+      "version": "v1.2.3",
       "uri": "https://foobar.com/releases/postgres-postgresql-v0.2.0-9283dh9283u...hd092ujdf2ued.tar.gz",
       "checksum": {
         "type": "sha256",
