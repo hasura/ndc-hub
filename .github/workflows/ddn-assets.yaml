@@ -1,0 +1,40 @@
+name: DDN Assets
+
+on:
+  push:
+    branches:
+      - "main"
+      - "vishnu/cps-1077-build-and-push-ndc-hubdatacommit-sha-docker-images"
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate data
+        run: |
+          export NDC_HUB_GIT_REPO_FILE_PATH=$PWD
+          echo "NDC_HUB_GIT_REPO_FILE_PATH = $NDC_HUB_GIT_REPO_FILE_PATH"
+
+          pushd docker/data
+            echo "Downloading ddn-assets"
+            wget https://github.com/hasura/ddn-assets/releases/download/v0.1.0/ddn-assets
+            chmod +x ddn-assets
+
+            echo "Running ddn-assets"
+            ddn-assets
+          popd
+
+      # - name: Log in to the Container registry
+      #   uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      #   with:
+      #     registry: ${{ env.REGISTRY }}
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
