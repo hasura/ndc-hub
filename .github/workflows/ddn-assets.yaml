@@ -24,7 +24,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate data and push image
+      - name: Build and push data image
         run: |
           export NDC_HUB_GIT_REPO_FILE_PATH=$PWD
           echo "NDC_HUB_GIT_REPO_FILE_PATH = $NDC_HUB_GIT_REPO_FILE_PATH"
@@ -41,4 +41,10 @@ jobs:
             ./ddn-assets generate
 
             docker build -t ghcr.io/hasura/ndc-hub:data.$GITHUB_SHA . --push
+          popd
+
+      - name: Build and push data server image
+        run: |
+          pushd docker/server
+            docker build -t ghcr.io/hasura/ndc-hub:data-server.$GITHUB_SHA . --push
           popd
