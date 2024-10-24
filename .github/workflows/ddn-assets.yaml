@@ -18,7 +18,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Generate data
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate data and push image
         run: |
           export NDC_HUB_GIT_REPO_FILE_PATH=$PWD
           echo "NDC_HUB_GIT_REPO_FILE_PATH = $NDC_HUB_GIT_REPO_FILE_PATH"
@@ -34,12 +41,5 @@ jobs:
             echo "Running ddn-assets"
             ./ddn-assets generate
 
-            docker build -t ghcr.io/hasura/ndc-hub:data.$GITHUB_SHA .
+            docker build -t ghcr.io/hasura/ndc-hub:data.$GITHUB_SHA . --push
           popd
-
-      # - name: Log in to the Container registry
-      #   uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-      #   with:
-      #     registry: ${{ env.REGISTRY }}
-      #     username: ${{ github.actor }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
