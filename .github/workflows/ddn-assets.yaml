@@ -28,6 +28,9 @@ jobs:
             wget https://github.com/hasura/ddn-assets/releases/download/v0.1.0/ddn-assets
             chmod +x ddn-assets
 
+            # TODO: get rid of this after fixing https://github.com/hasura/ddn-assets/issues/7
+            touch assets
+
             echo "Running ddn-assets"
             ./ddn-assets generate
 
