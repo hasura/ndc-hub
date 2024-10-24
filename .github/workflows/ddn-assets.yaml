@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "main"
-      - "vishnu/cps-1077-build-and-push-ndc-hubdatacommit-sha-docker-images"
 
 jobs:
   generate:
