@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "main"
-      - "vishnu/cps-1079-build-and-push-ndc-hubdata-servercommit-sha-docker-images"
 
 env:
   DATA_TAG: data.${{ github.sha }}
