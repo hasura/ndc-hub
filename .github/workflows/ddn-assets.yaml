@@ -7,7 +7,8 @@ on:
       - "vishnu/cps-1079-build-and-push-ndc-hubdata-servercommit-sha-docker-images"
 
 env:
-  DATA_TAG: data.$GITHUB_SHA
+  DATA_TAG: data.${{ github.sha }}
+  DATA_SERVER_TAG: data-server.${{ github.sha }}
   DDN_ASSETS_VERSION: v0.1.0
 
 jobs:
@@ -51,5 +52,5 @@ jobs:
       - name: Build and push data server image
         run: |
           pushd docker/server
-            docker build --build-arg DATA_TAG=$DATA_TAG -t ghcr.io/hasura/ndc-hub:data-server.$GITHUB_SHA . --push
+            docker build --build-arg DATA_TAG=$DATA_TAG -t ghcr.io/hasura/ndc-hub:$DATA_SERVER_TAG . --push
           popd
