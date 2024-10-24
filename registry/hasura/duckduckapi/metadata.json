@@ -1,0 +1,28 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "DuckDuckAPI - A connector to create a data product out of any SaaS service, with support for federated OAuth2 access",
+    "title": "DuckDuckAPI Connector",
+    "logo": "logo.png",
+    "tags": [],
+    "latest_version": "v0.1.3"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-duckduckapi/",
+    "version": [
+      {
+        "tag": "v0.1.3",
+        "hash": "7fcca949d700d22d4d1001b91d93bef2c2804b9e",
+        "is_verified": true
+      }
+    ]
+  }
+}
