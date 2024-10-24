@@ -29,7 +29,9 @@ jobs:
             chmod +x ddn-assets
 
             echo "Running ddn-assets"
-            ./ddn-assets
+            ./ddn-assets generate
+
+            docker build -t ghcr.io/hasura/ndc-hub:data.$GITHUB_SHA .
           popd
 
       # - name: Log in to the Container registry
