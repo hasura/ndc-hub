@@ -5,7 +5,7 @@
     "title": "Stripe Connector",
     "logo": "logo.png",
     "tags": [],
-    "latest_version": "v0.2.3"
+    "latest_version": "v0.3.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -18,6 +18,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-stripe",
     "version": [
+      {
+        "tag": "v0.3.0",
+        "hash": "4b6ddfd4a867a000660953584e3bdd116ad33933",
+        "is_verified": true
+      },
       {
         "tag": "v0.2.3",
         "hash": "71956bc9cc3eb1c08c0f22441a8c9d106dc6cea8",
