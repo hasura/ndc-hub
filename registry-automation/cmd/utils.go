@@ -18,7 +18,15 @@ func generateGCPObjectName(namespace, connectorName, version string) string {
 
 func downloadFile(sourceURL, destination string, headers map[string]string) error {
 	// Create a new HTTP client
-	client := &http.Client{}
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// Copy headers to redirected request
+			for key, values := range headers {
+				req.Header.Set(key, values)
+			}
+			return nil
+		},
+	}
 
 	// Create a new GET request
 	req, err := http.NewRequest("GET", sourceURL, nil)
