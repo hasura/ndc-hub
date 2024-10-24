@@ -29,7 +29,7 @@ jobs:
             chmod +x ddn-assets
 
             # TODO: get rid of this after fixing https://github.com/hasura/ddn-assets/issues/7
-            touch assets
+            mkdir assets
 
             echo "Running ddn-assets"
             ./ddn-assets generate
