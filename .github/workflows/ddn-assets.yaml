@@ -29,7 +29,7 @@ jobs:
             chmod +x ddn-assets
 
             echo "Running ddn-assets"
-            ddn-assets
+            ./ddn-assets
           popd
 
       # - name: Log in to the Container registry
