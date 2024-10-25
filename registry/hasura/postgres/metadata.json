@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.1.1"
+    "latest_version": "v1.2.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -73,6 +73,11 @@
       {
         "tag": "v1.1.2",
         "hash": "3ecf2be",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.2.0",
+        "hash": "e3f7a53",
         "is_verified": true
       }
     ]
