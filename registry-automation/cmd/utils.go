@@ -1,13 +1,15 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
+
+	"gopkg.in/yaml.v2"
 )
 
 func generateGCPObjectName(namespace, connectorName, version string) string {
@@ -16,7 +18,15 @@ func generateGCPObjectName(namespace, connectorName, version string) string {
 
 func downloadFile(sourceURL, destination string, headers map[string]string) error {
 	// Create a new HTTP client
-	client := &http.Client{}
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// Copy headers to redirected request
+			for key, values := range headers {
+				req.Header.Set(key, values)
+			}
+			return nil
+		},
+	}
 
 	// Create a new GET request
 	req, err := http.NewRequest("GET", sourceURL, nil)
@@ -35,6 +45,11 @@ func downloadFile(sourceURL, destination string, headers map[string]string) erro
 		return fmt.Errorf("error sending request: %v", err)
 	}
 	defer resp.Body.Close()
+
+	// check the response status
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Error downloading file: %s. HINT: Make sure that the tarball can be downloaded without any authentication", resp.Status)
+	}
 
 	// Create the destination file
 	outFile, err := os.Create(destination)
@@ -111,12 +126,16 @@ func extractTarGz(src, dest string) (string, error) {
 	if err := os.MkdirAll(filepath, 0755); err != nil {
 		return "", fmt.Errorf("error creating destination directory: %v", err)
 	}
+	var stdout, stderr bytes.Buffer
 	// Run the tar command with the -xvzf options
 	cmd := exec.Command("tar", "-xvzf", src, "-C", dest)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	// Execute the command
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("error extracting tar.gz file: %v", err)
+		return "", fmt.Errorf("error extracting file:\nerror: %v\nstdout: %s\nstderr: %s",
+			err, stdout.String(), stderr.String())
 	}
 
 	return fmt.Sprintf("%s/.hasura-connector/connector-metadata.yaml", filepath), nil
