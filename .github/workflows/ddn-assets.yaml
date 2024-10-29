@@ -5,6 +5,11 @@ on:
     branches:
       - "main"
 
+env:
+  DATA_TAG: data.${{ github.sha }}
+  DATA_SERVER_TAG: data-server.${{ github.sha }}
+  DDN_ASSETS_VERSION: v0.1.0
+
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -24,14 +29,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate data and push image
+      - name: Build and push data image
         run: |
           export NDC_HUB_GIT_REPO_FILE_PATH=$PWD
           echo "NDC_HUB_GIT_REPO_FILE_PATH = $NDC_HUB_GIT_REPO_FILE_PATH"
 
           pushd docker/data
             echo "Downloading ddn-assets"
-            wget https://github.com/hasura/ddn-assets/releases/download/v0.1.0/ddn-assets
+            wget https://github.com/hasura/ddn-assets/releases/download/$DDN_ASSETS_VERSION/ddn-assets
             chmod +x ddn-assets
 
             # TODO: get rid of this after fixing https://github.com/hasura/ddn-assets/issues/7
@@ -40,5 +45,11 @@ jobs:
             echo "Running ddn-assets"
             ./ddn-assets generate
 
-            docker build -t ghcr.io/hasura/ndc-hub:data.$GITHUB_SHA . --push
+            docker build -t ghcr.io/hasura/ndc-hub:$DATA_TAG . --push
+          popd
+
+      - name: Build and push data server image
+        run: |
+          pushd docker/server
+            docker build --build-arg DATA_TAG=$DATA_TAG -t ghcr.io/hasura/ndc-hub:$DATA_SERVER_TAG . --push
           popd
