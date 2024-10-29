@@ -1,0 +1,44 @@
+name: DDN Assets
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate data and push image
+        run: |
+          export NDC_HUB_GIT_REPO_FILE_PATH=$PWD
+          echo "NDC_HUB_GIT_REPO_FILE_PATH = $NDC_HUB_GIT_REPO_FILE_PATH"
+
+          pushd docker/data
+            echo "Downloading ddn-assets"
+            wget https://github.com/hasura/ddn-assets/releases/download/v0.1.0/ddn-assets
+            chmod +x ddn-assets
+
+            # TODO: get rid of this after fixing https://github.com/hasura/ddn-assets/issues/7
+            mkdir assets
+
+            echo "Running ddn-assets"
+            ./ddn-assets generate
+
+            docker build -t ghcr.io/hasura/ndc-hub:data.$GITHUB_SHA . --push
+          popd
