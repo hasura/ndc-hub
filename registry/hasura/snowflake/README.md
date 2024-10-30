@@ -76,6 +76,17 @@ After the CLI initializes the connector, you'll need to:
   [relationships](https://hasura.io/docs/3.0/cli/commands/ddn_relationship_add).
 - Create a [new build](https://hasura.io/docs/3.0/cli/commands/ddn_supergraph_build_local).
 - Test it by [running your project along with the connector](https://hasura.io/docs/3.0/cli/commands/ddn_run#examples).
+  
+## Key-Pair Authentication with RSA Keys
+
+Snowflake supports Key-Pair Authentication in their JDBC driver, as noted in the docs:
+- https://docs.snowflake.com/en/developer-guide/jdbc/jdbc-configure#private-key-file-name-and-password-in-connection-string
+
+This connector supports the method described in section `Private key file name and password in connection string`.
+
+Namely, mount your RSA keys into the Connector container, and then reference the mounted file path in your connection string as below:
+- `jdbc:snowflake://xxx.us-east-2.aws.snowflakecomputing.com/?private_key_file=/etc/connector/rsa_key.p8&private_key_file_pwd=<PASSWORD>`
+
 
 ## License
 
