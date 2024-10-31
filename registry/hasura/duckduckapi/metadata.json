@@ -5,7 +5,7 @@
     "title": "DuckDuckAPI Connector",
     "logo": "logo.png",
     "tags": [],
-    "latest_version": "v0.4.1"
+    "latest_version": "v0.5.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -19,10 +19,16 @@
     "repository": "https://github.com/hasura/ndc-duckduckapi/",
     "version": [
       {
+        "tag": "v0.5.0",
+        "hash": "434d53346467288c898d7d2136a240c8bba3898a",
+        "is_verified": true
+      },
+      {
         "tag": "v0.4.1",
         "hash": "67e7a10bc90427e44194845d5d498caccdc33ee9",
         "is_verified": true
       },
+      {
         "tag": "v0.4.0",
         "hash": "bb6e1436ff2eebd4e4dc95e2dfd820ca9ef45669",
         "is_verified": true
