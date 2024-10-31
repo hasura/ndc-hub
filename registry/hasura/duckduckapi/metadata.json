@@ -20,7 +20,10 @@
     "version": [
       {
         "tag": "v0.4.1",
-        "hash": "67e7a10bc90427e44194845d5d498caccdc33ee9",
+        "hash": "67e7a10bc90427e44194845d5d498caccdc33ee9"
+      },
+        "tag": "v0.4.0",
+        "hash": "bb6e1436ff2eebd4e4dc95e2dfd820ca9ef45669",
         "is_verified": true
       },
       {
