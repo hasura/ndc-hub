@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "main"
-      - "vishnu/cps-861-store-cli-plugin-binaries-in-asset-store"
 
 env:
   DATA_TAG: data.${{ github.sha }}
