@@ -1,8 +1,6 @@
 # Databricks Connector
 
 [![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/getting-started/overview/)
-// TODO(KC): We need to change this
-[![ndc-hub](https://img.shields.io/badge/ndc--hub-cassandra-blue.svg?style=flat)](https://hasura.io/connectors/cassandra)
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg?style=flat)](./readme.md)
 
@@ -30,9 +28,9 @@ Below, you'll find a matrix of all supported features for the Databricks connect
 | Simple Aggregation              | ✅        |       |
 | Sort                            | ✅        |       |
 | Paginate                        | ✅        |       |
-| Table Relationships             | ✅        |       |
+| Table Relationships             | ❌        |       |
 | Views                           | ✅        |       |
-| Remote Relationships            | ✅        |       |
+| Remote Relationships            | ❌        |       |
 | Custom Fields                   | ❌        |       |
 | Mutations                       | ❌        |       |
 | Distinct                        | ❌        |       |
@@ -60,10 +58,11 @@ ddn connector init -i
 
 When the wizard runs, you'll be prompted to enter the following env vars necessary for your connector to function:
 
-| Name                | Description                    | Required |
-|---------------------|--------------------------------|----------|
-| DATABRICKS_JDBC_URL | JDBC URL of your Databricks DB | Yes      |
-|                     |                                |          |
+| Name                    | Description                    | Required |
+|-------------------------|--------------------------------|----------|
+| DATABRICKS_JDBC_URL     | JDBC URL of your Databricks DB | Yes      |
+| DATABRICKS_ACCESS_TOKEN | Personal access token          | Yes      |
+
 
 After the CLI initializes the connector, you'll need to:
 
