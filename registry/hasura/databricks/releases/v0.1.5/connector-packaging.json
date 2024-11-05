@@ -1,0 +1,11 @@
+{
+    "version": "v0.1.5",
+    "uri": "https://github.com/hasura/ndc-databricks/releases/download/v0.1.5/connector-definition.tgz",
+    "checksum": {
+        "type": "sha256",
+      "value": "cc2ffc35051b2709a7691bb24fe034933a08c26fabf893ddd105f3ad920a900d"
+    },
+    "source": {
+      "hash": "d9a7e7070470c1d41bfa400731884c9c4452709d"
+    }
+}
