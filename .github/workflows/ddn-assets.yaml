@@ -8,7 +8,7 @@ on:
 env:
   DATA_TAG: data.${{ github.sha }}
   DATA_SERVER_TAG: data-server.${{ github.sha }}
-  DDN_ASSETS_VERSION: v0.1.0
+  DDN_ASSETS_VERSION: v0.2.0
 
 jobs:
   generate:
@@ -33,6 +33,8 @@ jobs:
         run: |
           export NDC_HUB_GIT_REPO_FILE_PATH=$PWD
           echo "NDC_HUB_GIT_REPO_FILE_PATH = $NDC_HUB_GIT_REPO_FILE_PATH"
+          export CONN_HUB_DATA_SERVER_URL="https://storage.googleapis.com/staging-connector-platform-registry/assets"
+          echo "CONN_HUB_DATA_SERVER_URL = $CONN_HUB_DATA_SERVER_URL"
 
           pushd docker/data
             echo "Downloading ddn-assets"
