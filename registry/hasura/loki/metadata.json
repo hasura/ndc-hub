@@ -1,0 +1,28 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect Hasura DDN to a Loki API server",
+    "title": "Loki Data Connector",
+    "logo": "logo.png",
+    "tags": ["database"],
+    "latest_version": "v0.0.1"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-loki",
+    "version": [
+      {
+        "tag": "v0.0.1",
+        "hash": "907d8cd2777ae0e8092a062309ff899d1c5d6110",
+        "is_verified": true
+      }
+    ]
+  }
+}

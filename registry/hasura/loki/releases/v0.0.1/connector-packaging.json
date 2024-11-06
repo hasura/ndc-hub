@@ -1,0 +1,11 @@
+{
+  "version": "v0.0.1",
+  "uri": "https://github.com/hasura/ndc-loki/releases/download/v0.0.1/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "d4eaea3fcf39d79ba7eee082e6c0f26ea119117ef9363c28f9c34330fd61ec3a"
+  },
+  "source": {
+    "hash": "907d8cd2777ae0e8092a062309ff899d1c5d6110"
+  }
+}
