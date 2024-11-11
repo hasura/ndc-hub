@@ -1,0 +1,28 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect Hasura DDN to REST API servers",
+    "title": "REST Connector",
+    "logo": "logo.png",
+    "tags": ["rest", "api", "openapi"],
+    "latest_version": "v0.4.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-rest",
+    "version": [
+      {
+        "tag": "v0.4.0",
+        "hash": "1b5065d681697ff7d3893a3c7b1b78b2485158c2",
+        "is_verified": true
+      }
+    ]
+  }
+}
