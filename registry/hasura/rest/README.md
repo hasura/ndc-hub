@@ -6,6 +6,35 @@ Data Connectors are the way to connect the Hasura Data Delivery Network (DDN) to
 
 The data connector is open source and can be found in the [ndc-rest GitHub repository](https://github.com/hasura/ndc-rest).
 
+## Features
+
+- No code, configuration based.
+- Supported many API specifications.
+- Composable API connections.
+- Supported authentication.
+- Supported headers forwarding.
+- Supported timeout and retry.
+- Supported concurrency and sending distributed requests to multiple servers.
+
+**Supported request types**
+
+| Request Type | Query | Path | Body | Headers |
+| ------------ | ----- | ---- | ---- | ------- |
+| GET          | ✅    | ✅   | NA   | ✅      |
+| POST         | ✅    | ✅   | ✅   | ✅      |
+| DELETE       | ✅    | ✅   | ✅   | ✅      |
+| PUT          | ✅    | ✅   | ✅   | ✅      |
+| PATCH        | ✅    | ✅   | ✅   | ✅      |
+
+**Supported content types**
+
+- `application/json`
+- `application/x-www-form-urlencoded`
+- `application/octet-stream`
+- `multipart/form-data`
+- `text/*`
+- Upload file content types, e.g.`image/*` from `base64` arguments.
+
 ## Deployment
 
 The connector is hosted by Hasura and can be used from the [Hasura v3 Console](https://console.hasura.io).
