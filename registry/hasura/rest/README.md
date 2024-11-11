@@ -32,6 +32,7 @@ The data connector is open source and can be found in the [ndc-rest GitHub repos
 - `application/x-www-form-urlencoded`
 - `application/octet-stream`
 - `multipart/form-data`
+- `application/x-ndjson`
 - `text/*`
 - Upload file content types, e.g.`image/*` from `base64` arguments.
 
