@@ -1,3 +1,3 @@
 FROM scratch
 
-COPY assets /assets
+COPY assets/outputs /assets

@@ -1,0 +1,30 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The Databricks Native Data Connector allows for connecting to a Databricks instance giving you an instant GraphQL API on top of your Databricks data.",
+    "title": "Databricks Native Data Connector",
+    "logo": "logo.png",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.1.7"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-databricks/",
+    "version": [
+      {
+        "tag": "v0.1.7",
+        "hash": "c04744ae937a818073fdf12534c6c59e05a22be8",
+        "is_verified": true
+      }
+    ]
+  }
+}
