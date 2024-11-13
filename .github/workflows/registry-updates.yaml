@@ -7,14 +7,6 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - registry/**
-  pull_request:
-    branches:
-      - kc/record-latest-version
-      - main
-    types: [opened, synchronize, reopened]
-    paths:
-      - registry/**
-
 
 jobs:
   update_registry_db:
@@ -31,23 +23,23 @@ jobs:
           repository: ${{github.event.pull_request.head.repo.full_name}}
           fetch-depth: 1
 
-      # - name: Check for PR approvals
-      #   id: check-approval
-      #   uses: actions/github-script@v7
-      #   with:
-      #     script: |
-      #       const { owner, repo } = context.issue;
-      #       const pull_number = context.payload.pull_request.number;
-      #       console.log("Owner and repo and pull_number", owner, repo, pull_number);
-      #       const { data: reviews } = await github.rest.pulls.listReviews({
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         pull_number: context.payload.pull_request.number,
-      #       });
-      #       const approved = reviews.some(review => review.state === 'APPROVED');
-      #       if (!approved) {
-      #         core.setFailed('This workflow will only run when the PR is approved by someone in Hasura')
-      #       }
+      - name: Check for PR approvals
+        id: check-approval
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.issue;
+            const pull_number = context.payload.pull_request.number;
+            console.log("Owner and repo and pull_number", owner, repo, pull_number);
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            const approved = reviews.some(review => review.state === 'APPROVED');
+            if (!approved) {
+              core.setFailed('This workflow will only run when the PR is approved by someone in Hasura')
+            }
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
