@@ -93,9 +93,8 @@ type ConnectorMetadata struct {
 		Homepage     string `json:"homepage"`
 		Name         string `json:"name"`
 	} `json:"author"`
-	IsVerified         bool   `json:"is_verified"`
-	IsHostedByHasura   bool   `json:"is_hosted_by_hasura"`
-	LatestVersion      string `json:"latest_version"`
+	IsVerified         bool `json:"is_verified"`
+	IsHostedByHasura   bool `json:"is_hosted_by_hasura"`
 	HasuraHubConnector struct {
 		Namespace string `json:"namespace"`
 		Name      string `json:"name"`
