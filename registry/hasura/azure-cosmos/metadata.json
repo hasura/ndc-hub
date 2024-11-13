@@ -1,11 +1,11 @@
 {
     "overview": {
       "namespace": "hasura",
-      "description": "Connect to a Azure Cosmos DB for NoSQL and expose it to Hasura v3 Project!",
-      "title": "Azure Cosmos DB for NoSQL",
+      "description": "Connect to a Azure Cosmos DB for NoSQL and expose it to Hasura v3 Project",
+      "title": "Azure Cosmos DB for NoSQL Connector",
       "logo": "logo.png",
       "tags": [],
-      "latest_version": "v0.2.0"
+      "latest_version": "v0.1.6"
     },
     "author": {
       "support_email": "support@hasura.io",
