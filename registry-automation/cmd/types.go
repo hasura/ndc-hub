@@ -60,8 +60,11 @@ func (wc WhereClause) MarshalJSON() ([]byte, error) {
 
 type ConnectorOverviewUpdate struct {
 	Set struct {
-		Docs *string `json:"docs,omitempty"`
-		Logo *string `json:"logo,omitempty"`
+		Docs          *string `json:"docs,omitempty"`
+		Logo          *string `json:"logo,omitempty"`
+		LatestVersion *string `json:"latest_version,omitempty"`
+		Title         *string `json:"title,omitempty"`
+		Description   *string `json:"description,omitempty"`
 	} `json:"_set"`
 	Where WhereClause `json:"where"`
 }
@@ -90,9 +93,9 @@ type ConnectorMetadata struct {
 		Homepage     string `json:"homepage"`
 		Name         string `json:"name"`
 	} `json:"author"`
-
-	IsVerified         bool `json:"is_verified"`
-	IsHostedByHasura   bool `json:"is_hosted_by_hasura"`
+	IsVerified         bool   `json:"is_verified"`
+	IsHostedByHasura   bool   `json:"is_hosted_by_hasura"`
+	LatestVersion      string `json:"latest_version"`
 	HasuraHubConnector struct {
 		Namespace string `json:"namespace"`
 		Name      string `json:"name"`
@@ -125,6 +128,7 @@ type ProcessedChangedFiles struct {
 	NewConnectors        NewConnectors
 	NewLogos             NewLogos
 	NewReadmes           NewReadmes
+	ModifiedConnectors   ModifiedMetadata
 }
 
 type GraphQLClientInterface interface {
@@ -171,6 +175,9 @@ type Connector struct {
 }
 
 type NewConnectorVersions map[Connector]map[string]string
+
+// ModifiedMetadata represents the modified metadata in the PR, the key is the connector name and the value is the path to the modified metadata
+type ModifiedMetadata map[Connector]MetadataFile
 
 // ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
 type ModifiedLogos map[Connector]string
