@@ -5,7 +5,7 @@
       "title": "Azure Cosmos DB for NoSQL Connector",
       "logo": "logo.png",
       "tags": [],
-      "latest_version": "v0.1.6"
+      "latest_version": "v0.2.0"
     },
     "author": {
       "support_email": "support@hasura.io",
