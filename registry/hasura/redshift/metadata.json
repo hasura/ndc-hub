@@ -1,0 +1,30 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The Redshift Native Data Connector allows for connecting to a Redshift instance giving you an instant GraphQL API on top of your Redshift data.",
+    "title": "Redshift Native Data Connector",
+    "logo": "logo.png",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.1.1"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-redshift/",
+    "version": [
+      {
+        "tag": "v0.1.1",
+        "hash": "5cad71dc7c6ad975ec643ac13f2361f3bd1e26cb",
+        "is_verified": true
+      }
+    ]
+  }
+}
