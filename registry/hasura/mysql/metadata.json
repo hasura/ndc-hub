@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.2"
+    "latest_version": "v1.0.3"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -49,6 +49,17 @@
       "source": {
         "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
       }
+    },
+    {
+      "version": "1.0.3",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.3/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "5a8e528410358c5c7eec1d8a081d701917f868febbd39b25f5dc8d502aaab15f"
+      },
+      "source": {
+        "hash": "084bde9aac2e42c2782b110e15b82ef4bd473b79"
+      }
     }
   ],
   "source_code": {
@@ -68,6 +79,11 @@
       {
         "tag": "mysql/v1.0.2",
         "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.3",
+        "hash": "084bde9aac2e42c2782b110e15b82ef4bd473b79",
         "is_verified": true
       }
     ]
