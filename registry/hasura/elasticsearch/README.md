@@ -33,7 +33,7 @@ Docs for the Elasticsearch data connector:
 Below, you'll find a matrix of all supported features for the Elasticsearch connector:
 
 | Feature                         | Supported | Notes |
-| ------------------------------- | --------- | ----- |
+|---------------------------------| --------- | ----- |
 | Native Queries + Logical Models | ✅        |       |
 | Simple Object Query             | ✅        |       |
 | Filter / Search                 | ✅        |       |
@@ -44,7 +44,7 @@ Below, you'll find a matrix of all supported features for the Elasticsearch conn
 | Nested Arrays                   | ✅        |       |
 | Nested Filtering                | ✅        |       |
 | Nested Sorting                  | ❌        |       |
-| Nested Relationships            | ❌        |       |
+| Relationships                   | ✅        |       |
 
 ## Prerequisites
 
