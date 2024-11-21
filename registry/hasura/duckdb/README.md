@@ -22,18 +22,18 @@ Below, you'll find a matrix of all supported features for the DuckDB connector:
 
 | Feature                         | Supported | Notes |
 | ------------------------------- | --------- | ----- |
-| Native Queries + Logical Models | ❌        |       |
-| Simple Object Query             | ✅        |       |
-| Filter / Search                 | ✅        |       |
-| Simple Aggregation              | ❌        |       |
-| Sort                            | ✅        |       |
-| Paginate                        | ✅        |       |
-| Table Relationships             | ✅        |       |
-| Views                           | ❌        |       |
-| Distinct                        | ❌        |       |
-| Remote Relationships            | ✅        |       |
-| Custom Fields                   | ❌        |       |
-| Mutations                       | ❌        |       |
+| Native Queries + Logical Models | ❌     |       |
+| Simple Object Query             | ✅     |       |
+| Filter / Search                 | ✅     |       |
+| Simple Aggregation              | ❌     |       |
+| Sort                            | ✅     |       |
+| Paginate                        | ✅     |       |
+| Table Relationships             | ✅     |       |
+| Views                           | ❌     |       |
+| Distinct                        | ❌     |       |
+| Remote Relationships            | ✅     |       |
+| Custom Fields                   | ❌     |       |
+| Mutations                       | ❌     |       |
 
 ## Prerequisites
 

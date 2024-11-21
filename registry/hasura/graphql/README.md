@@ -10,6 +10,21 @@ For Hasura v2 users, this functionality is the replacement of
 The `ndc-graphql` data connector is open source and can be found in the
 [ndc-graphql GitHub repository](https://github.com/hasura/ndc-graphql).
 
+## Features
+
+Below, you'll find a matrix of all supported features for the GraphQL connector:
+
+| Feature                | Supported | Notes |
+| ---------------------- | --------- | ----- |
+| Queries                | ✅        | All features that v3 engine currently supports
+| Mutations              | ✅        |
+| Header Passthrough     | ✅        | Entire headers can be forwarded
+| Subscriptions          | ❌        |
+| Unions                 | ❌        | Can be brought in via scalar types
+| Interfaces             | ❌        |
+| Relay API              | ❌        |
+| Directives             | ❌        | @cached, Apollo directives
+
 ## Prerequisites
 
 1. Create a [Hasura Cloud account](https://console.hasura.io)

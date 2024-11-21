@@ -8,6 +8,28 @@ which can expose and run GraphQL queries via the Hasura v3 Project.
 The connector implements the [NDC Specification](https://hasura.github.io/ndc-spec/overview.html),
 but does not currently support mutations, column relationship arguments in queries, functions or procedures.
 
+## Features
+
+Below, you'll find a matrix of all supported features for the MongoDB data connector:
+
+| Feature                                         | Supported | Notes |
+| ----------------------------------------------- | --------- | ----- |
+| Native Queries + Logical Models                 | ✅        |       |
+| Simple Object Query                             | ✅        |       |
+| Filter / Search                                 | ✅        |       |
+| Filter by fields of Nested Objects              | ✅        |       |
+| Filter by values in Nested Arrays               | ✅        |       |
+| Simple Aggregation                              | ✅        |       |
+| Aggregate fields of Nested Objects              | ❌        |       |
+| Aggregate values of Nested Arrays               | ❌        |       |
+| Sort                                            | ✅        |       |
+| Sorty by fields of Nested Objects               | ❌        |       |
+| Paginate                                        | ✅        |       |
+| Collection Relationships                        | ✅        |       |
+| Remote Relationships                            | ✅        |       |
+| Relationships Keyed by Fields of Nested Objects | ❌        |       |
+| Mutations                                       | ✅        | Provided by custom [Native Mutations](TODO) - predefined basic mutations are also planned |
+
 ## Prerequisites
 
 1. Create a [Hasura Cloud account](https://console.hasura.io)
