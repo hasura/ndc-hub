@@ -4,7 +4,9 @@
     "description": "Connect to a SQL Server database and expose it to Hasura v3 Project",
     "title": "SQL Server Connector",
     "logo": "logo.png",
-    "tags": ["database"],
+    "tags": [
+      "database"
+    ],
     "latest_version": "v0.2.2"
   },
   "author": {
@@ -16,7 +18,7 @@
   "is_hosted_by_hasura": true,
   "packages": [
     {
-      "version": "0.1.2",
+      "version": "v0.1.2",
       "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.1.2/package.tar.gz",
       "checksum": {
         "type": "sha256",
@@ -27,7 +29,7 @@
       }
     },
     {
-      "version": "0.1.1",
+      "version": "v0.1.1",
       "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.1.1/package.tar.gz",
       "checksum": {
         "type": "sha256",
@@ -38,7 +40,7 @@
       }
     },
     {
-      "version": "0.1.0",
+      "version": "v0.1.0",
       "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.1.0/package.tar.gz",
       "checksum": {
         "type": "sha256",

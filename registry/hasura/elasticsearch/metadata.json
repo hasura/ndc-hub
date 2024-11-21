@@ -18,7 +18,7 @@
   "is_hosted_by_hasura": true,
   "packages": [
     {
-      "version": "0.1.0",
+      "version": "v0.1.0",
       "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v0.1.0/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
@@ -29,7 +29,7 @@
       }
     },
     {
-      "version": "0.1.1",
+      "version": "v0.1.1",
       "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v0.1.1/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
@@ -40,7 +40,7 @@
       }
     },
     {
-      "version": "0.2.0",
+      "version": "v0.2.0",
       "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v0.2.0/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
@@ -51,7 +51,7 @@
       }
     },
     {
-      "version": "1.0.0",
+      "version": "v1.0.0",
       "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.0.0/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
@@ -62,7 +62,7 @@
       }
     },
     {
-      "version": "1.0.1",
+      "version": "v1.0.1",
       "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.0.1/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
@@ -73,7 +73,7 @@
       }
     },
     {
-      "version": "1.0.2",
+      "version": "v1.0.2",
       "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.0.2/connector-definition.tgz",
       "checksum": {
         "type": "sha256",
@@ -84,7 +84,7 @@
       }
     },
     {
-      "version": "1.0.3",
+      "version": "v1.0.3",
       "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.0.3/connector-definition.tgz",
       "checksum": {
         "type": "sha256",

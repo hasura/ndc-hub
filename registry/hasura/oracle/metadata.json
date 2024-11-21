@@ -18,7 +18,7 @@
   "is_hosted_by_hasura": true,
   "packages": [
     {
-      "version": "0.1.0",
+      "version": "v0.1.0",
       "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/oracle%2Fv0.1.0/package.tar.gz",
       "checksum": {
         "type": "sha256",
@@ -29,7 +29,7 @@
       }
     },
     {
-      "version": "1.0.1",
+      "version": "v1.0.1",
       "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/oracle%2Fv1.0.1/package.tar.gz",
       "checksum": {
         "type": "sha256",
@@ -40,7 +40,7 @@
       }
     },
     {
-      "version": "1.0.2",
+      "version": "v1.0.2",
       "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/oracle%2Fv1.0.2/package.tar.gz",
       "checksum": {
         "type": "sha256",

@@ -4,7 +4,9 @@
     "description": "Connect to a BigQuery database and expose it to Hasura v3 Project",
     "title": "BigQuery Connector",
     "logo": "logo.png",
-    "tags": ["database"],
+    "tags": [
+      "database"
+    ],
     "latest_version": "v0.1.1"
   },
   "author": {
@@ -16,7 +18,7 @@
   "is_hosted_by_hasura": true,
   "packages": [
     {
-      "version": "0.1.1",
+      "version": "v0.1.1",
       "uri": "https://github.com/hasura/ndc-bigquery/releases/download/v0.1.1/package.tar.gz",
       "checksum": {
         "type": "sha256",
