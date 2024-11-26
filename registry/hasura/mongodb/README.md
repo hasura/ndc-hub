@@ -14,5 +14,5 @@ Check out the [Hasura docs here](https://hasura.io/docs/3.0/getting-started/with
 
 ## Troubleshooting
 
-Please [submit a Github issue](https://github.com/hasura/ndc-mongodb/issues/new)
+Please [submit a Github issue](https://github.com/hasura/graphql-engine/issues/new)
 if you encounter any problems!
