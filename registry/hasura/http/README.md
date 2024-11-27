@@ -6,9 +6,12 @@ Data Connectors are the way to connect the Hasura Data Delivery Network (DDN) to
 
 The data connector is open source and can be found in the [ndc-http GitHub repository](https://github.com/hasura/ndc-http).
 
+> [!NOTE]
+> HTTP connector is a configuration-based HTTP engine and isn't limited to the OpenAPI specs only. Use [OpenAPI Connector](https://hasura.io/docs/3.0/connectors/external-apis/open-api) if you want to take more control of OpenAPI via code generation.
+
 ## Features
 
-- No code, configuration based.
+- No code, configuration-based.
 - Supported many API specifications.
 - Composable API collections.
 - Supported authentication.
@@ -60,7 +63,7 @@ The connector is hosted by Hasura and can be used from the [Hasura v3 Console](h
 
 The Hasura HTTP connector can be deployed using the [Hasura CLI](https://hasura.io/docs/3.0/cli/overview) by following either the [Quick Start Guide](https://hasura.io/docs/3.0/getting-started/overview/) or [deploying the connector](https://hasura.io/docs/3.0/connectors/deployment).
 
-Explore, request and contribute pre-built configurations of popular services in the [ndc-http-recipes](https://github.com/hasura/ndc-http-recipes/tree/main/recipes) repository.
+Explore, request, and contribute pre-built configurations of popular services in the [HTTP Connector Recipes](https://github.com/hasura/ndc-http-recipes/tree/main/recipes) repository.
 
 ## Troubleshooting
 
