@@ -121,8 +121,9 @@ func buildContext() Context {
 }
 
 type fileProcessor struct {
-	regex   *regexp.Regexp
-	process func(matches []string, file string)
+	regex               *regexp.Regexp
+	newFileHandler      func(matches []string, file string)
+	modifiedFileHandler func(matches []string, file string) error
 }
 
 // processChangedFiles categorizes changes in connector files within a registry system.
@@ -154,43 +155,64 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 		NewConnectors:        make(map[Connector]MetadataFile),
 		NewLogos:             make(map[Connector]string),
 		NewReadmes:           make(map[Connector]string),
+		ModifiedConnectors:   make(map[Connector]MetadataFile),
 	}
 
 	processors := []fileProcessor{
 		{
 			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/metadata.json$`),
-			process: func(matches []string, file string) {
-				// IsNew is set to true because we are processing newly added metadata.json
+			newFileHandler: func(matches []string, file string) {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.NewConnectors[connector] = MetadataFile(file)
-				fmt.Printf("Processing metadata file for connector: %s\n", connector.Name)
+				fmt.Printf("Processing metadata file for new connector: %s\n", connector.Name)
+			},
+			modifiedFileHandler: func(matches []string, file string) error {
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				result.ModifiedConnectors[connector] = MetadataFile(file)
+				fmt.Printf("Processing metadata file for modified connector: %s\n", connector.Name)
+				return nil
 			},
 		},
 		{
 			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/logo\.(png|svg)$`),
-			process: func(matches []string, file string) {
+			newFileHandler: func(matches []string, file string) {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.NewLogos[connector] = file
-				fmt.Printf("Processing logo file for connector: %s\n", connector.Name)
+				fmt.Printf("Processing logo file for new connector: %s\n", connector.Name)
+			},
+			modifiedFileHandler: func(matches []string, file string) error {
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				result.ModifiedLogos[connector] = file
+				fmt.Printf("Processing logo file for modified connector: %s\n", connector.Name)
+				return nil
 			},
 		},
 		{
 			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/README\.md$`),
-			process: func(matches []string, file string) {
+			newFileHandler: func(matches []string, file string) {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.NewReadmes[connector] = file
-				fmt.Printf("Processing README file for connector: %s\n", connector.Name)
+				fmt.Printf("Processing README file for new connector: %s\n", connector.Name)
+			},
+			modifiedFileHandler: func(matches []string, file string) error {
+				connector := Connector{Name: matches[2], Namespace: matches[1]}
+				result.ModifiedReadmes[connector] = file
+				fmt.Printf("Processing README file for modified connector: %s\n", connector.Name)
+				return nil
 			},
 		},
 		{
 			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/releases/([^/]+)/connector-packaging\.json$`),
-			process: func(matches []string, file string) {
+			newFileHandler: func(matches []string, file string) {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				version := matches[3]
 				if _, exists := result.NewConnectorVersions[connector]; !exists {
 					result.NewConnectorVersions[connector] = make(map[string]string)
 				}
 				result.NewConnectorVersions[connector][version] = file
+			},
+			modifiedFileHandler: func(matches []string, file string) error {
+				return fmt.Errorf("Connector packaging files (%s) are immutable and should not be changed", file)
 			},
 		},
 	}
@@ -199,14 +221,12 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 		for _, processor := range processors {
 			if matches := processor.regex.FindStringSubmatch(file); matches != nil {
 				if isModified {
-					connector := Connector{Name: matches[2], Namespace: matches[1]}
-					if processor.regex.String() == processors[1].regex.String() {
-						result.ModifiedLogos[connector] = file
-					} else if processor.regex.String() == processors[2].regex.String() {
-						result.ModifiedReadmes[connector] = file
+					processError := processor.modifiedFileHandler(matches, file)
+					if processError != nil {
+						fmt.Printf("Error processing modified %s file: %s: %v\n", matches[2], file, processError)
 					}
 				} else {
-					processor.process(matches, file)
+					processor.newFileHandler(matches, file)
 				}
 				return
 			}
@@ -223,6 +243,35 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 	}
 
 	return result
+}
+
+// processModifiedConnectors processes the modified connectors and updates the connector metadata in the registry
+// This function updates the registry with the latest version, title, and description of the connector
+func processModifiedConnector(metadataFile MetadataFile, connector Connector) (ConnectorOverviewUpdate, error) {
+	// Iterate over the modified connectors and update the connectors in the registry
+	var connectorOverviewUpdate ConnectorOverviewUpdate
+	connectorMetadata, err := readJSONFile[ConnectorMetadata](string(metadataFile))
+	if err != nil {
+		return connectorOverviewUpdate, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
+	}
+	connectorOverviewUpdate = ConnectorOverviewUpdate{
+		Set: struct {
+			Docs          *string `json:"docs,omitempty"`
+			Logo          *string `json:"logo,omitempty"`
+			LatestVersion *string `json:"latest_version,omitempty"`
+			Title         *string `json:"title,omitempty"`
+			Description   *string `json:"description,omitempty"`
+		}{
+			LatestVersion: &connectorMetadata.Overview.LatestVersion,
+			Title:         &connectorMetadata.Overview.Title,
+			Description:   &connectorMetadata.Overview.Description,
+		},
+		Where: WhereClause{
+			ConnectorName:      connector.Name,
+			ConnectorNamespace: connector.Namespace,
+		},
+	}
+	return connectorOverviewUpdate, nil
 }
 
 func processNewConnector(ciCtx Context, connector Connector, metadataFile MetadataFile) (ConnectorOverviewInsert, HubRegistryConnectorInsertInput, error) {
@@ -277,14 +326,15 @@ func processNewConnector(ciCtx Context, connector Connector, metadataFile Metada
 	}
 
 	connectorOverviewAndAuthor = ConnectorOverviewInsert{
-		Name:        connector.Name,
-		Namespace:   connector.Namespace,
-		Docs:        string(docs),
-		Logo:        uploadedLogoUrl,
-		Title:       connectorMetadata.Overview.Title,
-		Description: connectorMetadata.Overview.Description,
-		IsVerified:  connectorMetadata.IsVerified,
-		IsHosted:    connectorMetadata.IsHostedByHasura,
+		Name:          connector.Name,
+		Namespace:     connector.Namespace,
+		Docs:          string(docs),
+		Logo:          uploadedLogoUrl,
+		Title:         connectorMetadata.Overview.Title,
+		Description:   connectorMetadata.Overview.Description,
+		IsVerified:    connectorMetadata.IsVerified,
+		IsHosted:      connectorMetadata.IsHostedByHasura,
+		LatestVersion: connectorMetadata.Overview.LatestVersion,
 		Author: ConnectorAuthorNestedInsert{
 			Data: ConnectorAuthor{
 				Name:         connectorMetadata.Author.Name,
@@ -329,6 +379,7 @@ func runCI(cmd *cobra.Command, args []string) {
 	modifiedReadmes := processChangedFiles.ModifiedReadmes
 
 	newlyAddedConnectors := processChangedFiles.NewConnectors
+	modifiedConnectors := processChangedFiles.ModifiedConnectors
 
 	var newConnectorsToBeAdded NewConnectorsInsertInput
 	newConnectorsToBeAdded.HubRegistryConnectors = make([]HubRegistryConnectorInsertInput, 0)
@@ -355,6 +406,18 @@ func runCI(cmd *cobra.Command, args []string) {
 		newConnectorsToBeAdded.HubRegistryConnectors = hubRegistryConnectorsToBeAdded
 		newConnectorsToBeAdded.ConnectorOverviews = newConnectorOverviewsToBeAdded
 
+	}
+
+	if len(modifiedConnectors) > 0 {
+		fmt.Println("Modified connectors: ", modifiedConnectors)
+		// Process the modified connectors
+		for connector, metadataFile := range modifiedConnectors {
+			connectorOverviewUpdate, err := processModifiedConnector(metadataFile, connector)
+			if err != nil {
+				log.Fatalf("Failed to process the modified connector: %s/%s, Error: %v", connector.Namespace, connector.Name, err)
+			}
+			connectorOverviewUpdates = append(connectorOverviewUpdates, connectorOverviewUpdate)
+		}
 	}
 
 	if len(newlyAddedConnectorVersions) > 0 {
