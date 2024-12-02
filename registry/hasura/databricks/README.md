@@ -28,14 +28,10 @@ Below, you'll find a matrix of all supported features for the Databricks connect
 | Simple Aggregation              | ✅        |       |
 | Sort                            | ✅        |       |
 | Paginate                        | ✅        |       |
-| Table Relationships             | ❌        |       |
 | Views                           | ✅        |       |
-| Remote Relationships            | ❌        |       |
-| Custom Fields                   | ❌        |       |
+| Relationships                   | ✅        |       |
 | Mutations                       | ❌        |       |
 | Distinct                        | ❌        |       |
-| Enums                           | ❌        |       |
-| Naming Conventions              | ❌        |       |
 | Default Values                  | ❌        |       |
 | User-defined Functions          | ❌        |       |
 
