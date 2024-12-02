@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v0.1.2"
+    "latest_version": "v0.1.3"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -21,8 +21,8 @@
     "repository": "https://github.com/hasura/ndc-redshift/",
     "version": [
       {
-        "tag": "v0.1.2",
-        "hash": "2e9d9cb4462a548fa7b242f50ad86ea68d5652cf",
+        "tag": "v0.1.3",
+        "hash": "4ac78264a6540c0efb1850d009f448e67de1384d",
         "is_verified": true
       }
     ]
