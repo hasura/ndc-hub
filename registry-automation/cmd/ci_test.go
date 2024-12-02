@@ -74,6 +74,7 @@ func TestProcessChangedFiles(t *testing.T) {
 				NewConnectors:        map[Connector]MetadataFile{{Name: "connector1", Namespace: "namespace1"}: "registry/namespace1/connector1/metadata.json"},
 				NewLogos:             map[Connector]string{},
 				NewReadmes:           map[Connector]string{},
+				ModifiedConnectors:   map[Connector]MetadataFile{},
 			},
 		},
 		{
@@ -91,6 +92,26 @@ func TestProcessChangedFiles(t *testing.T) {
 				NewConnectors:        map[Connector]MetadataFile{},
 				NewLogos:             map[Connector]string{},
 				NewReadmes:           map[Connector]string{},
+				ModifiedConnectors:   map[Connector]MetadataFile{},
+			},
+		},
+		{
+			name: "Modified logo and README and metadata",
+			changedFiles: ChangedFiles{
+				Modified: []string{
+					"registry/namespace1/connector1/logo.png",
+					"registry/namespace1/connector1/README.md",
+					"registry/namespace1/connector1/metadata.json",
+				},
+			},
+			expected: ProcessedChangedFiles{
+				NewConnectorVersions: map[Connector]map[string]string{},
+				ModifiedLogos:        map[Connector]string{{Name: "connector1", Namespace: "namespace1"}: "registry/namespace1/connector1/logo.png"},
+				ModifiedReadmes:      map[Connector]string{{Name: "connector1", Namespace: "namespace1"}: "registry/namespace1/connector1/README.md"},
+				NewConnectors:        map[Connector]MetadataFile{},
+				NewLogos:             map[Connector]string{},
+				NewReadmes:           map[Connector]string{},
+				ModifiedConnectors:   map[Connector]MetadataFile{{Name: "connector1", Namespace: "namespace1"}: "registry/namespace1/connector1/metadata.json"},
 			},
 		},
 	}
