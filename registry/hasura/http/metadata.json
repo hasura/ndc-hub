@@ -3,7 +3,7 @@
     "namespace": "hasura",
     "description": "Connect Hasura DDN to HTTP API servers",
     "title": "HTTP Connector",
-    "logo": "logo.svg",
+    "logo": "logo.png",
     "tags": ["http", "rest", "api", "openapi"],
     "latest_version": "v0.5.0"
   },
