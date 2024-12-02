@@ -166,15 +166,16 @@ type ConnectorAuthorNestedInsert struct {
 }
 
 type ConnectorOverviewInsert struct {
-	Namespace   string                      `json:"namespace"`
-	Name        string                      `json:"name"`
-	Title       string                      `json:"title"`
-	Description string                      `json:"description"`
-	Logo        string                      `json:"logo"`
-	Docs        string                      `json:"docs"`
-	IsVerified  bool                        `json:"is_verified"`
-	IsHosted    bool                        `json:"is_hosted_by_hasura"`
-	Author      ConnectorAuthorNestedInsert `json:"author"`
+	Namespace     string                      `json:"namespace"`
+	Name          string                      `json:"name"`
+	Title         string                      `json:"title"`
+	Description   string                      `json:"description"`
+	Logo          string                      `json:"logo"`
+	Docs          string                      `json:"docs"`
+	IsVerified    bool                        `json:"is_verified"`
+	IsHosted      bool                        `json:"is_hosted_by_hasura"`
+	LatestVersion string                      `json:"latest_version"`
+	Author        ConnectorAuthorNestedInsert `json:"author"`
 }
 
 type ConnectorAuthor struct {
