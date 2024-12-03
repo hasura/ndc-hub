@@ -32,6 +32,16 @@ Below, you'll find a matrix of all supported features for the DynamoDB for NoSQL
 | Nested Sorting                  | ❌        |       |
 | Nested Relationships            | ❌        |       |
 
+## Documentation
+
+The DynamoDB NoSQL database uses 3 operations to fetch data based on the partition and sort key:
+
+1. GET transaction: Both the partition and sort keys are provided in the filter clause. This is th eleast expensive operation.
+2. Query: Partition key is provided in the filter clause.
+3. Scan: None of the key attributes are provided. This is the most expensive operation.
+
+Note: To fetch the data using the Global Secondary Index, the collection name should be provided as '<table_name>:<gsi_name>
+
 ## Prerequisites
 
 1. Create a [Hasura Cloud account](https://console.hasura.io)
