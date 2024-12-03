@@ -1,0 +1,12 @@
+{
+    "version": "0.1.1",
+    "uri": "https://github.com/hasura/ndc-dynamodb/releases/download/v0.1.1/package.tar.gz",
+    "checksum": {
+      "type": "sha256",
+      "value": "17dc787eb150d85ea3e8c0aef977d4930b24c11f09673ed3138ea65565001803"
+    },
+    "source": {
+      "hash": "ce61f5f562a2c34180becc74d4d5f28ba0840a1f"
+    }
+  }
+  
