@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.2"
+    "latest_version": "v1.0.3"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -49,6 +49,17 @@
       "source": {
         "hash": "024d06f337329fc9a7a6534ac20381b7b47ec4d7"
       }
+    },
+    {
+      "version": "1.0.3",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv1.0.3/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "add9a381278fc73cb6b45c321c71537dcf81966bf51de1f44434f3ba9cb5f852"
+      },
+      "source": {
+        "hash": "9d1130bc4291338b7b3efdf01756ad0fbbcec2e1"
+      }
     }
   ],
   "source_code": {
@@ -68,6 +79,11 @@
       {
         "tag": "snowflake/v1.0.2",
         "hash": "024d06f337329fc9a7a6534ac20381b7b47ec4d7",
+        "is_verified": true
+      },
+      {
+        "tag": "snowflake/v1.0.3",
+        "hash": "9d1130bc4291338b7b3efdf01756ad0fbbcec2e1",
         "is_verified": true
       }
     ]
