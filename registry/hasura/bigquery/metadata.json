@@ -5,7 +5,7 @@
     "title": "BigQuery Connector",
     "logo": "logo.png",
     "tags": ["database"],
-    "latest_version": "v0.1.1"
+    "latest_version": "v1.0.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -15,6 +15,17 @@
   "is_verified": true,
   "is_hosted_by_hasura": true,
   "packages": [
+    {
+      "version": "v1.0.0",
+      "uri": "https://github.com/hasura/ndc-bigquery/releases/download/v1.0.0/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "51c8b7efe737c102373e79a2c78e4ab8d36fe9d6af6f8637fd75c347d6623c35"
+      },
+      "source": {
+        "hash": "330310de3f8dc06ffada89d7bc908597a68a4eb8"
+      }
+    },
     {
       "version": "0.1.1",
       "uri": "https://github.com/hasura/ndc-bigquery/releases/download/v0.1.1/package.tar.gz",
@@ -31,6 +42,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-bigquery/",
     "version": [
+      {
+        "tag": "v1.0.0",
+        "hash": "330310de3f8dc06ffada89d7bc908597a68a4eb8",
+        "is_verified": true
+      },
       {
         "tag": "v0.1.1",
         "hash": "10ac176c590840971354a611c156aef6bc9915c4",
