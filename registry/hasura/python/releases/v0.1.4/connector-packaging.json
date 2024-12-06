@@ -1,0 +1,11 @@
+{
+    "version": "v0.1.4",
+    "uri": "https://github.com/hasura/ndc-python-lambda/releases/download/v0.1.4/connector-definition.tgz",
+    "checksum": {
+      "type": "sha256",
+      "value": "588d5bc24295102f7c4eefa94d8b867c7aa0f944febdee3d7232261f22bc844a"
+    },
+    "source": {
+      "hash": "5bdfa301446f2aecee190d0fd9c6d9081f802109"
+    }
+  }
