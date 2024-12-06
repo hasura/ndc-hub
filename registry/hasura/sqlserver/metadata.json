@@ -14,52 +14,6 @@
   },
   "is_verified": true,
   "is_hosted_by_hasura": true,
-  "packages": [
-    {
-      "version": "1.0.0",
-      "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v1.0.0/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "26d4440a62740330e142e8e21671a2aef3b060653934d02a366d17f4048deaa7"
-      },
-      "source": {
-        "hash": "205eceea515c0a25fa85b19ceb838d5acecfaa20"
-      }
-    },
-    {
-      "version": "0.1.2",
-      "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.1.2/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "102c642b2e0ddea1eaa471c5189ecd3423a20f91ad83995e09f9d4721dd85732"
-      },
-      "source": {
-        "hash": "bc0fd3d126f6c142587e014aa900fc6bc90cd59d"
-      }
-    },
-    {
-      "version": "0.1.1",
-      "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.1.1/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "340f11a2dbc180af838327c09949ac0dc14c94eb87b0d6b5a28c765ec928b1a9"
-      },
-      "source": {
-        "hash": "638a2b608f7a9c4625de7df35c61c909d2ce16b1"
-      }
-    },
-    {
-      "version": "0.1.0",
-      "uri": "https://github.com/hasura/ndc-sqlserver/releases/download/v0.1.0/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "5f47a1df3055b694ffaf13058e201ac0fa83db53ce2044cd15eeaaa841565cb4"
-      },
-      "source": {
-        "hash": "e26d6bd1a22540dcf5c5b29460260c2d23ff2657"
-      }
-    }
-  ],
   "source_code": {
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-sqlserver/",
@@ -67,6 +21,21 @@
       {
         "tag": "v1.0.0",
         "hash": "205eceea515c0a25fa85b19ceb838d5acecfaa20",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.2.2",
+        "hash": "c33ff7efdcdef2c337aa40e2e776a4c2fdaca68b",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.2.1",
+        "hash": "35dd850de629234553b3338f4c1ab976b20d77b6",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.2.0",
+        "hash": "368b38fbe0acb089198acb99ba6dc46c89f6c184",
         "is_verified": true
       },
       {
