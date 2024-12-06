@@ -80,12 +80,12 @@ After the CLI initializes the connector, you'll need to:
 
 ## Documentation
 
-View the full documentation for the ndc-sqlserver connector [here](./docs/readme.md).
+View the full documentation for the ndc-sqlserver connector [here](https://github.com/hasura/ndc-sqlserver/blob/main/docs/readme.md).
 
 ## Contributing
 
 We're happy to receive any contributions from the community. Please refer to our
-[development guide](./docs/development.md).
+[development guide](https://github.com/hasura/ndc-sqlserver/blob/main/docs/development.md).
 
 ## License
 
