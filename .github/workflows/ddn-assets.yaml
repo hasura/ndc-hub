@@ -8,7 +8,7 @@ on:
 env:
   DATA_TAG: data.${{ github.sha }}
   DATA_SERVER_TAG: data-server.${{ github.sha }}
-  DDN_ASSETS_VERSION: v0.2.0
+  DDN_ASSETS_VERSION: v0.2.1
 
 jobs:
   generate:
