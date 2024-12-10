@@ -5,7 +5,7 @@
     "title": "HTTP Connector",
     "logo": "logo.png",
     "tags": ["http", "rest", "api", "openapi"],
-    "latest_version": "v0.5.0"
+    "latest_version": "v0.6.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -16,13 +16,6 @@
   "is_hosted_by_hasura": true,
   "source_code": {
     "is_open_source": true,
-    "repository": "https://github.com/hasura/ndc-http",
-    "version": [
-      {
-        "tag": "v0.5.0",
-        "hash": "2280487ec010799c66e5354a7aeaca42920b8430",
-        "is_verified": true
-      }
-    ]
+    "repository": "https://github.com/hasura/ndc-http"
   }
 }
