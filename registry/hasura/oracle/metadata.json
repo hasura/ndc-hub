@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.4"
+    "latest_version": "v1.0.5"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -71,6 +71,17 @@
       "source": {
         "hash": "9d1130bc4291338b7b3efdf01756ad0fbbcec2e1"
       }
+    },
+    {
+      "version": "v1.0.5",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/oracle%2Fv1.0.5/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "8308e6216afaf8417bf992ddce98c1530698373966b5b5fe5b9ab89040751d96"
+      },
+      "source": {
+        "hash": "ab66004e7a0671cd1af7b84cd930d9c042fadb77"
+      }
     }
   ],
   "source_code": {
@@ -100,6 +111,11 @@
       {
         "tag": "oracle/v1.0.4",
         "hash": "9d1130bc4291338b7b3efdf01756ad0fbbcec2e1",
+        "is_verified": true
+      },
+      {
+        "tag": "oracle/v1.0.5",
+        "hash": "ab66004e7a0671cd1af7b84cd930d9c042fadb77",
         "is_verified": true
       }
     ]
