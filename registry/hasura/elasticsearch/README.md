@@ -33,18 +33,25 @@ Docs for the Elasticsearch data connector:
 Below, you'll find a matrix of all supported features for the Elasticsearch connector:
 
 | Feature                         | Supported | Notes |
-|---------------------------------| --------- | ----- |
+| ------------------------------- | --------- | ----- |
 | Native Queries + Logical Models | ✅        |       |
 | Simple Object Query             | ✅        |       |
 | Filter / Search                 | ✅        |       |
-| Simple Aggregation              | ✅        |       |
+| Simple Aggregation              | alpha\*   |       |
 | Sort                            | ✅        |       |
-| Paginate                        | ✅        |       |
+| Paginate                        | ✅\*      |       |
+| Relationships                   | ❌        |       |
 | Nested Objects                  | ✅        |       |
 | Nested Arrays                   | ✅        |       |
 | Nested Filtering                | ✅        |       |
 | Nested Sorting                  | ❌        |       |
-| Relationships                   | ✅        |       |
+| Nested Relationships            | ❌        |       |
+
+> [!Note]
+> **Pagination** currently works only upto 10,000 rows because of the limits that Elasticsearch imposes. Pagination for additional rows will be available in a future relase version.
+
+> [!Note]
+> Aggregations are currently in alpha and are being actively worked upon
 
 ## Prerequisites
 
