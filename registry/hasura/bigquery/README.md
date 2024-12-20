@@ -4,6 +4,9 @@
 [![ndc-hub](https://img.shields.io/badge/ndc--hub-bigquery-blue.svg?style=flat)](https://hasura.io/connectors/bigquery)
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
 
+> [!IMPORTANT]
+> Breaking change: As of v2, the configuration format has changed. Configs prior to v2 need to be deleted and re-initialized
+
 With this connector, Hasura allows you to instantly create a real-time GraphQL API on top of your data models in
 BigQuery. This connector supports BigQuery's functionalities listed in the table below, allowing for efficient and
 scalable data operations. Additionally, users benefit from all the powerful features of Hasura’s Data Delivery Network

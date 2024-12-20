@@ -1,0 +1,11 @@
+{
+  "version": "v2.0.0",
+  "uri": "https://github.com/hasura/ndc-bigquery/releases/download/v2.0.0/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "dfb6657b9ae27fbdf3305caf511c1fe0bddf5b54dc3899f5c25bd1c256eec743"
+  },
+  "source": {
+    "hash": "ffa5d601278d417eb68dd5a0be6e06a3e5e3e672"
+  }
+}
