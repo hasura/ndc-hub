@@ -20,7 +20,7 @@ This connector implements the [Data Connector Spec](https://github.com/hasura/nd
 Below, you'll find a matrix of all supported features for the Databricks connector:
 
 | Feature                         | Supported | Notes |
-| ------------------------------- | --------- | ----- |
+|---------------------------------|-----------|-------|
 | Native Queries + Logical Models | ❌        |       |
 | Native Mutations                | ❌        |       |
 | Simple Object Query             | ✅        |       |
@@ -28,10 +28,14 @@ Below, you'll find a matrix of all supported features for the Databricks connect
 | Simple Aggregation              | ✅        |       |
 | Sort                            | ✅        |       |
 | Paginate                        | ✅        |       |
+| Table Relationships             | ❌        |       |
 | Views                           | ✅        |       |
-| Relationships                   | ✅        |       |
+| Remote Relationships            | ✅        |       |
+| Custom Fields                   | ❌        |       |
 | Mutations                       | ❌        |       |
 | Distinct                        | ❌        |       |
+| Enums                           | ❌        |       |
+| Naming Conventions              | ❌        |       |
 | Default Values                  | ❌        |       |
 | User-defined Functions          | ❌        |       |
 
@@ -57,8 +61,10 @@ When the wizard runs, you'll be prompted to enter the following env vars necessa
 | Name                    | Description                    | Required |
 |-------------------------|--------------------------------|----------|
 | DATABRICKS_JDBC_URL     | JDBC URL of your Databricks DB | Yes      |
-| DATABRICKS_ACCESS_TOKEN | Personal access token          | Yes      |
+| DATABRICKS_SCHEMA       | Databricks Schema              | Yes      |
+| DATABRICKS_CATALOG      | Databricks Catalog             | Yes      |
 
+Note: While entering the JDBC URL, ensure that the JDBC URL is in accordance with the DataBricks JDBC URL format, as specified [here](https://docs.databricks.com/en/integrations/jdbc/authentication.html).
 
 After the CLI initializes the connector, you'll need to:
 
