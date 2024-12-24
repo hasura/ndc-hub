@@ -40,7 +40,7 @@ Below, you'll find a matrix of all supported features for the Elasticsearch conn
 | Simple Aggregation              | alpha\*   |       |
 | Sort                            | ✅        |       |
 | Paginate                        | ✅\*      |       |
-| Relationships                   | ❌        |       |
+| Relationships                   | ✅        |       |
 | Nested Objects                  | ✅        |       |
 | Nested Arrays                   | ✅        |       |
 | Nested Filtering                | ✅        |       |
@@ -48,7 +48,8 @@ Below, you'll find a matrix of all supported features for the Elasticsearch conn
 | Nested Relationships            | ❌        |       |
 
 > [!Note]
-> **Pagination** currently works only upto 10,000 rows because of the limits that Elasticsearch imposes. Pagination for additional rows will be available in a future relase version.
+> - **Relationships** are currently implemented via `top_hits` operator. That operator has a default maximum result size limit of 100 rows. This is what the connector operates on. If you give the connector a higher limit, it will change that to 100 for compliance with the database. Also, since the returned result will contain only 100 rows per bucket, it may not represent the whole result.
+>- **Pagination** currently works only upto 10,000 rows because of the limits that Elasticsearch imposes. Pagination for additional rows will be available in a future relase version.
 
 > [!Note]
 > Aggregations are currently in alpha and are being actively worked upon
