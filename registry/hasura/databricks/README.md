@@ -19,25 +19,25 @@ This connector implements the [Data Connector Spec](https://github.com/hasura/nd
 
 Below, you'll find a matrix of all supported features for the Databricks connector:
 
-| Feature                         | Supported | Notes |
-|---------------------------------|-----------|-------|
-| Native Queries + Logical Models | ❌        |       |
-| Native Mutations                | ❌        |       |
-| Simple Object Query             | ✅        |       |
-| Filter / Search                 | ✅        |       |
-| Simple Aggregation              | ✅        |       |
-| Sort                            | ✅        |       |
-| Paginate                        | ✅        |       |
-| Table Relationships             | ❌        |       |
-| Views                           | ✅        |       |
-| Remote Relationships            | ✅        |       |
-| Custom Fields                   | ❌        |       |
-| Mutations                       | ❌        |       |
-| Distinct                        | ❌        |       |
-| Enums                           | ❌        |       |
-| Naming Conventions              | ❌        |       |
-| Default Values                  | ❌        |       |
-| User-defined Functions          | ❌        |       |
+| Feature                         | Supported | Notes                                                                                                                   |
+|---------------------------------|-----------|-------------------------------------------------------------------------------------------------------------------------|
+| Native Queries + Logical Models | ❌        |                                                                                                                         |
+| Native Mutations                | ❌        |                                                                                                                         |
+| Simple Object Query             | ✅        |                                                                                                                         |
+| Filter / Search                 | ✅        |                                                                                                                         |
+| Simple Aggregation              | ✅        | There is a known bug with the `limit` feature when used with aggregate functions where the `limit` argument is ignored. |
+| Sort                            | ✅        |                                                                                                                         |
+| Paginate                        | ✅        |                                                                                                                         |
+| Table Relationships             | ❌        |                                                                                                                         |
+| Views                           | ✅        |                                                                                                                         |
+| Remote Relationships            | ✅        |                                                                                                                         |
+| Custom Fields                   | ❌        |                                                                                                                         |
+| Mutations                       | ❌        |                                                                                                                         |
+| Distinct                        | ❌        |                                                                                                                         |
+| Enums                           | ❌        |                                                                                                                         |
+| Naming Conventions              | ❌        |                                                                                                                         |
+| Default Values                  | ❌        |                                                                                                                         |
+| User-defined Functions          | ❌        |                                                                                                                         |
 
 ## Prerequisites
 

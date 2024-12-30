@@ -4,7 +4,7 @@
 [![ndc-hub](https://img.shields.io/badge/ndc--hub-sqlserver-blue.svg?style=flat)](https://hasura.io/connectors/sqlserver)
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
 
-> **Note:** ADO.NET is the supported connection string format for SQL Server for ndc-sqlserver in DDN. 
+> **Note:** ADO.NET is the supported connection string format for SQL Server for ndc-sqlserver in DDN.
 > You can find the documentation for ADO.NET SQL Server connection strings [here](https://learn.microsoft.com/en-us/dotnet/framework/data/adonet/connection-string-syntax#sqlclient-connection-strings).
 > This is a change from Hasura version 2, where ODBC connection strings were supported.
 
@@ -24,26 +24,26 @@ the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 
 Below, you'll find a matrix of all supported features for the SQL Server connector:
 
-| Feature                         | Supported | Notes                                |
-| ------------------------------- | --------- | ------------------------------------ |
-| Native Queries + Logical Models | ✅        |                                      |
-| Native Mutations                | ✅        |                                      |
-| Simple Object Query             | ✅        |                                      |
-| Filter / Search                 | ✅        |                                      |
-| Simple Aggregation              | ✅        |                                      |
-| Sort                            | ✅        |                                      |
-| Paginate                        | ✅        |                                      |
-| Table Relationships             | ✅        |                                      |
-| Views                           | ✅        |                                      |
-| Remote Relationships            | ✅        |                                      |
-| Stored Procedures               | ✅        |                                      |
-| Custom Fields                   | ❌        |                                      |
-| Mutations                       | ❌        | Only native mutations are suppported |
-| Distinct                        | ✅        |                                      |
-| Enums                           | ❌        |                                      |
-| Naming Conventions              | ❌        |                                      |
-| Default Values                  | ❌        |                                      |
-| User-defined Functions          | ❌        |                                      |
+| Feature                         | Supported | Notes                                                                                                                                                    |
+|---------------------------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Native Queries + Logical Models | ✅        |                                                                                                                                                          |
+| Native Mutations                | ✅        |                                                                                                                                                          |
+| Simple Object Query             | ✅        |                                                                                                                                                          |
+| Filter / Search                 | ✅        |                                                                                                                                                          |
+| Simple Aggregation              | ✅        | The limit parameter does not work as expected when combined with aggregate functions. Currently, any limit value set in these cases will be disregarded. |
+| Sort                            | ✅        |                                                                                                                                                          |
+| Paginate                        | ✅        |                                                                                                                                                          |
+| Table Relationships             | ✅        |                                                                                                                                                          |
+| Views                           | ✅        |                                                                                                                                                          |
+| Remote Relationships            | ✅        |                                                                                                                                                          |
+| Stored Procedures               | ✅        |                                                                                                                                                          |
+| Custom Fields                   | ❌        |                                                                                                                                                          |
+| Mutations                       | ❌        | Only native mutations are suppported                                                                                                                     |
+| Distinct                        | ✅        |                                                                                                                                                          |
+| Enums                           | ❌        |                                                                                                                                                          |
+| Naming Conventions              | ❌        |                                                                                                                                                          |
+| Default Values                  | ❌        |                                                                                                                                                          |
+| User-defined Functions          | ❌        |                                                                                                                                                          |
 
 ## Prerequisites
 
