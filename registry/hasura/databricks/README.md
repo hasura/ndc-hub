@@ -25,7 +25,7 @@ Below, you'll find a matrix of all supported features for the Databricks connect
 | Native Mutations                | ❌        |                                                                                                                         |
 | Simple Object Query             | ✅        |                                                                                                                         |
 | Filter / Search                 | ✅        |                                                                                                                         |
-| Simple Aggregation              | ✅        | There is a known bug with the `limit` feature when used with aggregate functions where the `limit` argument is ignored. |
+| Simple Aggregation              | ✅        | There is a known issue with the `limit` feature when used with aggregate functions where the `limit` argument is ignored. |
 | Sort                            | ✅        |                                                                                                                         |
 | Paginate                        | ✅        |                                                                                                                         |
 | Table Relationships             | ❌        |                                                                                                                         |
