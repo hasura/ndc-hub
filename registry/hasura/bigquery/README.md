@@ -55,7 +55,7 @@ Below, you'll find a matrix of all supported features for the BigQuery connector
 
 The steps below explain how to initialize and configure a connector on your local machine (typically for development
 purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
-[here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
+[here](https://hasura.io/docs/3.0/deployment/ddn/deploy-a-connector).
 
 ## Using the BigQuery connector
 
