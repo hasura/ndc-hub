@@ -43,6 +43,7 @@ Below, you'll find a matrix of all supported features for the BigQuery connector
 | Naming Conventions              | ❌        |       |
 | Default Values                  | ❌        |       |
 | User-defined Functions          | ❌        |       |
+| Variables                       | ❌        |       |
 
 ## Prerequisites
 
