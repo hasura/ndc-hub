@@ -4,8 +4,10 @@
     "description": "Connect to a MySQL database and expose it to Hasura v3 Project",
     "title": "MySQL Connector",
     "logo": "logo.svg",
-    "tags": ["database"],
-    "latest_version": "v1.0.8"
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.0.10"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -14,96 +16,6 @@
   },
   "is_verified": true,
   "is_hosted_by_hasura": true,
-  "packages": [
-    {
-      "version": "0.1.0",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv0.1.0/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "09b51f9be725099345159880d21efb712776bfd09291a0daa81d7e7b1418ca2c"
-      },
-      "source": {
-        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
-      }
-    },
-    {
-      "version": "1.0.1",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.1/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "4503cb8961e3c2c8aede3183187fb69862ac1442a89085d35cf1d4a4989d6db9"
-      },
-      "source": {
-        "hash": "fbeb926e1d5550bec78a042a36d5ac2a8fba4c9f"
-      }
-    },
-    {
-      "version": "1.0.2",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.2/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "86be6695432bef7cfcdccfc376c18f3c89ffefe6d139869ab4739709dd980141"
-      },
-      "source": {
-        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
-      }
-    },
-    {
-      "version": "1.0.3",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.3/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "5a8e528410358c5c7eec1d8a081d701917f868febbd39b25f5dc8d502aaab15f"
-      },
-      "source": {
-        "hash": "084bde9aac2e42c2782b110e15b82ef4bd473b79"
-      }
-    },
-    {
-      "version": "1.0.4",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.4/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "e88f3f4e35420a8d1f73d24611ac4d346e58cd6874e36ecdcb27152059003a7e"
-      },
-      "source": {
-        "hash": "d7789e02509932caa2ec709773edb3856b789c58"
-      }
-    },
-    {
-      "version": "1.0.6",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.6/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "1e7d6b8c204495a76c6af64f455a5575447970fc3c870f2680e9d63b2ee4f37a"
-      },
-      "source": {
-        "hash": "9d1130bc4291338b7b3efdf01756ad0fbbcec2e1"
-      }
-    },
-    {
-      "version": "v1.0.7",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.7/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "7604302910ac2a4d33eb1a0a9eab562c4209a22f725cc52e6c46a4327273102a"
-      },
-      "source": {
-        "hash": "72b6f529b79e4fc5e96d49ab76760bd7fd3af063"
-      }
-    },
-    {
-      "version": "v1.0.8",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.8/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "a85e9375b59c65af37d9be5848ee72b991d75a776c8e93abd4c7f6c4583ecbeb"
-      },
-      "source": {
-        "hash": "1abb4d0a7972fc806c711fd18e0a73b95b023b47"
-      }
-    }
-  ],
   "source_code": {
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-jvm-mono",
@@ -145,7 +57,16 @@
       },
       {
         "tag": "mysql/v1.0.8",
-        "hash": "1abb4d0a7972fc806c711fd18e0a73b95b023b47",
+        "hash": "1abb4d0a7972fc806c711fd18e0a73b95b023b47"
+      },
+      {
+        "tag": "mysql/v1.0.9",
+        "hash": "aea3288551386d8b83500d5316ee1a085c5227b4",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.10",
+        "hash": "aea3288551386d8b83500d5316ee1a085c5227b4",
         "is_verified": true
       }
     ]
