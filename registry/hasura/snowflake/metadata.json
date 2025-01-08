@@ -4,10 +4,8 @@
     "description": "Connect to a Snowflake database and expose it to Hasura v3 Project",
     "title": "Snowflake Connector",
     "logo": "logo.svg",
-    "tags": [
-      "database"
-    ],
-    "latest_version": "v1.0.3"
+    "tags": ["database"],
+    "latest_version": "v1.0.4"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -60,6 +58,17 @@
       "source": {
         "hash": "9d1130bc4291338b7b3efdf01756ad0fbbcec2e1"
       }
+    },
+    {
+      "version": "v1.0.4",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv1.0.4/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "51f8b5339d89959b7be427f0016454c3b5fd8f7563ada738e38d6d2f5fbfdebb"
+      },
+      "source": {
+        "hash": "5cd7850ffd963c85bf7c99826f8dca4fe00422ab"
+      }
     }
   ],
   "source_code": {
@@ -84,6 +93,11 @@
       {
         "tag": "snowflake/v1.0.3",
         "hash": "9d1130bc4291338b7b3efdf01756ad0fbbcec2e1",
+        "is_verified": true
+      },
+      {
+        "tag": "snowflake/v1.0.4",
+        "hash": "5cd7850ffd963c85bf7c99826f8dca4fe00422ab",
         "is_verified": true
       }
     ]
