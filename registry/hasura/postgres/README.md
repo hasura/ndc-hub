@@ -16,7 +16,7 @@ The connector is hosted by Hasura and can be used from the [Hasura v3 Console](h
 
 ## Usage
 
-The Hasura PostgreSQL connector can be deployed using the [Hasura CLI](https://hasura.io/docs/3.0/cli/overview) by following either the [Quick Start Guide](https://hasura.io/docs/3.0/getting-started/overview/) or [deploying the connector](https://hasura.io/docs/3.0/connectors/deployment).
+The Hasura PostgreSQL connector can be deployed using the [Hasura CLI](https://hasura.io/docs/3.0/cli/overview) by following either the [Quick Start Guide](https://hasura.io/docs/3.0/getting-started/overview/) or [deploying the connector](https://hasura.io/docs/3.0/deployment/ddn/deploy-a-connector?db=PostgreSQL).
 
 ## Troubleshooting
 
