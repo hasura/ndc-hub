@@ -1,6 +1,8 @@
 module github.com/hasura/ndc-hub/registry-automation
 
-go 1.21.4
+go 1.22.0
+
+toolchain go1.23.2
 
 require (
 	github.com/cloudinary/cloudinary-go/v2 v2.8.0
@@ -9,12 +11,14 @@ require (
 )
 
 require (
+	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/creasty/defaults v1.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/matryer/is v1.4.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	golang.org/x/mod v0.22.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
