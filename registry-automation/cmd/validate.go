@@ -80,8 +80,10 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 			hasError = true
 		}
 	}
+	fmt.Println("Completed validating `connector-packaging.json` contents")
 
 	if hasError {
+		fmt.Println("Exiting with a non-zero error code due to the error(s) in validation")
 		os.Exit(1)
 	}
 }
