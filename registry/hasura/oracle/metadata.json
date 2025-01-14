@@ -4,10 +4,8 @@
     "description": "Connect to an Oracle database and expose it to Hasura v3 Project",
     "title": "Oracle Connector",
     "logo": "logo.svg",
-    "tags": [
-      "database"
-    ],
-    "latest_version": "v1.0.5"
+    "tags": ["database"],
+    "latest_version": "v1.0.6"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -82,6 +80,17 @@
       "source": {
         "hash": "ab66004e7a0671cd1af7b84cd930d9c042fadb77"
       }
+    },
+    {
+      "version": "v1.0.6",
+      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/oracle%2Fv1.0.6/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "9e360d3e049b8e26315a79559fc1c5ccf3f71ff3021c3e6ea01762da5ff22913"
+      },
+      "source": {
+        "hash": "1abb4d0a7972fc806c711fd18e0a73b95b023b47"
+      }
     }
   ],
   "source_code": {
@@ -116,6 +125,11 @@
       {
         "tag": "oracle/v1.0.5",
         "hash": "ab66004e7a0671cd1af7b84cd930d9c042fadb77",
+        "is_verified": true
+      },
+      {
+        "tag": "oracle/v1.0.6",
+        "hash": "1abb4d0a7972fc806c711fd18e0a73b95b023b47",
         "is_verified": true
       }
     ]

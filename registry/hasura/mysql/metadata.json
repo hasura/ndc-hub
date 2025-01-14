@@ -56,6 +56,10 @@
         "is_verified": true
       },
       {
+        "tag": "mysql/v1.0.8",
+        "hash": "1abb4d0a7972fc806c711fd18e0a73b95b023b47"
+      },
+      {
         "tag": "mysql/v1.0.9",
         "hash": "aea3288551386d8b83500d5316ee1a085c5227b4",
         "is_verified": true
