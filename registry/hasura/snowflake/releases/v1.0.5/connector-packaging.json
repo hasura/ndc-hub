@@ -1,0 +1,11 @@
+{
+  "version": "v1.0.4",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv1.0.5/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "e524c756682a2abac2f0834552b72d186e7acbdf43e8ea0f57cc40b2674abd09"
+  },
+  "source": {
+    "hash": "23f290651dcad5001637bb7760d169426a78cecc"
+  }
+}
