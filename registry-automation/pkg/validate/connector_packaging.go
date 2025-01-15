@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -50,7 +49,6 @@ func ConnectorPackaging(cp *ndchub.ConnectorPackaging) error {
 func downloadFile(uri string, destFile *os.File) error {
 	var err error
 
-	log.Println("starting download: ", uri)
 	resp, err := http.Get(uri)
 	if err != nil {
 		return err
