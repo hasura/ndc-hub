@@ -3,9 +3,9 @@ package validate
 import (
 	"crypto/sha256"
 	"fmt"
+	"hash"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/hasura/ndc-hub/registry-automation/pkg/ndchub"
@@ -14,31 +14,50 @@ import (
 
 func ConnectorPackaging(cp *ndchub.ConnectorPackaging) error {
 	// validate version field
-	if !strings.HasPrefix(cp.Version, "v") {
-		return fmt.Errorf("version must start with 'v': but got %s", cp.Version)
-	}
-	if !semver.IsValid(cp.Version) {
-		return fmt.Errorf("invalid semantic version: %s", cp.Version)
+	if err := checkVersion(cp.Version); err != nil {
+		return err
 	}
 
 	// validate uri and checksum fields
-	connectorTgzFile, err := os.CreateTemp("", "connector-*.tgz")
+	if err := checkConnectorTarball(cp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func checkVersion(version string) error {
+	if !strings.HasPrefix(version, "v") {
+		return fmt.Errorf("version must start with 'v': but got %s", version)
+	}
+	if !semver.IsValid(version) {
+		return fmt.Errorf("invalid semantic version: %s", version)
+	}
+	return nil
+}
+
+func checkConnectorTarball(cp *ndchub.ConnectorPackaging) error {
+	var checksumFuncs map[string]hash.Hash = map[string]hash.Hash{
+		"sha256": sha256.New(),
+	}
+
+	fileContents, err := downloadFile(cp.URI)
 	if err != nil {
 		return err
 	}
-	defer connectorTgzFile.Close()
-	err = downloadFile(cp.URI, connectorTgzFile)
-	if err != nil {
-		return err
-	}
-	computeChecksum, ok := checksumFuncs[cp.Checksum.Type]
+
+	hashFunc, ok := checksumFuncs[cp.Checksum.Type]
 	if !ok {
 		return fmt.Errorf("unsupported checksum type: %s", cp.Checksum.Type)
 	}
-	checksum, err := computeChecksum(connectorTgzFile)
+
+	_, err = io.Copy(hashFunc, fileContents)
 	if err != nil {
 		return err
 	}
+	defer fileContents.Close()
+
+	checksum := fmt.Sprintf("%x", hashFunc.Sum(nil))
 	if checksum != cp.Checksum.Value {
 		return fmt.Errorf("checksum mismatch: checksum of downloaded file: %s, but checksum in connector-packaging.json: %s", checksum, cp.Checksum.Value)
 	}
@@ -46,39 +65,17 @@ func ConnectorPackaging(cp *ndchub.ConnectorPackaging) error {
 	return nil
 }
 
-func downloadFile(uri string, destFile *os.File) error {
+func downloadFile(uri string) (io.ReadCloser, error) {
 	var err error
 
 	resp, err := http.Get(uri)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error downloading: status code %d", resp.StatusCode)
+		return nil, fmt.Errorf("error downloading: status code %d", resp.StatusCode)
 	}
 
-	_, err = io.Copy(destFile, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-var checksumFuncs map[string]func(*os.File) (string, error) = map[string]func(*os.File) (string, error){
-	"sha256": getSHA256,
-}
-
-func getSHA256(file *os.File) (string, error) {
-	hash := sha256.New()
-
-	_, err := io.Copy(hash, file)
-	if err != nil {
-		return "", err
-	}
-
-	checksum := hash.Sum(nil)
-	return fmt.Sprintf("%x", checksum), nil
+	return resp.Body, nil
 }
