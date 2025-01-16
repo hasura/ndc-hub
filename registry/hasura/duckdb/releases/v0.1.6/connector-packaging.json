@@ -1,0 +1,11 @@
+{
+  "version": "v0.1.6",
+  "uri": "https://github.com/hasura/ndc-duckdb/releases/download/v0.1.6/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "93758097c4c61da1e6b8ecd1af05f901f308fc2482c0bb25677c8d57d7423e93"
+  },
+  "source": {
+    "hash": "de643e53e39db87c7cb7a60678031a753b39a50f"
+  }
+}
