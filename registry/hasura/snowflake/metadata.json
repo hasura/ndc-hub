@@ -5,7 +5,7 @@
     "title": "Snowflake Connector",
     "logo": "logo.svg",
     "tags": ["database"],
-    "latest_version": "v1.0.4"
+    "latest_version": "v1.0.5"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -14,63 +14,6 @@
   },
   "is_verified": true,
   "is_hosted_by_hasura": true,
-  "packages": [
-    {
-      "version": "0.1.0",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv0.1.0/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "564757bc44bebe56560fe21a1306507d160caf084d69556bded4a7ed392e1b41"
-      },
-      "source": {
-        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e"
-      }
-    },
-    {
-      "version": "1.0.1",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv1.0.1/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "01791312a91e41e59dd638f7efed7472a37c3d1fe174cc71a844a5cde65e23a5"
-      },
-      "source": {
-        "hash": "fbeb926e1d5550bec78a042a36d5ac2a8fba4c9f"
-      }
-    },
-    {
-      "version": "1.0.2",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv1.0.2/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "dfe7cf62e86dd3c26d1b62acbe6b9c20925834de916e69780e552f877ba55593"
-      },
-      "source": {
-        "hash": "024d06f337329fc9a7a6534ac20381b7b47ec4d7"
-      }
-    },
-    {
-      "version": "1.0.3",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv1.0.3/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "add9a381278fc73cb6b45c321c71537dcf81966bf51de1f44434f3ba9cb5f852"
-      },
-      "source": {
-        "hash": "9d1130bc4291338b7b3efdf01756ad0fbbcec2e1"
-      }
-    },
-    {
-      "version": "v1.0.4",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv1.0.4/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "51f8b5339d89959b7be427f0016454c3b5fd8f7563ada738e38d6d2f5fbfdebb"
-      },
-      "source": {
-        "hash": "5cd7850ffd963c85bf7c99826f8dca4fe00422ab"
-      }
-    }
-  ],
   "source_code": {
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-jvm-mono",
@@ -98,6 +41,11 @@
       {
         "tag": "snowflake/v1.0.4",
         "hash": "5cd7850ffd963c85bf7c99826f8dca4fe00422ab",
+        "is_verified": true
+      },
+      {
+        "tag": "snowflake/v1.0.5",
+        "hash": "23f290651dcad5001637bb7760d169426a78cecc",
         "is_verified": true
       }
     ]

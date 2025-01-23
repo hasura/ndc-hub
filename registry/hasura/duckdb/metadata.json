@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v0.1.4"
+    "latest_version": "v0.2.0"
   },
   "author": {
     "support_email": "Community Supported",
@@ -43,6 +43,16 @@
       {
         "tag": "v0.1.4",
         "hash": "f9a04ce7a9b30c26f0141bbe23a4d2ee1a3e0d00",
+        "is_verified": false
+      },
+      {
+        "tag": "v0.1.6",
+        "hash": "de643e53e39db87c7cb7a60678031a753b39a50f",
+        "is_verified": false
+      },
+      {
+        "tag": "v0.2.0",
+        "hash": "79afa4d6dd4b0056897b2c7fde5b67f91f2639f9",
         "is_verified": false
       }
     ]
