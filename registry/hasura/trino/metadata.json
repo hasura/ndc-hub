@@ -14,26 +14,13 @@
   },
   "is_verified": true,
   "is_hosted_by_hasura": true,
-  "packages": [
-    {
-      "version": "0.1.0",
-      "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/trino%2Fv1.0.0/package.tar.gz",
-      "checksum": {
-        "type": "sha256",
-        "value": "c0255288192c1dc86f90b32ef9f674481d79744f2e29d2f6229c9c5f42f72dee"
-      },
-      "source": {
-        "hash": "cf87d51932345f469e3f8cb654a6abf84fa53a8b"
-      }
-    }
-  ],
   "source_code": {
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-jvm-mono",
     "version": [
       {
         "tag": "trino/v1.0.0",
-        "hash": "cf87d51932345f469e3f8cb654a6abf84fa53a8b",
+        "hash": "65568833a32fb8862201acd45bd0b11e9d7b0fdc",
         "is_verified": true
       }
     ]
