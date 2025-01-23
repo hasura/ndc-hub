@@ -7,7 +7,7 @@
         "tags": [
             "database"
         ],
-        "latest_version": "v1.0.7"
+        "latest_version": "v1.0.8"
     },
     "author": {
         "support_email": "support@hasura.io",
@@ -20,6 +20,11 @@
         "is_open_source": true,
         "repository": "https://github.com/hasura/ndc-cassandra/",
         "version": [
+            {
+                "tag": "v1.0.8",
+                "hash": "d7333ed6238cc18ae55cfa3a33700939a0e0d7cb",
+                "is_verified": true
+            },
             {
                 "tag": "v1.0.7",
                 "hash": "79d7ef00c57f5b58e5e4f27e8ec89ffc2a685ec7",
