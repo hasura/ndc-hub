@@ -3,7 +3,7 @@
   "uri": "https://github.com/hasura/ndc-redshift/releases/download/v0.1.4/connector-definition.tgz",
   "checksum": {
     "type": "sha256",
-    "value": "6d7ba972cbe4538cb5f494f2f26abe71af132a4c39a29817c79a9784cbd2ea15"
+    "value": "7de3ae8ff0d647890a51036c838be7d4b709ae4638444e9f679cc1f84acc9af6"
   },
   "source": {
     "hash": "b8aa6e5a6abc1d7274530a59ced0a311933d929b"
