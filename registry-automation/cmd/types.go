@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
 	"encoding/json"
+
+	"cloud.google.com/go/storage"
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/machinebox/graphql"
@@ -173,19 +174,31 @@ type Connector struct {
 	Namespace string `json:"namespace"`
 }
 
+type Logo struct {
+	Path      string
+	Extension LogoExtension
+}
+
+type LogoExtension string
+
+const (
+	PNG LogoExtension = "png"
+	SVG LogoExtension = "svg"
+)
+
 type NewConnectorVersions map[Connector]map[string]string
 
 // ModifiedMetadata represents the modified metadata in the PR, the key is the connector name and the value is the path to the modified metadata
 type ModifiedMetadata map[Connector]MetadataFile
 
 // ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
-type ModifiedLogos map[Connector]string
+type ModifiedLogos map[Connector]Logo
 
 // ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
 type ModifiedReadmes map[Connector]string
 
 // ModifiedLogos represents the modified logos in the PR, the key is the connector name and the value is the path to the modified logo
-type NewLogos map[Connector]string
+type NewLogos map[Connector]Logo
 
 // ModifiedReadmes represents the modified READMEs in the PR, the key is the connector name and the value is the path to the modified README
 type NewReadmes map[Connector]string
