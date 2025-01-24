@@ -150,10 +150,10 @@ type fileProcessor struct {
 func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 	result := ProcessedChangedFiles{
 		NewConnectorVersions: make(map[Connector]map[string]string),
-		ModifiedLogos:        make(map[Connector]string),
+		ModifiedLogos:        make(map[Connector]Logo),
 		ModifiedReadmes:      make(map[Connector]string),
 		NewConnectors:        make(map[Connector]MetadataFile),
-		NewLogos:             make(map[Connector]string),
+		NewLogos:             make(map[Connector]Logo),
 		NewReadmes:           make(map[Connector]string),
 		ModifiedConnectors:   make(map[Connector]MetadataFile),
 	}
@@ -177,12 +177,12 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 			regex: regexp.MustCompile(`^registry/([^/]+)/([^/]+)/logo\.(png|svg)$`),
 			newFileHandler: func(matches []string, file string) {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
-				result.NewLogos[connector] = file
+				result.NewLogos[connector] = Logo{Path: file, Extension: LogoExtension(matches[3])}
 				fmt.Printf("Processing logo file for new connector: %s\n", connector.Name)
 			},
 			modifiedFileHandler: func(matches []string, file string) error {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
-				result.ModifiedLogos[connector] = file
+				result.ModifiedLogos[connector] = Logo{Path: file, Extension: LogoExtension(matches[3])}
 				fmt.Printf("Processing logo file for modified connector: %s\n", connector.Name)
 				return nil
 			},
@@ -274,7 +274,7 @@ func processModifiedConnector(metadataFile MetadataFile, connector Connector) (C
 	return connectorOverviewUpdate, nil
 }
 
-func processNewConnector(ciCtx Context, connector Connector, metadataFile MetadataFile) (ConnectorOverviewInsert, HubRegistryConnectorInsertInput, error) {
+func processNewConnector(ciCtx Context, connector Connector, metadataFile MetadataFile, logoPath Logo) (ConnectorOverviewInsert, HubRegistryConnectorInsertInput, error) {
 	// Process the newly added connector
 	// Get the string value from metadataFile
 	var connectorOverviewAndAuthor ConnectorOverviewInsert
@@ -288,11 +288,8 @@ func processNewConnector(ciCtx Context, connector Connector, metadataFile Metada
 	docs, err := readFile(fmt.Sprintf("registry/%s/%s/README.md", connector.Namespace, connector.Name))
 
 	if err != nil {
-
 		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Failed to read the README file of the connector: %s : %v", connector.Name, err)
 	}
-
-	logoPath := fmt.Sprintf("registry/%s/%s/logo.png", connector.Namespace, connector.Name)
 
 	uploadedLogoUrl, err := uploadLogoToCloudinary(ciCtx.Cloudinary, Connector{Name: connector.Name, Namespace: connector.Namespace}, logoPath)
 	if err != nil {
@@ -380,6 +377,7 @@ func runCI(cmd *cobra.Command, args []string) {
 
 	newlyAddedConnectors := processChangedFiles.NewConnectors
 	modifiedConnectors := processChangedFiles.ModifiedConnectors
+	newLogos := processChangedFiles.NewLogos
 
 	var newConnectorsToBeAdded NewConnectorsInsertInput
 	newConnectorsToBeAdded.HubRegistryConnectors = make([]HubRegistryConnectorInsertInput, 0)
@@ -393,7 +391,9 @@ func runCI(cmd *cobra.Command, args []string) {
 		fmt.Println("New connectors to be added to the registry: ", newlyAddedConnectors)
 
 		for connector, metadataFile := range newlyAddedConnectors {
-			connectorOverviewAndAuthor, hubRegistryConnector, err := processNewConnector(ctx, connector, metadataFile)
+			// Find the logo corresponding to the connector from the newLogos map, throw error if not found
+			logoPath := newLogos[connector]
+			connectorOverviewAndAuthor, hubRegistryConnector, err := processNewConnector(ctx, connector, metadataFile, logoPath)
 
 			if err != nil {
 				log.Fatalf("Failed to process the new connector: %s/%s, Error: %v", connector.Namespace, connector.Name, err)
@@ -462,8 +462,8 @@ func runCI(cmd *cobra.Command, args []string) {
 	fmt.Println("Successfully processed the changed files in the PR")
 }
 
-func uploadLogoToCloudinary(cloudinary CloudinaryInterface, connector Connector, logoPath string) (string, error) {
-	logoContent, err := readFile(logoPath)
+func uploadLogoToCloudinary(cloudinary CloudinaryInterface, connector Connector, logo Logo) (string, error) {
+	logoContent, err := readFile(logo.Path)
 	if err != nil {
 		fmt.Printf("Failed to read the logo file: %v", err)
 		return "", err
@@ -473,7 +473,7 @@ func uploadLogoToCloudinary(cloudinary CloudinaryInterface, connector Connector,
 
 	uploadResult, err := cloudinary.Upload(context.Background(), imageReader, uploader.UploadParams{
 		PublicID: fmt.Sprintf("%s-%s", connector.Namespace, connector.Name),
-		Format:   "png",
+		Format:   string(logo.Extension),
 	})
 	if err != nil {
 		return "", fmt.Errorf("Failed to upload the logo to cloudinary for the connector: %s, Error: %v\n", connector.Name, err)
