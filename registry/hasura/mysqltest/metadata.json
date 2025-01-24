@@ -1,0 +1,74 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a MySQL database and expose it to Hasura v3 Project",
+    "title": "MySQL Connector",
+    "logo": "logo.svg",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.0.10"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-jvm-mono",
+    "version": [
+      {
+        "tag": "mysql/v0.1.0",
+        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.1",
+        "hash": "fbeb926e1d5550bec78a042a36d5ac2a8fba4c9f",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.2",
+        "hash": "145792746281b606bcef2dfe20d1f0ad69efe01e",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.3",
+        "hash": "084bde9aac2e42c2782b110e15b82ef4bd473b79",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.4",
+        "hash": "d7789e02509932caa2ec709773edb3856b789c58",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.6",
+        "hash": "9d1130bc4291338b7b3efdf01756ad0fbbcec2e1",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.7",
+        "hash": "72b6f529b79e4fc5e96d49ab76760bd7fd3af063",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.8",
+        "hash": "1abb4d0a7972fc806c711fd18e0a73b95b023b47"
+      },
+      {
+        "tag": "mysql/v1.0.9",
+        "hash": "aea3288551386d8b83500d5316ee1a085c5227b4",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.10",
+        "hash": "aea3288551386d8b83500d5316ee1a085c5227b4",
+        "is_verified": true
+      }
+    ]
+  }
+}
