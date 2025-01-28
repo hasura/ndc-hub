@@ -69,6 +69,11 @@
         "tag": "v1.1.1",
         "hash": "fc6a7a7",
         "is_verified": true
+      },
+      {
+        "tag": "v2.0.0",
+        "hash": "4b62d9a281f092f10c29003b09351807c3e60212",
+        "is_verified": true
       }
     ]
   }
