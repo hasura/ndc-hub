@@ -5,7 +5,7 @@
     "title": "Snowflake Connector",
     "logo": "logo.svg",
     "tags": ["database"],
-    "latest_version": "v1.0.5"
+    "latest_version": "v1.0.6"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -46,6 +46,11 @@
       {
         "tag": "snowflake/v1.0.5",
         "hash": "23f290651dcad5001637bb7760d169426a78cecc",
+        "is_verified": true
+      },
+      {
+        "tag": "snowflake/v1.0.6",
+        "hash": "f49da200fc9737e3bc17ef743289b0a7f9078fe3",
         "is_verified": true
       }
     ]
