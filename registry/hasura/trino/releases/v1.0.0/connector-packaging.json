@@ -1,0 +1,11 @@
+{
+  "version": "v1.0.0",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/trino%2Fv1.0.0/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "5b009509676e97f1a5adfe6db9eeeb9da2aa7e287c60fa23670917710f0ac574"
+  },
+  "source": {
+    "hash": "65568833a32fb8862201acd45bd0b11e9d7b0fdc"
+  }
+}
