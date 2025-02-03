@@ -39,7 +39,7 @@ Below, you'll find a matrix of all supported features for the Elasticsearch conn
 | Filter / Search                 | ✅        |       |
 | Simple Aggregation              | ✅        |       |
 | Sort                            | ✅        |       |
-| Paginate                        | ✅\*      |       |
+| Paginate                        | ✅        |       |
 | Relationships                   | ✅        |       |
 | Nested Objects                  | ✅        |       |
 | Nested Arrays                   | ✅        |       |
@@ -50,7 +50,6 @@ Below, you'll find a matrix of all supported features for the Elasticsearch conn
 > [!Note]
 >
 > - **Relationships** are currently implemented via `top_hits` operator. That operator has a default maximum result size limit of 100 rows. This is what the connector operates on. If you give the connector a higher limit, it will change that to 100 for compliance with the database. Also, since the returned result will contain only 100 rows per bucket, it may not represent the whole result.
-> - **Pagination** currently works only upto 10,000 rows because of the limits that Elasticsearch imposes. Pagination for additional rows will be available in a future relase version.
 
 ## Prerequisites
 
@@ -92,6 +91,10 @@ After the CLI initializes the connector, you'll need to:
   [relationships](https://hasura.io/docs/3.0/cli/commands/ddn_relationship_add).
 - Create a [new build](https://hasura.io/docs/3.0/cli/commands/ddn_supergraph_build_local).
 - Test it by [running your project along with the connector](https://hasura.io/docs/3.0/cli/commands/ddn_run#examples).
+
+## Documentation
+
+Check out the [NDC Elasticsearch Documentation](https://github.com/hasura/ndc-elasticsearch/blob/main/docs/documentation.md)
 
 ## Contributing
 
