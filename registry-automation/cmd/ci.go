@@ -6,11 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
 	"log"
 	"os"
 	"regexp"
 
+	"path/filepath"
+	"sort"
+
 	"cloud.google.com/go/storage"
+	semver "github.com/Masterminds/semver/v3"
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/machinebox/graphql"
@@ -245,6 +250,61 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 	return result
 }
 
+// validateLatestVersion checks if the latest version in metadata.json matches
+// the actual latest version from the releases directory
+func validateLatestVersion(connector Connector, declaredLatestVersion string) error {
+	// Check if releases directory exists
+	releasesPath := fmt.Sprintf("../registry/%s/%s/releases", connector.Namespace, connector.Name)
+
+	// Read all version directories
+	entries, err := os.ReadDir(releasesPath)
+	if err != nil {
+		return fmt.Errorf("failed to read releases directory for connector %s/%s: %v",
+			connector.Namespace, connector.Name, err)
+	}
+
+	var versions semver.Collection
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		// Check if connector-packaging.json exists for this version
+		packagingPath := filepath.Join(releasesPath, entry.Name(), "connector-packaging.json")
+		if _, err := os.Stat(packagingPath); os.IsNotExist(err) {
+			continue // Skip directories without connector-packaging.json
+		}
+
+		// Parse the version string, skipping invalid semver strings
+		version, err := semver.NewVersion(entry.Name())
+		if err != nil {
+			continue // Skip invalid semver versions
+		}
+		versions = append(versions, version)
+	}
+
+	if len(versions) == 0 {
+		return fmt.Errorf("no valid versions found in releases directory for connector %s/%s",
+			connector.Namespace, connector.Name)
+	}
+
+	// Sort versions
+	sort.Sort(versions)
+	actualLatestVersion := versions[len(versions)-1]
+
+	// Parse the declared version for comparison
+	declaredVersion, err := semver.NewVersion(declaredLatestVersion)
+	if err != nil {
+		return fmt.Errorf("invalid semver format for latest_version in metadata.json: %v", err)
+	}
+
+	if !actualLatestVersion.Equal(declaredVersion) {
+		return fmt.Errorf("latest_version in metadata.json (%s) does not match actual latest version (%s) for connector %s/%s",
+			declaredLatestVersion, actualLatestVersion, connector.Namespace, connector.Name)
+	}
+	return nil
+}
+
 // processModifiedConnectors processes the modified connectors and updates the connector metadata in the registry
 // This function updates the registry with the latest version, title, and description of the connector
 func processModifiedConnector(metadataFile MetadataFile, connector Connector) (ConnectorOverviewUpdate, error) {
@@ -254,6 +314,11 @@ func processModifiedConnector(metadataFile MetadataFile, connector Connector) (C
 	if err != nil {
 		return connectorOverviewUpdate, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
 	}
+	err = validateLatestVersion(connector, connectorMetadata.Overview.LatestVersion)
+	if err != nil {
+		return connectorOverviewUpdate, err
+	}
+
 	connectorOverviewUpdate = ConnectorOverviewUpdate{
 		Set: struct {
 			Docs          *string `json:"docs,omitempty"`
@@ -548,6 +613,21 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 	encounteredError := false
 
 	for connectorName, versions := range newlyAddedConnectorVersions {
+
+		connectorMetadataFile := fmt.Sprintf("registry/%s/%s/metadata.json", connectorName.Namespace, connectorName.Name)
+		connectorMetadata, err := readJSONFile[ConnectorMetadata](string(connectorMetadataFile))
+		if err != nil {
+			fmt.Printf("Failed to read the connector metadata file: %v", err)
+			encounteredError = true
+		}
+
+		err = validateLatestVersion(connectorName, connectorMetadata.Overview.LatestVersion)
+		if err != nil {
+			fmt.Printf("Failed to validate the latest version of the connector: %s, Error: %v", connectorName, err)
+			encounteredError = true
+			break
+		}
+
 		for version, connectorVersionPath := range versions {
 			var connectorVersion ConnectorVersion
 			isNewConnector := newConnectorsAdded[connectorName]
@@ -571,8 +651,6 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 		// delete the uploaded connector versions from the registry
 		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
 	}
-
-	fmt.Println("Successfully added connector versions to the registry.")
 
 	return connectorVersions
 
