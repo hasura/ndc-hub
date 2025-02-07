@@ -350,6 +350,11 @@ func processNewConnector(ciCtx Context, connector Connector, metadataFile Metada
 		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
 	}
 
+	err = validateLatestVersion(connector, connectorMetadata.Overview.LatestVersion)
+	if err != nil {
+		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, err
+	}
+
 	docs, err := readFile(fmt.Sprintf("registry/%s/%s/README.md", connector.Namespace, connector.Name))
 
 	if err != nil {
