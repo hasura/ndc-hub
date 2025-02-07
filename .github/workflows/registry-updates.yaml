@@ -7,6 +7,12 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - registry/**
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+    paths:
+      - registry/**
 
 jobs:
   update_registry_db:
