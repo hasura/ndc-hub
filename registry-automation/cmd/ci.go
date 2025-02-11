@@ -314,10 +314,6 @@ func processModifiedConnector(metadataFile MetadataFile, connector Connector) (C
 	if err != nil {
 		return connectorOverviewUpdate, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
 	}
-	err = validateLatestVersion(connector, connectorMetadata.Overview.LatestVersion)
-	if err != nil {
-		return connectorOverviewUpdate, err
-	}
 
 	connectorOverviewUpdate = ConnectorOverviewUpdate{
 		Set: struct {
@@ -348,11 +344,6 @@ func processNewConnector(ciCtx Context, connector Connector, metadataFile Metada
 	connectorMetadata, err := readJSONFile[ConnectorMetadata](string(metadataFile))
 	if err != nil {
 		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
-	}
-
-	err = validateLatestVersion(connector, connectorMetadata.Overview.LatestVersion)
-	if err != nil {
-		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, err
 	}
 
 	docs, err := readFile(fmt.Sprintf("registry/%s/%s/README.md", connector.Namespace, connector.Name))
@@ -618,20 +609,6 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 	encounteredError := false
 
 	for connectorName, versions := range newlyAddedConnectorVersions {
-
-		connectorMetadataFile := fmt.Sprintf("registry/%s/%s/metadata.json", connectorName.Namespace, connectorName.Name)
-		connectorMetadata, err := readJSONFile[ConnectorMetadata](string(connectorMetadataFile))
-		if err != nil {
-			fmt.Printf("Failed to read the connector metadata file: %v", err)
-			encounteredError = true
-		}
-
-		err = validateLatestVersion(connectorName, connectorMetadata.Overview.LatestVersion)
-		if err != nil {
-			fmt.Printf("Failed to validate the latest version of the connector: %s, Error: %v", connectorName, err)
-			encounteredError = true
-			break
-		}
 
 		for version, connectorVersionPath := range versions {
 			var connectorVersion ConnectorVersion
