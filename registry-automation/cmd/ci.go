@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
 	"log"
 	"os"
 	"regexp"
 
 	"cloud.google.com/go/storage"
+
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/machinebox/graphql"
@@ -254,6 +256,7 @@ func processModifiedConnector(metadataFile MetadataFile, connector Connector) (C
 	if err != nil {
 		return connectorOverviewUpdate, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
 	}
+
 	connectorOverviewUpdate = ConnectorOverviewUpdate{
 		Set: struct {
 			Docs          *string `json:"docs,omitempty"`
@@ -548,6 +551,7 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 	encounteredError := false
 
 	for connectorName, versions := range newlyAddedConnectorVersions {
+
 		for version, connectorVersionPath := range versions {
 			var connectorVersion ConnectorVersion
 			isNewConnector := newConnectorsAdded[connectorName]
@@ -571,8 +575,6 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 		// delete the uploaded connector versions from the registry
 		log.Fatalf("Failed to upload the connector version: %v", uploadConnectorVersionErr)
 	}
-
-	fmt.Println("Successfully added connector versions to the registry.")
 
 	return connectorVersions
 
