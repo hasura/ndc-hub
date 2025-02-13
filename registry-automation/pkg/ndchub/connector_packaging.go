@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	MetadataJSON           = "metadata.json"
 	ConnectorPackagingJSON = "connector-packaging.json"
 )
 

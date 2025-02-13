@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/hasura/ndc-hub/registry-automation/pkg/ndchub"
 	"github.com/hasura/ndc-hub/registry-automation/pkg/validate"
@@ -44,18 +42,17 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	type connectorMetadata struct {
+		filepath string
+		metadata *ndchub.ConnectorMetadata
+	}
+	var allConnectorMetadata []connectorMetadata
+
 	type connectorPackaging struct {
 		filePath         string
 		connectorPackage *ndchub.ConnectorPackaging
 	}
 	var connectorPkgs []connectorPackaging
-
-	// Track all connectors to validate their versions
-	type connectorMetadataWithVersion struct {
-		connector     Connector
-		latestVersion string
-	}
-	var connectorsToValidate []connectorMetadataWithVersion
 
 	err = filepath.WalkDir(registryFolder, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -73,29 +70,14 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 		}
 
 		// Check for metadata.json files
-		if filepath.Base(path) == "metadata.json" && !strings.Contains(path, "aliased_connectors") {
-			metadata, err := os.ReadFile(path)
-			var connectorMetadata ConnectorMetadata
-			err = json.Unmarshal(metadata, &connectorMetadata)
+		if filepath.Base(path) == ndchub.MetadataJSON {
+			cm, err := ndchub.GetConnectorMetadata(path)
 			if err != nil {
-				return fmt.Errorf("failed to read metadata.json at %s: %v", path, err)
+				return err
 			}
-
-			if err != nil {
-				return fmt.Errorf("failed to read metadata.json at %s: %v", path, err)
+			if cm != nil {
+				allConnectorMetadata = append(allConnectorMetadata, connectorMetadata{filepath: path, metadata: cm})
 			}
-
-			// Get namespace and name from path
-			connectorFolder := filepath.Dir(path)
-			namespaceFolder := filepath.Dir(connectorFolder)
-
-			connectorsToValidate = append(connectorsToValidate, connectorMetadataWithVersion{
-				connector: Connector{
-					Name:      filepath.Base(connectorFolder),
-					Namespace: filepath.Base(namespaceFolder),
-				},
-				latestVersion: connectorMetadata.Overview.LatestVersion,
-			})
 		}
 
 		return nil
@@ -120,12 +102,17 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 	fmt.Println("Completed validating `connector-packaging.json` contents")
 
 	fmt.Println("Validating latest versions in metadata.json")
-	for _, cm := range connectorsToValidate {
-		println("validating latest version for", cm.connector.Namespace, cm.connector.Name, "with version", cm.latestVersion)
-		err := validate.ValidateLatestVersion(cm.connector.Name, cm.connector.Namespace, cm.latestVersion)
+	for _, cm := range allConnectorMetadata {
+		var respectiveConnectorPkgs []ndchub.ConnectorPackaging
+		for _, cp := range connectorPkgs {
+			if cp.connectorPackage.Namespace == cm.metadata.Overview.Namespace && cp.connectorPackage.Name == cm.metadata.Overview.Name {
+				respectiveConnectorPkgs = append(respectiveConnectorPkgs, *cp.connectorPackage)
+			}
+		}
+
+		err := validate.Metadata(cm.metadata, respectiveConnectorPkgs)
 		if err != nil {
-			fmt.Printf("error validating latest version for %s/%s: %v\n",
-				cm.connector.Namespace, cm.connector.Name, err)
+			fmt.Println("error validating connector packaging", cm.filepath, err)
 			hasError = true
 		}
 	}
