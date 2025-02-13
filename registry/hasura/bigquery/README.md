@@ -82,12 +82,12 @@ After the CLI initializes the connector, you'll need to:
 
 ## Documentation
 
-View the full documentation for the ndc-bigquery connector [here](./docs/readme.md).
+View the full documentation for the ndc-bigquery connector [here](https://github.com/hasura/ndc-bigquery/blob/main/readme.md).
 
 ## Contributing
 
 We're happy to receive any contributions from the community. Please refer to our
-[development guide](./docs/development.md).
+[development guide](https://github.com/hasura/ndc-bigquery/blob/main/readme.md#getting-started).
 
 ## License
 
