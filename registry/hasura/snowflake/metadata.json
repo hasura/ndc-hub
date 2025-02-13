@@ -4,8 +4,10 @@
     "description": "Connect to a Snowflake database and expose it to Hasura v3 Project",
     "title": "Snowflake Connector",
     "logo": "logo.svg",
-    "tags": ["database"],
-    "latest_version": "v1.0.6"
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.0.7"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -51,6 +53,11 @@
       {
         "tag": "snowflake/v1.0.6",
         "hash": "f49da200fc9737e3bc17ef743289b0a7f9078fe3",
+        "is_verified": true
+      },
+      {
+        "tag": "snowflake/v1.0.7",
+        "hash": "df5943dfecd8251719ede7b0d8b23e725375858c",
         "is_verified": true
       }
     ]
