@@ -15,6 +15,7 @@ import (
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"github.com/hasura/ndc-hub/registry-automation/pkg/ndchub"
 	"github.com/machinebox/graphql"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
@@ -252,7 +253,7 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 func processModifiedConnector(metadataFile MetadataFile, connector Connector) (ConnectorOverviewUpdate, error) {
 	// Iterate over the modified connectors and update the connectors in the registry
 	var connectorOverviewUpdate ConnectorOverviewUpdate
-	connectorMetadata, err := readJSONFile[ConnectorMetadata](string(metadataFile))
+	connectorMetadata, err := readJSONFile[ndchub.ConnectorMetadata](string(metadataFile))
 	if err != nil {
 		return connectorOverviewUpdate, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
 	}
@@ -283,7 +284,7 @@ func processNewConnector(ciCtx Context, connector Connector, metadataFile Metada
 	var connectorOverviewAndAuthor ConnectorOverviewInsert
 	var hubRegistryConnectorInsertInput HubRegistryConnectorInsertInput
 
-	connectorMetadata, err := readJSONFile[ConnectorMetadata](string(metadataFile))
+	connectorMetadata, err := readJSONFile[ndchub.ConnectorMetadata](string(metadataFile))
 	if err != nil {
 		return connectorOverviewAndAuthor, hubRegistryConnectorInsertInput, fmt.Errorf("Failed to parse the connector metadata file: %v", err)
 	}
