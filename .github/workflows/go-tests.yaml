@@ -34,10 +34,3 @@ jobs:
       run: |
         mkdir -p coverage
         go test -race -coverprofile=coverage/coverage.txt -covermode=atomic ./...
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./registry-automation/coverage/coverage.txt
-        fail_ci_if_error: true
-        verbose: true
