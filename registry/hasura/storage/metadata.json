@@ -1,0 +1,21 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "The Hasura Storage Connector allows for connecting cloud storage services, giving you an instant GraphQL API on top of your storage data.",
+    "title": "Storage Data Connector",
+    "logo": "logo.png",
+    "tags": ["storage", "s3", "gcs", "blob"],
+    "latest_version": "v0.0.3"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-storage"
+  }
+}
