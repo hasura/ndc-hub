@@ -8,19 +8,21 @@ import (
 	"net/http"
 	"strings"
 
+	semver "github.com/Masterminds/semver/v3"
 	"github.com/hasura/ndc-hub/registry-automation/pkg/ndchub"
-	"golang.org/x/mod/semver"
 )
 
-func ConnectorPackaging(cp *ndchub.ConnectorPackaging) error {
+func ConnectorPackaging(cp *ndchub.ConnectorPackaging, is_validate_connector_tarball bool) error {
 	// validate version field
 	if err := checkVersion(cp.Version); err != nil {
 		return err
 	}
 
 	// validate uri and checksum fields
-	if err := checkConnectorTarball(cp); err != nil {
-		return err
+	if is_validate_connector_tarball {
+		if err := checkConnectorTarball(cp); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -30,7 +32,8 @@ func checkVersion(version string) error {
 	if !strings.HasPrefix(version, "v") {
 		return fmt.Errorf("version must start with 'v': but got %s", version)
 	}
-	if !semver.IsValid(version) {
+	_, err := semver.NewVersion(version)
+	if err != nil {
 		return fmt.Errorf("invalid semantic version: %s", version)
 	}
 	return nil

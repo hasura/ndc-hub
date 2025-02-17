@@ -79,33 +79,6 @@ const (
 	PrebuiltDockerImage = "PrebuiltDockerImage"
 )
 
-// Type to represent the metadata.json file
-type ConnectorMetadata struct {
-	Overview struct {
-		Namespace     string   `json:"namespace"`
-		Description   string   `json:"description"`
-		Title         string   `json:"title"`
-		Logo          string   `json:"logo"`
-		Tags          []string `json:"tags"`
-		LatestVersion string   `json:"latest_version"`
-	} `json:"overview"`
-	Author struct {
-		SupportEmail string `json:"support_email"`
-		Homepage     string `json:"homepage"`
-		Name         string `json:"name"`
-	} `json:"author"`
-	IsVerified         bool `json:"is_verified"`
-	IsHostedByHasura   bool `json:"is_hosted_by_hasura"`
-	HasuraHubConnector struct {
-		Namespace string `json:"namespace"`
-		Name      string `json:"name"`
-	} `json:"hasura_hub_connector"`
-	SourceCode struct {
-		IsOpenSource bool   `json:"is_open_source"`
-		Repository   string `json:"repository"`
-	} `json:"source_code"`
-}
-
 // Make a struct with the fields expected in the command line arguments
 type ConnectorRegistryArgs struct {
 	ChangedFilesPath         string
