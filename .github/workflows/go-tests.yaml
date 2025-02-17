@@ -1,0 +1,36 @@
+name: Registry Automation Unit Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run Go Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        cache: true
+        cache-dependency-path: registry-automation/go.sum
+
+    - name: Install dependencies
+      working-directory: ./registry-automation
+      run: go mod download
+
+    - name: Run tests
+      working-directory: ./registry-automation
+      run: go test -v ./...
+
+    - name: Run tests with coverage
+      working-directory: ./registry-automation
+      run: |
+        mkdir -p coverage
+        go test -race -coverprofile=coverage/coverage.txt -covermode=atomic ./...
