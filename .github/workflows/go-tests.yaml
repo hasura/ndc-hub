@@ -11,11 +11,6 @@ jobs:
     name: Run Go Tests
     runs-on: ubuntu-latest
 
-
-    defaults:
-      run:
-        working-directory: ./registry-automation
-
     steps:
     - uses: actions/checkout@v3
 
@@ -24,18 +19,25 @@ jobs:
       with:
         go-version: '1.21'
         cache: true
+        cache-dependency-path: registry-automation/go.sum
 
     - name: Install dependencies
+      working-directory: ./registry-automation
       run: go mod download
 
     - name: Run tests
+      working-directory: ./registry-automation
       run: go test -v ./...
 
     - name: Run tests with coverage
-      run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+      working-directory: ./registry-automation
+      run: |
+        mkdir -p coverage
+        go test -race -coverprofile=coverage/coverage.txt -covermode=atomic ./...
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        file: ./coverage.txt
-        flags: unittests
+        files: ./registry-automation/coverage/coverage.txt
+        fail_ci_if_error: true
+        verbose: true
