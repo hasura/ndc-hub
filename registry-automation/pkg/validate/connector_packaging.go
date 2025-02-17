@@ -12,15 +12,17 @@ import (
 	"github.com/hasura/ndc-hub/registry-automation/pkg/ndchub"
 )
 
-func ConnectorPackaging(cp *ndchub.ConnectorPackaging) error {
+func ConnectorPackaging(cp *ndchub.ConnectorPackaging, is_validate_connector_tarball bool) error {
 	// validate version field
 	if err := checkVersion(cp.Version); err != nil {
 		return err
 	}
 
 	// validate uri and checksum fields
-	if err := checkConnectorTarball(cp); err != nil {
-		return err
+	if is_validate_connector_tarball {
+		if err := checkConnectorTarball(cp); err != nil {
+			return err
+		}
 	}
 
 	return nil
