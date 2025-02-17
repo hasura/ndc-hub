@@ -30,14 +30,16 @@ func TestConnectorPackaging(t *testing.T) {
 				Version: tc.version,
 			}
 
-			err := ConnectorPackaging(cp)
+			err := ConnectorPackaging(cp, false)
 
 			if tc.wantErr && err == nil {
-				t.Errorf("ConnectorPackaging() error = nil, wantErr %v", tc.wantErr)
+				t.Errorf("Test case '%s': expected error but got nil", tc.name)
 			}
 			if !tc.wantErr && err != nil {
-				t.Errorf("ConnectorPackaging() error = %v, wantErr %v", err, tc.wantErr)
+				t.Errorf("Test case '%s': unexpected error: %v", tc.name, err)
+
 			}
+
 		})
 	}
 }
