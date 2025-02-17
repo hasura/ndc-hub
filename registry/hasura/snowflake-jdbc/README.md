@@ -22,14 +22,14 @@ Below, you'll find a matrix of all supported features for the Snowflake connecto
 
 | Feature                         | Supported | Notes |
 | ------------------------------- | --------- | ----- |
-| Native Queries + Logical Models | ✅        |       |
+| Native Queries + Logical Models | ❌        |       |
 | Native Mutations                | ❌        |       |
 | Simple Object Query             | ✅        |       |
 | Filter / Search                 | ✅        |       |
 | Simple Aggregation              | ✅        |       |
 | Sort                            | ✅        |       |
 | Paginate                        | ✅        |       |
-| Table Relationships             | ✅        |       |
+| Table Relationships             | ❌        |       |
 | Views                           | ✅        |       |
 | Remote Relationships            | ✅        |       |
 | Custom Fields                   | ❌        |       |
