@@ -36,7 +36,7 @@ Docs for the Storage data connector:
 
 (\*): Support Amazon S3 Compatible Cloud Storage providers. The connector uses [MinIO Go Client SDK](https://github.com/minio/minio-go) behind the scenes.
 
-### Feature matrix
+### Supported features
 
 Below, you'll find a matrix of all supported features for the Storage connector:
 
