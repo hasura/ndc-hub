@@ -93,7 +93,7 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 	fmt.Println("Validating `connector-packaging.json` contents")
 	for _, cp := range connectorPkgs {
 		println("validating connector packaging for", cp.connectorPackage.Namespace, cp.connectorPackage.Name, "with version", cp.connectorPackage.Version)
-		err := validate.ConnectorPackaging(cp.connectorPackage)
+		err := validate.ConnectorPackaging(cp.connectorPackage, true)
 		if err != nil {
 			fmt.Println("error validating connector packaging", cp.filePath, err)
 			hasError = true
