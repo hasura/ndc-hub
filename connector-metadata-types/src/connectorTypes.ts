@@ -29,7 +29,9 @@ export type ManagedDockerBuildPackaging = {
 export type NativeToolchainCommands = {
   start: string | DockerizedCommand | ShellScriptCommand;
   update?: string | DockerizedCommand | ShellScriptCommand;
-  watch: string | DockerizedCommand | ShellScriptCommand;
+  watch?: string | DockerizedCommand | ShellScriptCommand;
+  upgradeConfiguration?: string | DockerizedCommand | ShellScriptCommand;
+  cliPluginEntrypoint?: string | DockerizedCommand | ShellScriptCommand;
 };
 
 export type NativeToolchainDefinition = {
