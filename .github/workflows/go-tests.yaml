@@ -1,4 +1,4 @@
-name: Go Tests
+name: Registry Automation Unit Tests
 
 on:
   push:
@@ -10,6 +10,11 @@ jobs:
   test:
     name: Run Go Tests
     runs-on: ubuntu-latest
+
+
+    defaults:
+      run:
+        working-directory: ./registry-automation
 
     steps:
     - uses: actions/checkout@v3
