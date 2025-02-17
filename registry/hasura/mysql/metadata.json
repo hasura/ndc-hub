@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.10"
+    "latest_version": "v1.0.11"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -67,6 +67,11 @@
       {
         "tag": "mysql/v1.0.10",
         "hash": "aea3288551386d8b83500d5316ee1a085c5227b4",
+        "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.11",
+        "hash": "df5943dfecd8251719ede7b0d8b23e725375858c",
         "is_verified": true
       }
     ]

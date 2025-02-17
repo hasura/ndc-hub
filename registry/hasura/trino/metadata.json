@@ -4,8 +4,10 @@
     "description": "Connect to a Trino database and expose it to Hasura v3 Project",
     "title": "Trino Connector",
     "logo": "logo.svg",
-    "tags": ["database"],
-    "latest_version": "v1.0.0"
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.0.1"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -21,6 +23,11 @@
       {
         "tag": "trino/v1.0.0",
         "hash": "65568833a32fb8862201acd45bd0b11e9d7b0fdc",
+        "is_verified": true
+      },
+      {
+        "tag": "trino/v1.0.1",
+        "hash": "df5943dfecd8251719ede7b0d8b23e725375858c",
         "is_verified": true
       }
     ]

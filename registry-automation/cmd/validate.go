@@ -42,11 +42,18 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	type connectorMetadata struct {
+		filepath string
+		metadata *ndchub.ConnectorMetadata
+	}
+	var allConnectorMetadata []connectorMetadata
+
 	type connectorPackaging struct {
 		filePath         string
 		connectorPackage *ndchub.ConnectorPackaging
 	}
 	var connectorPkgs []connectorPackaging
+
 	err = filepath.WalkDir(registryFolder, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -62,6 +69,17 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 			}
 		}
 
+		// Check for metadata.json files
+		if filepath.Base(path) == ndchub.MetadataJSON {
+			cm, err := ndchub.GetConnectorMetadata(path)
+			if err != nil {
+				return err
+			}
+			if cm != nil {
+				allConnectorMetadata = append(allConnectorMetadata, connectorMetadata{filepath: path, metadata: cm})
+			}
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -74,13 +92,31 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 
 	fmt.Println("Validating `connector-packaging.json` contents")
 	for _, cp := range connectorPkgs {
-		err := validate.ConnectorPackaging(cp.connectorPackage)
+		println("validating connector packaging for", cp.connectorPackage.Namespace, cp.connectorPackage.Name, "with version", cp.connectorPackage.Version)
+		err := validate.ConnectorPackaging(cp.connectorPackage, true)
 		if err != nil {
 			fmt.Println("error validating connector packaging", cp.filePath, err)
 			hasError = true
 		}
 	}
 	fmt.Println("Completed validating `connector-packaging.json` contents")
+
+	fmt.Println("Validating latest versions in metadata.json")
+	for _, cm := range allConnectorMetadata {
+		var respectiveConnectorPkgs []ndchub.ConnectorPackaging
+		for _, cp := range connectorPkgs {
+			if cp.connectorPackage.Namespace == cm.metadata.Overview.Namespace && cp.connectorPackage.Name == cm.metadata.Overview.Name {
+				respectiveConnectorPkgs = append(respectiveConnectorPkgs, *cp.connectorPackage)
+			}
+		}
+
+		err := validate.Metadata(cm.metadata, respectiveConnectorPkgs)
+		if err != nil {
+			fmt.Println("error validating connector packaging", cm.filepath, err)
+			hasError = true
+		}
+	}
+	fmt.Println("Completed validating latest versions")
 
 	if hasError {
 		fmt.Println("Exiting with a non-zero error code due to the error(s) in validation")
