@@ -5,7 +5,7 @@
     "title": "DuckDuckAPI Connector",
     "logo": "logo.png",
     "tags": [],
-    "latest_version": "v0.6.0"
+    "latest_version": "v0.7.0"
   },
   "author": {
     "support_email": "support@hasura.io",
