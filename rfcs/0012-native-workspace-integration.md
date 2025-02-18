@@ -1,4 +1,4 @@
-# RFC: Native Connector Packaging
+# RFC: Native Connector Packaging Environment Variables
 
 > [!NOTE]
 > This RFC builds upon the concepts defined in the [Native Packaging RFC](./0004-native-packaging.md)
@@ -16,7 +16,7 @@ With these environment variables, connector authors can write scripts to run the
 
 Also, to make native runtime configuration to have feature parity with binary and docker based plugin commands, the following optional command keys are added to native toolchain commands:
 
- - `upgradeConfiguration` - Exact same [functionality](./0010-connector-upgrades-dx.md) as `updagradeConfiguration` in binary and docker based commands.
+ - `upgradeConfiguration` - Exact same [functionality](./0010-connector-upgrades-dx.md) as `upgradeConfiguration` in binary and docker based commands.
  - `cliPluginEntrypoint` - This is the entrypoint to invoke arbitrary CLI commands (like the `native-operation` command in ndc-postgres CLI plugin). CLI will invoke this entrypoint and append all user provided arguments to it with a space.
 
 ## Example
@@ -35,7 +35,8 @@ packagingDefinition:
 +         HASURA_CONFIGURATION_DIRECTORY="$HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH" "$HASURA_DDN_NATIVE_CONNECTOR_DIR/ndc-postgres" serve
 +       powershell: |
 +         $ErrorActionPreference = "Stop"
-+         $env:HASURA_CONFIGURATION_DIRECTORY="$env:HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH"; & "$env:HASURA_DDN_NATIVE_CONNECTOR_DIR\ndc-postgres.exe" serve
++         $env:HASURA_CONFIGURATION_DIRECTORY="$env:HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH" 
++         & "$env:HASURA_DDN_NATIVE_CONNECTOR_DIR\ndc-postgres.exe" serve
 +     update:
 +       type: ShellScript
 +       bash: |
@@ -91,5 +92,5 @@ set -eu -o pipefail
 **.hasura-connector/entrypoint.ps1**
 ```powershell
 $ErrorActionPreference = "Stop"
-& "$env:HASURA_DDN_NATIVE_CONNECTOR_PLUGIN_DIR\hasura-ndc-postgres.exe" "$Args"
+& "$env:HASURA_DDN_NATIVE_CONNECTOR_PLUGIN_DIR\hasura-ndc-postgres.exe" @Args
 ```
