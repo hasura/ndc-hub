@@ -90,9 +90,8 @@ export type BinaryCliPluginPlatform = {
     | "windows-amd64"
     | "linux-amd64";
   /**
-   * The URI of the CLI plugin archive, it can either be in the tar.gz format
-   * or zip format (for windows).
-   * This archive should be a URL from which the binary can be downloaded,
+   * The URI of the CLI plugin.
+   * This CLI binary plugin should be a URL from which the binary can be downloaded,
    * without any authentication.
    */
   uri: string;
@@ -101,7 +100,7 @@ export type BinaryCliPluginPlatform = {
    */
   sha256: string;
   /**
-   * The name of the binary file. This is the name of the binary file that will be placed in the bin directory.
+   * The name of the binary file. The binary file downloaded from the `uri` will be saved with this name.
    */
   bin: string;
 };
