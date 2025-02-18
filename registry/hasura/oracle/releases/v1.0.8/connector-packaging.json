@@ -1,0 +1,11 @@
+{
+  "version": "v1.0.8",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/oracle%2Fv1.0.8/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "a248e77b9324b60542f00c4703ef5103dd176ea36b5b478ac3d910d02fda540f"
+  },
+  "source": {
+    "hash": "63745e6b8284f08d6dad8ff8b71e901f063869f5"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "version": "v1.0.0",
+  "uri": "https://github.com/hasura/ndc-jdbc/releases/download/v1.0.0-snowflake/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "12cffa67d1b2392f1fdfb50fc026d60f99700ad856f62824cf017a6a7cada5fb"
+  },
+  "source": {
+    "hash": "104ac5d838590ab035904af2116edb89571f2280"
+  }
+}
