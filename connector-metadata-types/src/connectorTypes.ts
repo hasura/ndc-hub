@@ -91,7 +91,7 @@ export type BinaryCliPluginPlatform = {
     | "linux-amd64";
   /**
    * The URI of the CLI plugin.
-   * This CLI binary plugin should be a URL from which the binary can be downloaded,
+   * This CLI binary plugin should be a URL from where the binary can be downloaded,
    * without any authentication.
    */
   uri: string;

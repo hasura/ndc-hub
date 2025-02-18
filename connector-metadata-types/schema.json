@@ -577,7 +577,7 @@
                     "type": "string"
                   },
                   "uri": {
-                    "description": "The URI of the CLI plugin.\nThis CLI binary plugin should be a URL from which the binary can be downloaded,\nwithout any authentication.",
+                    "description": "The URI of the CLI plugin.\nThis CLI binary plugin should be a URL from where the binary can be downloaded,\nwithout any authentication.",
                     "type": "string"
                   },
                   "sha256": {
