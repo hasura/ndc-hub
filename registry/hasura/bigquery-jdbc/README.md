@@ -69,6 +69,33 @@ When the wizard runs, you'll be prompted to enter the following env vars necessa
 
 After the CLI initializes the connector, you'll need to:
 
+### Configuring your JDBC connection string
+The official BigQuery JDBC driver is used. You can find documentation on configuring the JDBC connection string
+[here](https://cloud.google.com/bigquery/docs/reference/odbc-jdbc-drivers#current_jdbc_driver). As an example using a service account with a full key file downloaded from google:
+```
+APP_FOO_JDBC_URL=jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;Project=project-id;OAuthType=0;OAuthServiceAcctEmail=service-account-email;OAuthPvtKey=/etc/connector/key.json;
+```
+**Note:** since the files get mounted in docker it is import the file path is `/etc/connector/<your-key-file>.json`
+
+Make sure you place you `key.json` in the connector folder `/<subgraph>/connector/<connectorname>/key.json`. The key
+should be the full key downloaded from google cloud console that looks like:
+```
+{
+  "type": "service_account",
+  "project_id": "project-id",
+  "private_key_id": "private-key-id",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nprivate-key\n-----END PRIVATE KEY-----\n",
+  "client_email": "service-account-email",
+  "client_id": "client-id",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/service-account-email"
+}
+```
+
+Once that is done you'll need to:
+
 - [Introspect](https://hasura.io/docs/3.0/cli/commands/ddn_connector_introspect) the source.
 - Add your [models](https://hasura.io/docs/3.0/cli/commands/ddn_model_add),
   [commands](https://hasura.io/docs/3.0/cli/commands/ddn_command_add), and
