@@ -1,5 +1,5 @@
 {
-  "version": "v0.0.1-testing",
+  "version": "v1.0.2-test",
   "uri": "https://github.com/hasura/ndc-jdbc/releases/download/snowflake%2Fv0.0.1-test/snowflake-connector-v0.0.1-test.tar.gz",
   "checksum": {
     "type": "sha256",
