@@ -1,24 +1,24 @@
-# Snowflake Connector
+# BigQuery Connector
 
 [![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/getting-started/overview/)
-[![ndc-hub](https://img.shields.io/badge/ndc--hub-snowflake-blue.svg?style=flat)](https://hasura.io/connectors/snowflake-jdbc)
+[![ndc-hub](https://img.shields.io/badge/ndc--hub-bigquery-blue.svg?style=flat)](https://hasura.io/connectors/bigquery-jdbc)
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg?style=flat)](./readme.md)
 
 With this connector, Hasura allows you to instantly create a real-time GraphQL API on top of your data models in
-Snowflake. This connector supports Snowflake's functionalities listed in the table below, allowing for efficient and
+BigQuery. This connector supports BigQuery's functionalities listed in the table below, allowing for efficient and
 scalable data operations. Additionally, users benefit from all the powerful features of Hasura’s Data Delivery Network
 (DDN) platform, including query pushdown capabilities that delegate query operations to the database, thereby enhancing
 query optimization and performance.
 
 This connector implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 
-- [Connector information in the Hasura Hub](https://hasura.io/connectors/snowflake-jdbc)
+- [Connector information in the Hasura Hub](https://hasura.io/connectors/bigquery-jdbc)
 - [Hasura V3 Documentation](https://hasura.io/docs/3.0)
 
 ## Features
 
-Below, you'll find a matrix of all supported features for the Snowflake connector:
+Below, you'll find a matrix of all supported features for the BigQuery connector:
 
 | Feature                         | Supported | Notes |
 | ------------------------------- | --------- | ----- |
@@ -52,7 +52,7 @@ The steps below explain how to initialize and configure a connector on your loca
 purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
 [here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
 
-## Using the Snowflake connector
+## Using the BigQuery connector
 
 With the [context set](https://hasura.io/docs/3.0/cli/commands/ddn_context_set/) for an existing subgraph, initialize
 the connector:
@@ -66,7 +66,6 @@ When the wizard runs, you'll be prompted to enter the following env vars necessa
 | Name         | Description                                                  | Required |
 | ------------ | ------------------------------------------------------------ | -------- |
 | JDBC_URL     | The JDBC URL to connect to the database                      | Yes      |
-| JDBC_SCHEMAS | A comma-separated list of schemas to include in the metadata | Yes      |
 
 After the CLI initializes the connector, you'll need to:
 
@@ -76,18 +75,7 @@ After the CLI initializes the connector, you'll need to:
   [relationships](https://hasura.io/docs/3.0/cli/commands/ddn_relationship_add).
 - Create a [new build](https://hasura.io/docs/3.0/cli/commands/ddn_supergraph_build_local).
 - Test it by [running your project along with the connector](https://hasura.io/docs/3.0/cli/commands/ddn_run#examples).
-  
-## Key-Pair Authentication with RSA Keys
-
-Snowflake supports Key-Pair Authentication in their JDBC driver, as noted in the docs:
-- https://docs.snowflake.com/en/developer-guide/jdbc/jdbc-configure#private-key-file-name-and-password-in-connection-string
-
-This connector supports the method described in section `Private key file name and password in connection string`.
-
-Namely, mount your RSA keys into the Connector container, and then reference the mounted file path in your connection string as below:
-- `jdbc:snowflake://xxx.us-east-2.aws.snowflakecomputing.com/?private_key_file=/etc/connector/rsa_key.p8&private_key_file_pwd=<PASSWORD>`
-
 
 ## License
 
-The Hasura Snowflake connector is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+The Hasura BigQuery connector is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
