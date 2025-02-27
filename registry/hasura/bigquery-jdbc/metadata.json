@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.1"
+    "latest_version": "v1.0.2"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -20,6 +20,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-jdbc",
     "version": [
+      {
+        "tag": "bigquery/v1.0.2",
+        "hash": "5c806a027e53ce756f78fec37d1169692d8f9355",
+        "is_verified": true
+      },
       {
         "tag": "bigquery/v1.0.1",
         "hash": "b278e1bf455f2f5d58a88fd075dbd68468c16341",
