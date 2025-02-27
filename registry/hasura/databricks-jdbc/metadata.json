@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.0"
+    "latest_version": "v1.0.1"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -20,6 +20,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-jdbc",
     "version": [
+      {
+        "tag": "databricks/v1.0.1",
+        "hash": "5c806a027e53ce756f78fec37d1169692d8f9355",
+        "is_verified": true
+      },
       {
         "tag": "databricks/v1.0.0",
         "hash": "39cd01841217f8e2e46f895d5fa341f07c55a889",
