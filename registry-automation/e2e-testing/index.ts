@@ -20,7 +20,7 @@ await setupDDNCLI();
 await login();
 await run_fixtures();
 
-async function login() {
+async function login(): Promise<void> {
   if (process.env.HASURA_DDN_PAT) {
     await runCommand(ddn(), [
       "auth",
@@ -31,8 +31,8 @@ async function login() {
   }
 }
 
-async function run_fixtures(fixturesDir = FIXTURES_DIRECTORY) {
-  let selectorPattern = "*";
+async function run_fixtures(fixturesDir: string = FIXTURES_DIRECTORY): Promise<void> {
+  let selectorPattern: string = "*";
   if (process.env.SELECTOR_PATTERN) {
     selectorPattern = process.env.SELECTOR_PATTERN;
   }
@@ -49,7 +49,7 @@ async function run_fixtures(fixturesDir = FIXTURES_DIRECTORY) {
   for (const dir of directories) {
     if (minimatch(dir, selectorPattern)) {
       clear_project_dir();
-      let module;
+      let module: any;
       try {
         module = await import(
           pathToFileURL(path.join(fixturesDir, dir, "index.js"))
@@ -111,12 +111,12 @@ async function run_fixtures(fixturesDir = FIXTURES_DIRECTORY) {
   }
 }
 
-function clear_project_dir(dir = PROJECT_DIRECTORY) {
+function clear_project_dir(dir: string = PROJECT_DIRECTORY): void {
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
 }
 
-function pathToFileURL(filepath) {
+function pathToFileURL(filepath: string): string {
   let normalizedPath = filepath.replace(/\\/g, "/");
   if (process.platform === "win32") {
     normalizedPath = "/" + normalizedPath;

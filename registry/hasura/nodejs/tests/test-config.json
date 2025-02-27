@@ -1,0 +1,6 @@
+{
+    "hubID": "hasura/nodejs",
+    "port": 8083,
+    "runCloudTests": false,
+    "setupComposeFile": "compose.yaml"
+}
