@@ -1,5 +1,3 @@
-"use strict";
-
 import { spawn, type ChildProcess } from "child_process";
 import { fileURLToPath } from "url";
 import path from "path";
@@ -10,15 +8,25 @@ import assert from "node:assert/strict";
 import https from "https";
 import axios, { type AxiosInstance } from "axios";
 
-export const CURRENT_DIRECTORY: string = path.dirname(fileURLToPath(import.meta.url));
-export const PROJECT_DIRECTORY: string = path.join(CURRENT_DIRECTORY, "project");
-export const FIXTURES_DIRECTORY: string = path.join(CURRENT_DIRECTORY, "fixtures");
+export const CURRENT_DIRECTORY: string = path.dirname(
+  fileURLToPath(import.meta.url),
+);
+export const PROJECT_DIRECTORY: string = path.join(
+  CURRENT_DIRECTORY,
+  "project",
+);
+export const FIXTURES_DIRECTORY: string =
+  process.env.FIXTURES_DIRECTORY || path.join(CURRENT_DIRECTORY, "fixtures");
 export const ENGINE_PORT: string = process.env.ENGINE_PORT || "3280";
 export const PROMPTQL_PORT: string = process.env.PROMPTQL_PORT || "3282";
-export const IS_CLOUD_TEST_ENABLED: boolean = process.env.ENABLE_CLOUD_TESTS === "true";
-export const AUTH_ENDPOINT: string = process.env.AUTH_ENDPOINT || "https://auth.pro.hasura.io";
-export const DATA_ENDPOINT: string = process.env.DATA_ENDPOINT || "https://data.pro.hasura.io";
-export const PROMPTQL_ENDPOINT: string | undefined = process.env.PROMPTQL_ENDPOINT;
+export const IS_CLOUD_TEST_ENABLED: boolean =
+  process.env.ENABLE_CLOUD_TESTS === "true";
+export const AUTH_ENDPOINT: string =
+  process.env.AUTH_ENDPOINT || "https://auth.pro.hasura.io";
+export const DATA_ENDPOINT: string =
+  process.env.DATA_ENDPOINT || "https://data.pro.hasura.io";
+export const PROMPTQL_ENDPOINT: string | undefined =
+  process.env.PROMPTQL_ENDPOINT;
 
 export const REASONABLE_PAUSE: number = 5;
 
@@ -50,7 +58,10 @@ export function sleep(ms: number): Promise<void> {
   });
 }
 
-function createAxiosClient(url: string, headers: Record<string, string>): AxiosInstance {
+function createAxiosClient(
+  url: string,
+  headers: Record<string, string>,
+): AxiosInstance {
   return axios.create({
     baseURL: url,
     headers: headers,
@@ -60,7 +71,7 @@ function createAxiosClient(url: string, headers: Record<string, string>): AxiosI
 export async function runCommand(
   command: string | Promise<string>,
   args: string[] = [],
-  options: CommandOptions = {}
+  options: CommandOptions = {},
 ): Promise<CommandResult> {
   command = await command;
   return new Promise((resolve, reject) => {
@@ -93,7 +104,9 @@ export async function runCommand(
       const fullStderr = Buffer.concat(stderrData).toString();
 
       if (code !== 0) {
-        console.error(`Command "${command} ${args.join(" ")}" failed with code ${code}`);
+        console.error(
+          `Command "${command} ${args.join(" ")}" failed with code ${code}`,
+        );
         reject(new Error(fullStderr));
         return;
       }
@@ -114,7 +127,7 @@ export async function runCommand(
 export async function supergraph_init(
   dir: string = PROJECT_DIRECTORY,
   promptql: boolean = false,
-  ddnCmd: string = ddn()
+  ddnCmd: string = ddn(),
 ): Promise<string | undefined> {
   const args: string[] = ["supergraph", "init", ".", "--out", "json"];
   if (promptql) {
@@ -142,7 +155,7 @@ export async function supergraph_init(
 export async function connector_init(
   dir: string = PROJECT_DIRECTORY,
   ddnCmd: string = ddn(),
-  options: ConnectorInitOptions
+  options: ConnectorInitOptions,
 ): Promise<void> {
   const args: string[] = [
     "connector",
@@ -220,7 +233,9 @@ export async function run_docker_start_detached(
   });
 }
 
-export async function docker_compose_teardown(dir: string = PROJECT_DIRECTORY): Promise<void> {
+export async function docker_compose_teardown(
+  dir: string = PROJECT_DIRECTORY,
+): Promise<void> {
   const args = ["compose", "down", "-v"];
   await runCommand("docker", args, {
     cwd: dir,
@@ -246,7 +261,10 @@ export async function run_cloud_tests(
   await run_tests(fixturesDir, client);
 }
 
-async function run_tests(fixturesDir: string, client: AxiosInstance): Promise<void> {
+async function run_tests(
+  fixturesDir: string,
+  client: AxiosInstance,
+): Promise<void> {
   const fixtureName = path.basename(fixturesDir);
   const snapshotDir = path.join(fixturesDir, "snapshots");
   if (!fs.existsSync(snapshotDir)) {
@@ -312,20 +330,23 @@ export async function project_create(
   });
 }
 
-export async function project_init(dir: string = PROJECT_DIRECTORY, ddnCmd: string | Promise<string> = ddn()): Promise<string> {
+export async function project_init(
+  dir: string = PROJECT_DIRECTORY,
+  ddnCmd: string | Promise<string> = ddn(),
+): Promise<string> {
   const args = ["project", "init", "--out", "json"];
 
   const res = await runCommand(ddnCmd, args, {
     cwd: dir,
   });
 
-
   const data = JSON.parse(res.stdout);
   return data.project;
-
 }
 
-export async function readProjectNameFromContext(dir: string = PROJECT_DIRECTORY): Promise<string> {
+export async function readProjectNameFromContext(
+  dir: string = PROJECT_DIRECTORY,
+): Promise<string> {
   const contextPath = path.join(dir, ".hasura", "context.yaml");
   const context = yaml.parse(fs.readFileSync(contextPath, "utf-8"));
   return context.definition.contexts.default.project;
@@ -451,7 +472,10 @@ export async function promptql_local_test(dir: string): Promise<void> {
   console.log("SUCCESS: PromptQL service is running locally and is healthy");
 }
 
-export async function promptql_cloud_test(pat: string, projectId: string): Promise<void> {
+export async function promptql_cloud_test(
+  pat: string,
+  projectId: string,
+): Promise<void> {
   if (!PROMPTQL_ENDPOINT) {
     console.log(
       "INFO: PROMPTQL_ENDPOINT is not set, skipping PromptQL cloud test",
@@ -493,7 +517,10 @@ query GetPromptqlConfig ($projectId: String!) {
   console.log("INFO: PromptQL Playground is enabled for cloud project");
 }
 
-export async function enable_promptql(dir = PROJECT_DIRECTORY, ddnCmd = ddn()): Promise<void> {
+export async function enable_promptql(
+  dir = PROJECT_DIRECTORY,
+  ddnCmd = ddn(),
+): Promise<void> {
   const args = [
     "codemod",
     "enable-promptql",
@@ -507,7 +534,10 @@ export async function enable_promptql(dir = PROJECT_DIRECTORY, ddnCmd = ddn()): 
   });
 }
 
-export async function get_project_id(pat: string, projectName: string): Promise<string> {
+export async function get_project_id(
+  pat: string,
+  projectName: string,
+): Promise<string> {
   // cps client
   const cpsClient = createAxiosClient(`${DATA_ENDPOINT}/v1/graphql`, {
     Authorization: `pat ${pat}`,
@@ -531,7 +561,11 @@ export async function get_project_id(pat: string, projectName: string): Promise<
   return projectId;
 }
 
-async function createCloudGQLClient(buildURL: string, pat: string, projectId: string): Promise<AxiosInstance> {
+async function createCloudGQLClient(
+  buildURL: string,
+  pat: string,
+  projectId: string,
+): Promise<AxiosInstance> {
   // fetch ddn token
   console.log("INFO: Fetching ddn token for cloud project");
   const res = await axios.post(
@@ -556,6 +590,7 @@ export async function printPAT(ddnCmd = ddn()): Promise<string> {
   const args = ["auth", "print-pat"];
   const { stdout } = await runCommand(ddnCmd, args, {
     cwd: PROJECT_DIRECTORY,
+    suppressOutput: true,
   });
   const pat = stdout.trim();
   return pat;
@@ -579,7 +614,10 @@ export async function track(
   });
 }
 
-async function update_context_yaml(dir = PROJECT_DIRECTORY, ddnCommand = ddn()) {
+async function update_context_yaml(
+  dir = PROJECT_DIRECTORY,
+  ddnCommand = ddn(),
+) {
   const ddnCmd = await ddnCommand;
   const contextPath = path.join(dir, ".hasura", "context.yaml");
   const context = yaml.parse(fs.readFileSync(contextPath, "utf-8"));
@@ -618,7 +656,10 @@ function getSuffix(): string {
   return "";
 }
 
-async function downloadBinary(url: string, destination: string): Promise<string> {
+async function downloadBinary(
+  url: string,
+  destination: string,
+): Promise<string> {
   if (url === undefined) {
     return Promise.reject(
       new Error("Specify either binary path or binary environment"),
@@ -721,4 +762,71 @@ export function ddn(): string {
     return DDN_CLI_PATH;
   }
   throw new Error("DDN CLI not set up");
+}
+
+export interface TestConfig {
+  hubID: string;
+  port?: number;
+  envs?: string[];
+  setupComposeFile?: string;
+  runCloudTests?: boolean;
+}
+
+export function validateTestConfig(config: TestConfig): void {
+  if (!config.hubID) {
+    throw new Error("hubID is required in test-config.json");
+  }
+}
+
+export interface GlobalConfig {
+  projectName?: string;
+}
+
+export interface FailedFixture {
+  name: string;
+  error: Error | string | unknown;
+  isCloud?: boolean;
+}
+
+export interface TestModule {
+  setup: (
+    projectDir: string,
+    ddnCmd: string,
+    config: GlobalConfig,
+  ) => Promise<void>;
+  test_local: (fixtureDir: string, config: GlobalConfig) => Promise<void>;
+  test_cloud?: (
+    projectDir: string,
+    ddnCmd: string,
+    fixtureDir: string,
+    config: GlobalConfig,
+  ) => Promise<void>;
+  teardown: (projectDir: string, config: GlobalConfig) => Promise<void>;
+}
+
+export function clear_project_dir(dir: string = PROJECT_DIRECTORY): void {
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.mkdirSync(dir, { recursive: true });
+}
+
+export function pathToFileURL(filepath: string): string {
+  let normalizedPath = filepath.replace(/\\/g, "/");
+  if (process.platform === "win32") {
+    normalizedPath = "/" + normalizedPath;
+  }
+  if (!normalizedPath.startsWith("/")) {
+    normalizedPath = "/" + normalizedPath;
+  }
+  return `file://${normalizedPath}`;
+}
+
+export async function login(): Promise<void> {
+  if (process.env.HASURA_DDN_PAT) {
+    await runCommand(ddn(), [
+      "auth",
+      "login",
+      "--pat",
+      process.env.HASURA_DDN_PAT,
+    ]);
+  }
 }

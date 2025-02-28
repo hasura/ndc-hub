@@ -17,7 +17,7 @@ The test runner is organized as follows:
 Before running the tests, make sure you have the necessary dependencies installed:
 
 ```shell
-npm install
+bun install
 ```
 
 The following Env Vars can be used to configure the test runner:
@@ -42,13 +42,13 @@ The following are only required if `ENABLE_CLOUD_TESTS` is set to `true`:
 To run the tests, use the following command:
 
 ```shell
-npm run start
+bun run start
 ```
 
 You can specify a particular directory or a glob pattern to test by setting the `SELECTOR_PATTERN` environment variable:
 
 ```shell
-SELECTOR_PATTERN=postgres npm run start
+SELECTOR_PATTERN=postgres bun run start
 ```
 
 ## Adding a New Connector
