@@ -73,8 +73,9 @@ After the CLI initializes the connector, you'll need to:
 The official BigQuery JDBC driver is used. You can find documentation on configuring the JDBC connection string
 [here](https://cloud.google.com/bigquery/docs/reference/odbc-jdbc-drivers#current_jdbc_driver). As an example using a service account with a full key file downloaded from google:
 ```
-APP_FOO_JDBC_URL=jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;Project=project-id;OAuthType=0;OAuthServiceAcctEmail=service-account-email;OAuthPvtKey=/etc/connector/key.json;
+APP_FOO_JDBC_URL=jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;ProjectId=project-id;DefaultDataset=dataset;OAuthType=0;OAuthServiceAcctEmail=service-account-email;OAuthPvtKey=/etc/connector/key.json;
 ```
+**Note:** `ProjectId` and `DefaultDataset` are required in your JDBC connection string.
 **Note:** since the files get mounted in docker it is import the file path is `/etc/connector/<your-key-file>.json`
 
 Make sure you place you `key.json` in the connector folder `/<subgraph>/connector/<connectorname>/key.json`. The key
