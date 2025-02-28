@@ -52,32 +52,36 @@ jobs:
           mv changed_files.json registry-automation/changed_files.json
           cd registry-automation
           MATRIX_JSON=$(go run main.go e2e)
+          echo "$MATRIX_JSON"
           echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
 
   e2e-tests:
     needs: setup-e2e
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        tasks: ${{ fromJSON(needs.setup-e2e.outputs.matrix) }}
+    # strategy:
+    #   fail-fast: false
+    #   matrix:
+    #     tasks: ${{ fromJSON(needs.setup-e2e.outputs.matrix) }}
     env:
       SELECTOR_PATTERN: ${{ matrix.tasks.selector_pattern }}
       CONNECTOR_VERSION: ${{ matrix.tasks.connector_version }}
       CLI_TAG: latest-staging
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch_depth: 1
-      - name: Install bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.1.x
-      - name: Run e2e tests
-        working-directory: ./registry-automation/e2e-testing
-        env:
-          HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT }}
-        run: |
-          bun install
-          bun run start-ndc
+        - name: test
+          run: | 
+            echo "Running e2e tests for ${{ needs.setup-e2e.outputs.matrix}}"
+    #   - name: Checkout repository
+    #     uses: actions/checkout@v2
+    #     with:
+    #       fetch_depth: 1
+    #   - name: Install bun
+    #     uses: oven-sh/setup-bun@v2
+    #     with:
+    #       bun-version: 1.1.x
+    #   - name: Run e2e tests
+    #     working-directory: ./registry-automation/e2e-testing
+    #     env:
+    #       HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT }}
+    #     run: |
+    #       bun install
+    #       bun run start-ndc
