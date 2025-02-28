@@ -40,7 +40,7 @@ func e2eInput(cmd *cobra.Command, args []string) {
 			})
 		}
 	}
-	outBytes, err := json.MarshalIndent(out, "", "  ")
+	outBytes, err := json.Marshal(out)
 	if err != nil {
 		log.Fatalf("Failed to marshal e2e outoput: %v", err)
 	}
