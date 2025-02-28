@@ -77,7 +77,7 @@ jobs:
       - name: Install bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.1.x
+          bun-version: latest
       - name: Run e2e tests
         working-directory: ./registry-automation/e2e-testing
         env:
