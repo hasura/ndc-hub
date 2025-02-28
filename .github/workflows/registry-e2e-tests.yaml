@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - registry/**
+  pull_request:
+    branches: [main]
 
 jobs:
   setup-e2e:
