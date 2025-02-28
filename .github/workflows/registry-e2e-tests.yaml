@@ -1,13 +1,10 @@
 name: Run Connector E2E Tests (staging)
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - registry/**
   pull_request:
     branches: [main]
+    paths:
+      - registry/**
 
 jobs:
   setup-e2e:
