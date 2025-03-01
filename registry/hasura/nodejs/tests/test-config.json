@@ -1,6 +1,7 @@
 {
-    "hubID": "hasura/nodejs",
+    "hub_id": "hasura/nodejs",
     "port": 8083,
-    "runCloudTests": false,
-    "setupComposeFile": "compose.yaml"
+    "run_cloud_tests": false,
+    "setup_compose_file_path": "compose.yaml",
+    "snapshots_dir": "snapshots"
 }

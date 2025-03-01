@@ -125,8 +125,10 @@ type CloudinaryInterface interface {
 }
 
 type E2EOutput struct {
-	SelectorPattern  string `json:"selector_pattern"`
-	ConnectorVersion string `json:"connector_version"`
+	Namespace          string `json:"namespace"`
+	ConnectorName      string `json:"connector_name"`
+	ConnectorVersion   string `json:"connector_version"`
+	TestConfigFilePath string `json:"test_config_file_path"`
 }
 
 type CloudinaryWrapper struct {
