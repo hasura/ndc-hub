@@ -54,7 +54,7 @@ func TestConfig(tc *ndchub.TestConfig) error {
 		}
 	}
 	if tc.SetupComposeFilePath != nil {
-		setupComposeFile := filepath.Join(tc.Path, *tc.SetupComposeFilePath)
+		setupComposeFile := filepath.Join(tcDir, *tc.SetupComposeFilePath)
 		setupComposeInfo, err := os.Stat(setupComposeFile)
 		if err != nil {
 			return fmt.Errorf("error reading setup compose file %q: %w", setupComposeFile, err)
