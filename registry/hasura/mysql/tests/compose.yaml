@@ -1,0 +1,27 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Password123
+    ports:
+      - "3310:3306"
+    volumes:
+      - ./data/chinook.sql:/docker-entrypoint-initdb.d/chinook.sql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysql",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-pPassword123",
+          "-e",
+          "SELECT * FROM Chinook.Album;",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

@@ -1,0 +1,12 @@
+query Query1($status: Text!, $email: Text!) {
+  users(where: { email: { _like: $email } }) {
+    email
+    orders(where: { status: { _eq: $status } }) {
+      status
+      product {
+        name
+        price
+      }
+    }
+  }
+}

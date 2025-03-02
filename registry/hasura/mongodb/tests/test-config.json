@@ -1,0 +1,8 @@
+{
+  "hub_id": "hasura/mongodb",
+  "port": 8083,
+  "envs": [
+    "MONGODB_DATABASE_URI=mongodb+srv://user:3CBOCCeint33uBJW@hasura-ddn.fjmew.mongodb.net/public"
+  ],
+  "snapshots_dir": "snapshots"
+}

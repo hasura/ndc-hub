@@ -1,0 +1,7 @@
+query Query2 {
+  employee {
+    city
+    country
+    email
+  }
+}

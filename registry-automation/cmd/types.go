@@ -124,6 +124,13 @@ type CloudinaryInterface interface {
 	Upload(ctx context.Context, file interface{}, uploadParams uploader.UploadParams) (*uploader.UploadResult, error)
 }
 
+type E2EOutput struct {
+	Namespace          string `json:"namespace"`
+	ConnectorName      string `json:"connector_name"`
+	ConnectorVersion   string `json:"connector_version"`
+	TestConfigFilePath string `json:"test_config_file_path"`
+}
+
 type CloudinaryWrapper struct {
 	*cloudinary.Cloudinary
 }

@@ -167,12 +167,12 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 			newFileHandler: func(matches []string, file string) {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.NewConnectors[connector] = MetadataFile(file)
-				fmt.Printf("Processing metadata file for new connector: %s\n", connector.Name)
+				fmt.Fprintf(os.Stderr, "Processing metadata file for new connector: %s\n", connector.Name)
 			},
 			modifiedFileHandler: func(matches []string, file string) error {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.ModifiedConnectors[connector] = MetadataFile(file)
-				fmt.Printf("Processing metadata file for modified connector: %s\n", connector.Name)
+				fmt.Fprintf(os.Stderr, "Processing metadata file for modified connector: %s\n", connector.Name)
 				return nil
 			},
 		},
@@ -181,12 +181,12 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 			newFileHandler: func(matches []string, file string) {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.NewLogos[connector] = Logo{Path: file, Extension: LogoExtension(matches[3])}
-				fmt.Printf("Processing logo file for new connector: %s\n", connector.Name)
+				fmt.Fprintf(os.Stderr, "Processing logo file for new connector: %s\n", connector.Name)
 			},
 			modifiedFileHandler: func(matches []string, file string) error {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.ModifiedLogos[connector] = Logo{Path: file, Extension: LogoExtension(matches[3])}
-				fmt.Printf("Processing logo file for modified connector: %s\n", connector.Name)
+				fmt.Fprintf(os.Stderr, "Processing logo file for modified connector: %s\n", connector.Name)
 				return nil
 			},
 		},
@@ -195,12 +195,12 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 			newFileHandler: func(matches []string, file string) {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.NewReadmes[connector] = file
-				fmt.Printf("Processing README file for new connector: %s\n", connector.Name)
+				fmt.Fprintf(os.Stderr, "Processing README file for new connector: %s\n", connector.Name)
 			},
 			modifiedFileHandler: func(matches []string, file string) error {
 				connector := Connector{Name: matches[2], Namespace: matches[1]}
 				result.ModifiedReadmes[connector] = file
-				fmt.Printf("Processing README file for modified connector: %s\n", connector.Name)
+				fmt.Fprintf(os.Stderr, "Processing README file for modified connector: %s\n", connector.Name)
 				return nil
 			},
 		},
@@ -226,7 +226,7 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 				if isModified {
 					processError := processor.modifiedFileHandler(matches, file)
 					if processError != nil {
-						fmt.Printf("Error processing modified %s file: %s: %v\n", matches[2], file, processError)
+						fmt.Fprintf(os.Stderr, "Error processing modified %s file: %s: %v\n", matches[2], file, processError)
 					}
 				} else {
 					processor.newFileHandler(matches, file)
@@ -234,7 +234,7 @@ func processChangedFiles(changedFiles ChangedFiles) ProcessedChangedFiles {
 				return
 			}
 		}
-		fmt.Printf("Skipping %s file: %s\n", map[bool]string{true: "modified", false: "newly added"}[isModified], file)
+		fmt.Fprintf(os.Stderr, "Skipping %s file: %s\n", map[bool]string{true: "modified", false: "newly added"}[isModified], file)
 	}
 
 	for _, file := range changedFiles.Added {

@@ -1,0 +1,8 @@
+query MyQuery($id: Int32!) {
+  getPostById(id: $id) {
+    body
+    title
+    userId
+    id
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "hub_id": "hasura/trino",
+  "port": 8083,
+  "envs": [
+    "JDBC_URL=jdbc:trino://local.hasura.dev:8090/chinook_mysql/chinook?user=trino"
+  ],
+  "snapshots_dir": "snapshots",
+  "setup_compose_file_path": "compose.yaml"
+}

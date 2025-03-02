@@ -1,0 +1,6 @@
+{
+    "hub_id": "hasura/nodejs",
+    "port": 8083,
+    "setup_compose_file_path": "compose.yaml",
+    "snapshots_dir": "snapshots"
+}

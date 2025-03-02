@@ -1,0 +1,16 @@
+query MyQuery($code: ID!) {
+  country(code: $code) {
+    awsRegion
+    capital
+    code
+    currencies
+    currency
+    emoji
+    name
+    native
+    states {
+      code
+      name
+    }
+  }
+}

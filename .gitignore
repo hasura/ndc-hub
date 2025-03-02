@@ -11,3 +11,5 @@
 # testing
 /tmp/empty
 registry-automation/extracted_tgz
+
+.idea
