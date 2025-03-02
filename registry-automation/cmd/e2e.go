@@ -26,7 +26,6 @@ var e2eChangedCmd = &cobra.Command{
 	Run:     e2eChanged,
 }
 
-// var e2eLatestRegistryDirArg string
 var e2eLatest = &cobra.Command{
 	Use:     "latest",
 	Short:   "Outputs the latest connector releases to test",
@@ -34,7 +33,6 @@ var e2eLatest = &cobra.Command{
 	Run:     e2eLatestFunc,
 }
 
-// var e2eAllRegistryDirArg string
 var e2eAll = &cobra.Command{
 	Use:     "all",
 	Short:   "Outputs all connector releases to test",
@@ -98,14 +96,6 @@ func e2eChanged(cmd *cobra.Command, args []string) {
 	printE2EOutput(out)
 }
 
-func getRepoRoot() string {
-	repoRoot := os.Getenv("NDC_HUB_GIT_REPO_FILE_PATH")
-	if repoRoot == "" {
-		log.Fatalf("NDC_HUB_GIT_REPO_FILE_PATH env var is not set")
-	}
-	return repoRoot
-}
-
 func e2eAllFunc(cmd *cobra.Command, args []string) {
 	registryDir := filepath.Join(getRepoRoot(), "registry")
 	out := make([]E2EOutput, 0)
@@ -127,14 +117,6 @@ func e2eAllFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to walk the registry directory: %v", err)
 	}
 	printE2EOutput(out)
-}
-
-func preRunCheck(cmd *cobra.Command, args []string) error {
-	repoRoot := os.Getenv("NDC_HUB_GIT_REPO_FILE_PATH")
-	if repoRoot == "" {
-		return fmt.Errorf("NDC_HUB_GIT_REPO_FILE_PATH env var is not set")
-	}
-	return nil
 }
 
 func e2eLatestFunc(cmd *cobra.Command, args []string) {
@@ -232,4 +214,16 @@ func getE2EOutput(connectorPackagingPath string, repoRoot string) *E2EOutput {
 		ConnectorVersion:   filepath.Base(versionFolder),
 		TestConfigFilePath: testConfigPath,
 	}
+}
+
+func preRunCheck(cmd *cobra.Command, args []string) error {
+	repoRoot := getRepoRoot()
+	if repoRoot == "" {
+		return fmt.Errorf("NDC_HUB_GIT_REPO_FILE_PATH env var is not set")
+	}
+	return nil
+}
+
+func getRepoRoot() string {
+	return os.Getenv("NDC_HUB_GIT_REPO_FILE_PATH")
 }

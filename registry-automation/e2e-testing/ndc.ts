@@ -1,8 +1,5 @@
-"use strict";
-
 import path from "path";
 import fs from "fs";
-import { minimatch } from "minimatch";
 import {
   PROJECT_DIRECTORY,
   runCommand,
