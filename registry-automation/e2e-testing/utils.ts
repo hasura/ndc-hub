@@ -242,13 +242,17 @@ export async function docker_compose_teardown(
   });
 }
 
-export async function run_local_tests(fixturesDir: string): Promise<void> {
+export async function run_local_tests(
+  fixtureName: string,
+  snapshotDir: string,
+): Promise<void> {
   const client = createLocalGQLClient();
-  await run_tests(fixturesDir, client);
+  await run_tests(fixtureName, snapshotDir, client);
 }
 
 export async function run_cloud_tests(
-  fixturesDir: string,
+  fixtureName: string,
+  snapshotDir: string,
   ddnCmd: string = ddn(),
   buildURL: string,
   projectId: string,
@@ -258,18 +262,17 @@ export async function run_cloud_tests(
     await printPAT(ddnCmd),
     projectId,
   );
-  await run_tests(fixturesDir, client);
+  await run_tests(fixtureName, snapshotDir, client);
 }
 
 async function run_tests(
-  fixturesDir: string,
+  fixtureName: string,
+  snapshotDir: string,
   client: AxiosInstance,
 ): Promise<void> {
-  const fixtureName = path.basename(fixturesDir);
-  const snapshotDir = path.join(fixturesDir, "snapshots");
   if (!fs.existsSync(snapshotDir)) {
     console.log(
-      `No snapshots found. Skipping tests for fixture ${fixturesDir}`,
+      `No snapshots found. Skipping tests for shapshotDir ${snapshotDir}`,
     );
     return;
   }
@@ -764,20 +767,6 @@ export function ddn(): string {
   throw new Error("DDN CLI not set up");
 }
 
-export interface TestConfig {
-  hubID: string;
-  port?: number;
-  envs?: string[];
-  setupComposeFile?: string;
-  runCloudTests?: boolean;
-}
-
-export function validateTestConfig(config: TestConfig): void {
-  if (!config.hubID) {
-    throw new Error("hubID is required in test-config.json");
-  }
-}
-
 export interface GlobalConfig {
   projectName?: string;
 }
@@ -786,22 +775,6 @@ export interface FailedFixture {
   name: string;
   error: Error | string | unknown;
   isCloud?: boolean;
-}
-
-export interface TestModule {
-  setup: (
-    projectDir: string,
-    ddnCmd: string,
-    config: GlobalConfig,
-  ) => Promise<void>;
-  test_local: (fixtureDir: string, config: GlobalConfig) => Promise<void>;
-  test_cloud?: (
-    projectDir: string,
-    ddnCmd: string,
-    fixtureDir: string,
-    config: GlobalConfig,
-  ) => Promise<void>;
-  teardown: (projectDir: string, config: GlobalConfig) => Promise<void>;
 }
 
 export function clear_project_dir(dir: string = PROJECT_DIRECTORY): void {

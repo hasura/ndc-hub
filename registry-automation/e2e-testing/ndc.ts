@@ -21,7 +21,6 @@ import {
   run_local_tests,
   sleep,
   type FailedFixture,
-  type TestConfig,
   clear_project_dir,
   login,
   project_init,
@@ -31,7 +30,6 @@ import {
   supergraph_build_create,
   run_cloud_tests,
   project_delete,
-  validateTestConfig,
 } from "./utils";
 
 clear_project_dir();
@@ -41,93 +39,172 @@ await setupDDNCLI();
 await login();
 await run_fixtures();
 
-async function run_fixtures(
-  fixturesDir: string = path.resolve(CURRENT_DIRECTORY, "..", "..", "registry"),
-): Promise<void> {
-  let selectorPattern: string = "*";
-  if (process.env.SELECTOR_PATTERN) {
-    selectorPattern = process.env.SELECTOR_PATTERN;
+function read_job_config(): TestJob[] {
+  const testJobFile = process.env.TEST_JOB_FILE;
+  if (!testJobFile) {
+    throw new Error(
+      `Provide TEST_JOB_FILE env var with the path to the job config json file`,
+    );
   }
-  const namespaces = fs
-    .readdirSync(fixturesDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory());
+  return JSON.parse(fs.readFileSync(testJobFile, "utf8")) as TestJob[];
+}
 
+function read_test_config(job: TestJob): TestConfig {
+  const tc = JSON.parse(
+    fs.readFileSync(job.test_config_file_path, "utf8"),
+  ) as TestConfig;
+  tc._testConfigDir = path.dirname(job.test_config_file_path);
+  return tc;
+}
+
+function get_snapshot_dir(testConfig: TestConfig): string {
+  return path.join(testConfig._testConfigDir, testConfig.snapshots_dir);
+}
+
+async function run_fixtures(): Promise<void> {
+  const jobs = read_job_config();
   const failedFixtures: FailedFixture[] = [];
   const successfulFixtures: string[] = [];
 
-  for (const namespace of namespaces) {
-    const namespaceDir: string = path.join(fixturesDir, namespace.name);
-    console.log(`Testing namespace ${namespaceDir}`);
-    const connectors = fs
-      .readdirSync(namespaceDir, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory());
+  for (const job of jobs) {
+    const globalConfig: GlobalConfig = {};
+    let testConfig: TestConfig;
+    try {
+      testConfig = read_test_config(job);
+      validateTestConfig(testConfig);
+    } catch (e) {
+      console.error(
+        `Error reading test config for ${job.connector_name}: ${e}`,
+      );
+      failedFixtures.push({
+        name: job.connector_name,
+        error: e,
+      });
+      continue;
+    }
 
-    for (const connector of connectors) {
-      const globalConfig: GlobalConfig = {};
-      if (!minimatch(`${namespace.name}/${connector.name}`, selectorPattern)) {
-        console.log(`Skipping connector ${connector.name}`);
+    const connectorID = `${testConfig.hub_id}:${job.connector_version}`;
+
+    try {
+      console.log(`Testing connector ${connectorID}`);
+
+      await supergraph_init(PROJECT_DIRECTORY, false, ddn());
+
+      await connector_init(PROJECT_DIRECTORY, ddn(), {
+        connectorName: job.connector_name,
+        hubID: connectorID,
+        port: testConfig.port || 8083,
+        composeFile: "compose.yaml",
+        envs: testConfig.envs || [],
+      });
+
+      if (testConfig.setup_compose_file_path) {
+        await runCommand(
+          "docker",
+          [
+            "compose",
+            "-f",
+            path.join(
+              path.dirname(job.test_config_file_path),
+              testConfig.setup_compose_file_path,
+            ),
+            "up",
+            "--build",
+            "-d",
+            "--wait",
+          ],
+          {
+            env: {
+              ...process.env,
+              CONNECTOR_CONTEXT_DIR: path.join(
+                PROJECT_DIRECTORY,
+                "app",
+                "connector",
+                job.connector_name,
+              ),
+            },
+          },
+        );
+        await sleep(10000);
+      }
+
+      await connector_introspect(PROJECT_DIRECTORY, ddn(), job.connector_name);
+
+      await track_all_models(PROJECT_DIRECTORY, ddn(), job.connector_name);
+
+      await track_all_commands(PROJECT_DIRECTORY, ddn(), job.connector_name);
+
+      await track_all_relationships(
+        PROJECT_DIRECTORY,
+        ddn(),
+        job.connector_name,
+      );
+
+      await supergraph_build_local(PROJECT_DIRECTORY, ddn());
+
+      await run_docker_start_detached(PROJECT_DIRECTORY, ddn());
+      await sleep(10000);
+
+      await run_local_tests(connectorID, get_snapshot_dir(testConfig));
+      // Run cloud tests
+      try {
+        if (testConfig.run_cloud_tests) {
+          const projectName = await project_init(PROJECT_DIRECTORY, ddn());
+          globalConfig.projectName = projectName;
+
+          const pat = await printPAT(ddn());
+          const projectId = await get_project_id(pat, projectName);
+          const buildUrl = await supergraph_build_create(
+            PROJECT_DIRECTORY,
+            ddn(),
+          );
+          await run_cloud_tests(
+            connectorID,
+            get_snapshot_dir(testConfig),
+            ddn(),
+            buildUrl,
+            projectId,
+          );
+        }
+      } catch (err) {
+        console.error(`Error testing fixture ${connectorID} in cloud: ${err}`);
+        failedFixtures.push({
+          name: connectorID,
+          error: err,
+          isCloud: true,
+        });
         continue;
       }
-      const connectorDir: string = path.join(namespaceDir, connector.name);
-      console.log(`Testing connector ${connector.name}`);
-      let testConfig: TestConfig = {
-        hubID: "",
-        port: 8083,
-        envs: undefined,
-        setupComposeFile: undefined,
-        runCloudTests: false,
-      };
-      const testConfigPath: string = path.join(
-        connectorDir,
-        "tests",
-        "test-config.json",
-      );
-      try {
-        if (!fs.existsSync(testConfigPath)) {
-          console.error(`No test-config.json found for ${connector.name}`);
-          failedFixtures.push({
-            name: connector.name,
-            error: `No test-config.json found for ${connector.name}`,
-          });
-          continue;
-        }
-        testConfig = JSON.parse(fs.readFileSync(testConfigPath, "utf8"));
-        validateTestConfig(testConfig);
 
-        await supergraph_init(PROJECT_DIRECTORY, false, ddn());
-        let hubID = testConfig.hubID;
-        if (!process.env.CONNECTOR_VERSION) {
-          console.error(
-            `CONNECTOR_VERSION environment variable not set. Please set it to the version of the connector to test.`,
-          );
-          failedFixtures.push({
-            name: connector.name,
-            error: `CONNECTOR_VERSION environment variable not set. Please set it to the version of the connector to test.`,
-          });
-          continue;
+      successfulFixtures.push(connectorID);
+    } catch (e) {
+      console.error(`Error testing fixture ${connectorID}: ${e}`);
+      failedFixtures.push({
+        name: connectorID,
+        error: e,
+      });
+    } finally {
+      try {
+        if (testConfig.hub_id) {
+          await docker_compose_teardown(PROJECT_DIRECTORY);
         }
-        hubID = `${hubID}:${process.env.CONNECTOR_VERSION}`;
-        await connector_init(PROJECT_DIRECTORY, ddn(), {
-          connectorName: connector.name,
-          hubID: hubID,
-          port: testConfig.port || 8083,
-          composeFile: "compose.yaml",
-          envs: testConfig.envs || [],
-        });
-        if (testConfig.setupComposeFile) {
+      } catch (err) {
+        console.error(`Error tearing down local dc ${connectorID}: ${err}`);
+      }
+
+      try {
+        if (testConfig.setup_compose_file_path) {
           await runCommand(
             "docker",
             [
               "compose",
               "-f",
               path.join(
-                path.dirname(testConfigPath),
-                testConfig.setupComposeFile,
+                testConfig._testConfigDir,
+                testConfig.setup_compose_file_path,
               ),
-              "up",
-              "--build",
-              "-d",
-              "--wait",
+              "down",
+              "-v",
             ],
             {
               env: {
@@ -136,115 +213,27 @@ async function run_fixtures(
                   PROJECT_DIRECTORY,
                   "app",
                   "connector",
-                  connector.name,
+                  job.connector_name,
                 ),
               },
             },
           );
-          await sleep(10000);
         }
-        await connector_introspect(PROJECT_DIRECTORY, ddn(), connector.name);
-        await track_all_models(PROJECT_DIRECTORY, ddn(), connector.name);
-        await track_all_commands(PROJECT_DIRECTORY, ddn(), connector.name);
-        await track_all_relationships(PROJECT_DIRECTORY, ddn(), connector.name);
-        await supergraph_build_local(PROJECT_DIRECTORY, ddn());
-        await run_docker_start_detached(PROJECT_DIRECTORY, ddn());
-        await sleep(10000);
-        await run_local_tests(path.dirname(testConfigPath));
-        // Run cloud tests
-        try {
-          if (testConfig.runCloudTests) {
-            const projectName = await project_init(PROJECT_DIRECTORY, ddn());
-            globalConfig.projectName = projectName;
-
-            const pat = await printPAT(ddn());
-            const projectId = await get_project_id(pat, projectName);
-            const buildUrl = await supergraph_build_create(
-              PROJECT_DIRECTORY,
-              ddn(),
-            );
-            await run_cloud_tests(
-              path.dirname(testConfigPath),
-              ddn(),
-              buildUrl,
-              projectId,
-            );
-          }
-        } catch (err) {
-          console.error(
-            `Error testing fixture ${connector.name} in cloud: ${err}`,
-          );
-          failedFixtures.push({
-            name: connector.name,
-            error: err,
-            isCloud: true,
-          });
-          continue;
-        }
-
-        successfulFixtures.push(connector.name);
-      } catch (e) {
-        console.error(`Error testing fixture ${connector.name}: ${e}`);
-        failedFixtures.push({
-          name: connector.name,
-          error: e,
-        });
-      } finally {
-        try {
-          if (testConfig.hubID) {
-            await docker_compose_teardown(PROJECT_DIRECTORY);
-          }
-        } catch (err) {
-          console.error(
-            `Error tearing down local dc ${connector.name}: ${err}`,
-          );
-        }
-
-        try {
-          if (testConfig.setupComposeFile) {
-            await runCommand(
-              "docker",
-              [
-                "compose",
-                "-f",
-                path.join(
-                  path.dirname(testConfigPath),
-                  testConfig.setupComposeFile,
-                ),
-                "down",
-                "-v",
-              ],
-              {
-                env: {
-                  ...process.env,
-                  CONNECTOR_CONTEXT_DIR: path.join(
-                    PROJECT_DIRECTORY,
-                    "app",
-                    "connector",
-                    connector.name,
-                  ),
-                },
-              },
-            );
-          }
-        } catch (err) {
-          console.error(
-            `Error tearing down setup dc ${connector.name}: ${err}`,
-          );
-        }
-
-        try {
-          if (globalConfig.projectName) {
-            await project_delete(globalConfig.projectName, PROJECT_DIRECTORY);
-          }
-        } catch (err) {
-          console.error(
-            `Error tearing down cloud project ${connector.name}: ${err}`,
-          );
-        }
-
-        clear_project_dir();
+      } catch (err) {
+        console.error(`Error tearing down setup dc ${connectorID}: ${err}`);
       }
+
+      try {
+        if (globalConfig.projectName) {
+          await project_delete(globalConfig.projectName, PROJECT_DIRECTORY);
+        }
+      } catch (err) {
+        console.error(
+          `Error tearing down cloud project ${connectorID}: ${err}`,
+        );
+      }
+
+      clear_project_dir();
     }
   }
 
@@ -255,5 +244,36 @@ async function run_fixtures(
   if (failedFixtures.length > 0) {
     console.error("Failed fixtures: ", failedFixtures);
     throw new Error(`One or more tests failed`);
+  }
+}
+
+interface TestConfig {
+  hub_id: string;
+  port?: number;
+  envs?: string[];
+  setup_compose_file_path?: string;
+  run_cloud_tests?: boolean;
+  snapshots_dir: string;
+
+  // Internal Properties
+  _testConfigDir: string;
+}
+
+interface TestJob {
+  namespace: string;
+  connector_name: string;
+  connector_version: string;
+  test_config_file_path: string;
+}
+
+function validateTestConfig(config: TestConfig): void {
+  if (!config.hub_id) {
+    throw new Error("hub_id is required in test config");
+  }
+  if (!config.snapshots_dir) {
+    throw new Error("snapshots_dir is required in test config");
+  }
+  if (!config._testConfigDir) {
+    throw new Error("_testConfigDir must be set in test config");
   }
 }

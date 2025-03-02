@@ -86,14 +86,25 @@ func e2eChanged(cmd *cobra.Command, args []string) {
 	}
 
 	// Collect the added or modified connectors
-	processChangedFiles := processChangedFiles(changedFiles)
+	processed := processChangedFiles(changedFiles)
 	out := make([]E2EOutput, 0)
-	for connector, versions := range processChangedFiles.NewConnectorVersions {
+	for connector, versions := range processed.NewConnectorVersions {
 		for version, connectorPackagingPath := range versions {
-			testConfigPath := getTestConfigPath(connectorPackagingPath)
+			repoRoot := os.Getenv("NDC_HUB_GIT_REPO_FILE_PATH")
+			if repoRoot == "" {
+				// By default, assume this is executed from the registry-automation folder
+				repoRoot = "../"
+			}
+			// connectorPackagingPath is relative to the repo. Use the repo root to construct Abs path
+			connectorPackagingFullPath, err := filepath.Abs(filepath.Join("../", connectorPackagingPath))
+			if err != nil {
+				log.Fatalf("Failed to get absolute path for connector-packaging.json: %v", err)
+			}
+			testConfigPath := getTestConfigPath(connectorPackagingFullPath)
 			if testConfigPath == "" {
-				log.Printf("test config path is empty for %v, ignoring", connectorPackagingPath)
-				continue
+				// TODO: improve error to point to readme/rfc to add tests
+				log.Fatalf("test config must be provided for all new connector releases. No test config found for %q",
+					connectorPackagingPath)
 			}
 			out = append(out, E2EOutput{
 				Namespace:          connector.Namespace,

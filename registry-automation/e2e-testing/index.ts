@@ -9,10 +9,10 @@ import {
   IS_CLOUD_TEST_ENABLED,
   setupDDNCLI,
   login,
-  type TestModule,
   clear_project_dir,
   pathToFileURL,
   type GlobalConfig,
+  type FailedFixture,
 } from "./utils";
 
 clear_project_dir();
@@ -36,8 +36,8 @@ async function run_fixtures(
     .filter((entry) => entry.isDirectory())
     .map((dir) => dir.name);
 
-  const failedFixtures = [];
-  const successfulFixtures = [];
+  const failedFixtures: FailedFixture[] = [];
+  const successfulFixtures: string[] = [];
 
   for (const dir of directories) {
     if (minimatch(dir, selectorPattern)) {
@@ -109,4 +109,20 @@ async function run_fixtures(
     console.log("Failed fixtures: ", failedFixtures);
     throw new Error(`One or more tests failed`);
   }
+}
+
+interface TestModule {
+  setup: (
+    projectDir: string,
+    ddnCmd: string,
+    config: GlobalConfig,
+  ) => Promise<void>;
+  test_local: (fixtureDir: string, config: GlobalConfig) => Promise<void>;
+  test_cloud?: (
+    projectDir: string,
+    ddnCmd: string,
+    fixtureDir: string,
+    config: GlobalConfig,
+  ) => Promise<void>;
+  teardown: (projectDir: string, config: GlobalConfig) => Promise<void>;
 }
