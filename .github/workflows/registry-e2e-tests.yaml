@@ -98,7 +98,9 @@ jobs:
         run: |
           export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
           cd registry-automation/e2e-testing
-          echo "${{ toJSON(matrix.task) }} | "jq '[.]'  > test-job.json
+          JOB_JSON='${{ toJSON(matrix.task) }}'
+          echo "$JOB_JSON"
+          echo "$JOB_JSON" | jq -c '[.]' > test-job.json
           cat test-job.json
           bun install
           export TEST_JOB_FILE=test-job.json
