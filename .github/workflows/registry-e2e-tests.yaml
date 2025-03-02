@@ -43,7 +43,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: 1.2.4
+          go-version: 1.21.x
 
       - name: Get the list of e2e tests to run
         id: e2e-test-matrix
@@ -88,7 +88,7 @@ jobs:
       - name: Install bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.2.4
       - name: Run e2e tests
         working-directory: ./registry-automation/e2e-testing
         env:
