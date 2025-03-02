@@ -50,10 +50,19 @@ function read_job_config(): TestJob[] {
 }
 
 function read_test_config(job: TestJob): TestConfig {
+  // job.test_config_file_path is relative to the repo. Use the repo root to construct Abs path
+  const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH;
+  if (!repoRoot) {
+    throw new Error(
+      `NDC_HUB_GIT_REPO_FILE_PATH env var is not set. Please set it to the root of the ndc-hub repo`,
+    );
+  }
   const tc = JSON.parse(
-    fs.readFileSync(job.test_config_file_path, "utf8"),
+    fs.readFileSync(path.join(repoRoot, job.test_config_file_path), "utf8"),
   ) as TestConfig;
-  tc._testConfigDir = path.dirname(job.test_config_file_path);
+  tc._testConfigDir = path.dirname(
+    path.join(repoRoot, job.test_config_file_path),
+  );
   return tc;
 }
 

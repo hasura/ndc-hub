@@ -20,23 +20,26 @@ var e2eCmd = &cobra.Command{
 
 var e2eChangedCmdArgs ConnectorRegistryArgs
 var e2eChangedCmd = &cobra.Command{
-	Use:   "changed",
-	Short: "Outputs the changed connector releases to test",
-	Run:   e2eChanged,
+	Use:     "changed",
+	Short:   "Outputs the changed connector releases to test",
+	PreRunE: preRunCheck,
+	Run:     e2eChanged,
 }
 
-var e2eLatestRegistryDirArg string
+// var e2eLatestRegistryDirArg string
 var e2eLatest = &cobra.Command{
-	Use:   "latest",
-	Short: "Outputs the latest connector releases to test",
-	Run:   e2eLatestFunc,
+	Use:     "latest",
+	Short:   "Outputs the latest connector releases to test",
+	PreRunE: preRunCheck,
+	Run:     e2eLatestFunc,
 }
 
-var e2eAllRegistryDirArg string
+// var e2eAllRegistryDirArg string
 var e2eAll = &cobra.Command{
-	Use:   "all",
-	Short: "Outputs all connector releases to test",
-	Run:   e2eAllFunc,
+	Use:     "all",
+	Short:   "Outputs all connector releases to test",
+	PreRunE: preRunCheck,
+	Run:     e2eAllFunc,
 }
 
 func init() {
@@ -46,19 +49,6 @@ func init() {
 	e2eChangedCmd.PersistentFlags().StringVar(&e2eChangedCmdArgs.ChangedFilesPath, "changed-files-path", changedFilesPathEnv, "path to a line-separated list of changed files in the PR")
 	if changedFilesPathEnv == "" {
 		e2eChangedCmd.MarkPersistentFlagRequired("changed-files-path")
-	}
-
-	// Path to the registry directory
-	registryDirectoryEnv := os.Getenv("REGISTRY_DIRECTORY")
-	e2eLatest.PersistentFlags().StringVar(&e2eLatestRegistryDirArg, "registry-directory",
-		registryDirectoryEnv, "path to the ndc-hub registry directory")
-	if registryDirectoryEnv == "" {
-		e2eLatest.MarkPersistentFlagRequired("registry-directory")
-	}
-	e2eAll.PersistentFlags().StringVar(&e2eAllRegistryDirArg, "registry-directory",
-		registryDirectoryEnv, "path to the ndc-hub registry directory")
-	if registryDirectoryEnv == "" {
-		e2eAll.MarkPersistentFlagRequired("registry-directory")
 	}
 
 	e2eCmd.AddCommand(e2eChangedCmd, e2eLatest, e2eAll)
@@ -90,17 +80,8 @@ func e2eChanged(cmd *cobra.Command, args []string) {
 	out := make([]E2EOutput, 0)
 	for connector, versions := range processed.NewConnectorVersions {
 		for version, connectorPackagingPath := range versions {
-			repoRoot := os.Getenv("NDC_HUB_GIT_REPO_FILE_PATH")
-			if repoRoot == "" {
-				// By default, assume this is executed from the registry-automation folder
-				repoRoot = "../"
-			}
-			// connectorPackagingPath is relative to the repo. Use the repo root to construct Abs path
-			connectorPackagingFullPath, err := filepath.Abs(filepath.Join("../", connectorPackagingPath))
-			if err != nil {
-				log.Fatalf("Failed to get absolute path for connector-packaging.json: %v", err)
-			}
-			testConfigPath := getTestConfigPath(connectorPackagingFullPath)
+
+			testConfigPath := getTestConfigPath(connectorPackagingPath, getRepoRoot())
 			if testConfigPath == "" {
 				// TODO: improve error to point to readme/rfc to add tests
 				log.Fatalf("test config must be provided for all new connector releases. No test config found for %q",
@@ -117,11 +98,16 @@ func e2eChanged(cmd *cobra.Command, args []string) {
 	printE2EOutput(out)
 }
 
-func e2eAllFunc(cmd *cobra.Command, args []string) {
-	registryDir, err := filepath.Abs(e2eAllRegistryDirArg)
-	if err != nil {
-		log.Fatalf("Failed to get the absolute path for the registry directory: %v", err)
+func getRepoRoot() string {
+	repoRoot := os.Getenv("NDC_HUB_GIT_REPO_FILE_PATH")
+	if repoRoot == "" {
+		log.Fatalf("NDC_HUB_GIT_REPO_FILE_PATH env var is not set")
 	}
+	return repoRoot
+}
+
+func e2eAllFunc(cmd *cobra.Command, args []string) {
+	registryDir := filepath.Join(getRepoRoot(), "registry")
 	out := make([]E2EOutput, 0)
 	if err := filepath.WalkDir(registryDir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -131,7 +117,7 @@ func e2eAllFunc(cmd *cobra.Command, args []string) {
 			return nil
 		}
 		if filepath.Base(path) == ndchub.ConnectorPackagingJSON {
-			e2eOutput := getE2EOutput(path)
+			e2eOutput := getE2EOutput(path, getRepoRoot())
 			if e2eOutput != nil {
 				out = append(out, *e2eOutput)
 			}
@@ -143,11 +129,16 @@ func e2eAllFunc(cmd *cobra.Command, args []string) {
 	printE2EOutput(out)
 }
 
-func e2eLatestFunc(cmd *cobra.Command, args []string) {
-	registryDir, err := filepath.Abs(e2eLatestRegistryDirArg)
-	if err != nil {
-		log.Fatalf("Failed to get the absolute path for the registry directory: %v", err)
+func preRunCheck(cmd *cobra.Command, args []string) error {
+	repoRoot := os.Getenv("NDC_HUB_GIT_REPO_FILE_PATH")
+	if repoRoot == "" {
+		return fmt.Errorf("NDC_HUB_GIT_REPO_FILE_PATH env var is not set")
 	}
+	return nil
+}
+
+func e2eLatestFunc(cmd *cobra.Command, args []string) {
+	registryDir := filepath.Join(getRepoRoot(), "registry")
 	out := make([]E2EOutput, 0)
 	registries, err := os.ReadDir(registryDir)
 	if err != nil {
@@ -157,8 +148,8 @@ func e2eLatestFunc(cmd *cobra.Command, args []string) {
 		if !registry.IsDir() {
 			continue
 		}
-		registryDir = filepath.Join(registryDir, registry.Name())
-		connectors, err := os.ReadDir(registryDir)
+		namespaceDir := filepath.Join(registryDir, registry.Name())
+		connectors, err := os.ReadDir(namespaceDir)
 		if err != nil {
 			log.Fatalf("Failed to read the registry directory: %v", err)
 		}
@@ -166,7 +157,7 @@ func e2eLatestFunc(cmd *cobra.Command, args []string) {
 			if !connector.IsDir() {
 				continue
 			}
-			connectorDir := filepath.Join(registryDir, connector.Name())
+			connectorDir := filepath.Join(namespaceDir, connector.Name())
 			metadataPath := filepath.Join(connectorDir, ndchub.MetadataJSON)
 			cm, err := ndchub.GetConnectorMetadata(metadataPath)
 			if err != nil {
@@ -178,7 +169,7 @@ func e2eLatestFunc(cmd *cobra.Command, args []string) {
 			}
 			latestVersion := cm.Overview.LatestVersion
 			latestVersionCPPath := filepath.Join(connectorDir, "releases", latestVersion, ndchub.ConnectorPackagingJSON)
-			e2eOutput := getE2EOutput(latestVersionCPPath)
+			e2eOutput := getE2EOutput(latestVersionCPPath, getRepoRoot())
 			if e2eOutput != nil {
 				out = append(out, *e2eOutput)
 			}
@@ -196,21 +187,35 @@ func printE2EOutput(out []E2EOutput) {
 	fmt.Fprintln(os.Stdout, string(outBytes))
 }
 
-func getTestConfigPath(connectorPackagingPath string) string {
-	cp, err := ndchub.GetConnectorPackaging(connectorPackagingPath)
+func getTestConfigPath(connectorPackagingPath string, repoRoot string) string {
+	// connectorPackagingPath is relative to the repo. Use the repo root to construct Abs path
+	fqConnectorPackagingPath := connectorPackagingPath
+	if !filepath.IsAbs(fqConnectorPackagingPath) {
+		fqConnectorPackagingPath = filepath.Join(repoRoot, connectorPackagingPath)
+	}
+	cp, err := ndchub.GetConnectorPackaging(fqConnectorPackagingPath)
 	if err != nil {
 		log.Fatalf("Failed to get connector packaging: %v", err)
 	}
 	if cp == nil {
-		log.Printf("connector packaging is nil for %v, ignoring", connectorPackagingPath)
+		log.Printf("connector packaging is nil for %v, ignoring", fqConnectorPackagingPath)
 		return ""
 	}
-	return cp.GetTestConfigPath()
+	testConfigPath := cp.GetTestConfigPath()
+	if testConfigPath == "" {
+		return ""
+	}
+	// test config path looks like this: /some/folder/ndc-hub/registry/hasura/turso/releases/v0.1.0/test-config.json. Make it relative to the repo root
+	out, err := filepath.Rel(repoRoot, testConfigPath)
+	if err != nil {
+		log.Fatalf("Failed to get relative path for test config: %v", err)
+	}
+	return out
 }
 
-func getE2EOutput(connectorPackagingPath string) *E2EOutput {
+func getE2EOutput(connectorPackagingPath string, repoRoot string) *E2EOutput {
 
-	testConfigPath := getTestConfigPath(connectorPackagingPath)
+	testConfigPath := getTestConfigPath(connectorPackagingPath, repoRoot)
 	if testConfigPath == "" {
 		log.Printf("test config path is empty for %v, ignoring", connectorPackagingPath)
 		return nil

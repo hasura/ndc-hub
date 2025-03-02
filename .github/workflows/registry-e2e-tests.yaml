@@ -51,6 +51,7 @@ jobs:
           CHANGED_FILES_PATH: "changed_files.json"
         run: |
           mv changed_files.json registry-automation/changed_files.json
+          export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
           cd registry-automation
           MATRIX_JSON=$(go run main.go e2e changed)
           echo "$MATRIX_JSON"
@@ -80,7 +81,7 @@ jobs:
     steps:
       - name: test
         run: |
-          echo "Running e2e tests for ${{ matrix.task }}"
+          echo "Running e2e tests for ${{ toJSON(matrix.task) }}"
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
@@ -90,11 +91,15 @@ jobs:
         with:
           bun-version: 1.2.4
       - name: Run e2e tests
-        working-directory: ./registry-automation/e2e-testing
+        working-directory: ./
         env:
           HASURA_DDN_PAT: WSM4cGM1ChBIIykOHWRVv3rRsXwN7EdfK83g8xHE36MCUaXwmTRZccQYcMKx9pWd
+          CLI_TAG: latest-staging
         run: |
-          jq '[.]' ${{ matrix.task }} > test-job.json
-          export TEST_JOB_FILE=test-job.json
+          export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
+          cd registry-automation/e2e-testing
+          echo "${{ toJSON(matrix.task) }} | "jq '[.]'  > test-job.json
+          cat test-job.json
           bun install
+          export TEST_JOB_FILE=test-job.json
           bun run start-ndc
