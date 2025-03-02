@@ -111,7 +111,7 @@ async function run_fixtures(): Promise<void> {
             "compose",
             "-f",
             path.join(
-              path.dirname(job.test_config_file_path),
+              testConfig._testConfigDir,
               testConfig.setup_compose_file_path,
             ),
             "up",
