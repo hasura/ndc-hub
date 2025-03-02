@@ -1,0 +1,46 @@
+{
+  "data": {
+    "employee": [
+      {
+        "city": "Edmonton",
+        "country": "Canada",
+        "email": "andrew@chinookcorp.com"
+      },
+      {
+        "city": "Calgary",
+        "country": "Canada",
+        "email": "nancy@chinookcorp.com"
+      },
+      {
+        "city": "Calgary",
+        "country": "Canada",
+        "email": "jane@chinookcorp.com"
+      },
+      {
+        "city": "Calgary",
+        "country": "Canada",
+        "email": "margaret@chinookcorp.com"
+      },
+      {
+        "city": "Calgary",
+        "country": "Canada",
+        "email": "steve@chinookcorp.com"
+      },
+      {
+        "city": "Calgary",
+        "country": "Canada",
+        "email": "michael@chinookcorp.com"
+      },
+      {
+        "city": "Lethbridge",
+        "country": "Canada",
+        "email": "robert@chinookcorp.com"
+      },
+      {
+        "city": "Lethbridge",
+        "country": "Canada",
+        "email": "laura@chinookcorp.com"
+      }
+    ]
+  }
+}

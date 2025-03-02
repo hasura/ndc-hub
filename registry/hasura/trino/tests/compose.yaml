@@ -1,0 +1,52 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: Password123
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-pPassword123",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    volumes:
+      - ./data/chinook.sql:/docker-entrypoint-initdb.d/chinook.sql
+
+  trino:
+    image: trinodb/trino:466
+    ports:
+      - "8090:8080"
+    volumes:
+      - ./data/trino/catalog:/etc/trino/catalog
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "trino",
+          "--server",
+          "localhost:8080",
+          "--catalog",
+          "system",
+          "--execute",
+          "SELECT * FROM chinook_mysql.chinook.album;",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    depends_on:
+      mysql:
+        condition: service_healthy
