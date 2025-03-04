@@ -46,7 +46,11 @@ implementation][NDC reference].
 
 All new connector releases to NDC hub MUST have e2e tests. The e2e tests are
 run in the CI pipeline for every connector release. The e2e tests are run using
-the [e2e-testing](./registry-automation/e2e-testing/) test runner. You need to add the following configuration to enable e2e tests:
+the [e2e-testing](./registry-automation/e2e-testing/) test runner. 
+
+[This](https://github.com/hasura/ndc-hub/pull/485/files) PR to add a new version of python connector with e2e tests can be used as an example of how to add e2e tests for new connector releases.
+
+You need to add the following configuration to enable e2e tests:
 
 - Add a `tests/test-config.json` file with the config for your connector. See [test-config.json](./registry/hasura/mysql/tests/test-config.json) for an example.
   - The `hub_id` is the value hub identifier for your connector. It is of the format `<namespace>/<connector-name>` (for e.g. `hasura/mysql`).
