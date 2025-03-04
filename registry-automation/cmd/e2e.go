@@ -41,7 +41,6 @@ var e2eAll = &cobra.Command{
 }
 
 func init() {
-
 	// Path for the changed files in the PR
 	var changedFilesPathEnv = os.Getenv("CHANGED_FILES_PATH")
 	e2eChangedCmd.PersistentFlags().StringVar(&e2eChangedCmdArgs.ChangedFilesPath, "changed-files-path", changedFilesPathEnv, "path to a line-separated list of changed files in the PR")
@@ -196,7 +195,6 @@ func getTestConfigPath(connectorPackagingPath string, repoRoot string) string {
 }
 
 func getE2EOutput(connectorPackagingPath string, repoRoot string) *E2EOutput {
-
 	testConfigPath := getTestConfigPath(connectorPackagingPath, repoRoot)
 	if testConfigPath == "" {
 		log.Printf("test config path is empty for %v, ignoring", connectorPackagingPath)

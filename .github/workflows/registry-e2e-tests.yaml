@@ -27,7 +27,7 @@ jobs:
           files: |
             registry/**
 
-      - name: Print out all the changed filse
+      - name: Print out all the changed files
         env:
           ADDED_FILES: ${{ steps.connector-version-changed-files.outputs.added_files }}
           MODIFIED_FILES: ${{ steps.connector-version-changed-files.outputs.modified_files }}
