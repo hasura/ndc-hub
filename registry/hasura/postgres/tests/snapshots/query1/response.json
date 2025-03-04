@@ -1,0 +1,58 @@
+{
+  "data": {
+    "users": [
+      {
+        "email": "seandemo@hasura.io",
+        "orders": [
+          {
+            "status": "complete",
+            "product": {
+              "name": "Sticker Sheet",
+              "price": 150
+            }
+          }
+        ]
+      },
+      {
+        "email": "robdemo@hasura.io",
+        "orders": [
+          {
+            "status": "complete",
+            "product": {
+              "name": "Hasuras in The Cloud Tee",
+              "price": 1000
+            }
+          }
+        ]
+      },
+      {
+        "email": "mariondemo@hasura.io",
+        "orders": [
+          {
+            "status": "complete",
+            "product": {
+              "name": "Monogram Baseball Cap",
+              "price": 1100
+            }
+          }
+        ]
+      },
+      {
+        "email": "sandeepdemo@hasura.io",
+        "orders": []
+      },
+      {
+        "email": "abbydemo@hasura.io",
+        "orders": [
+          {
+            "status": "complete",
+            "product": {
+              "name": "The Original Tee",
+              "price": 1000
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

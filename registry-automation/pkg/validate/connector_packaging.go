@@ -6,6 +6,7 @@ import (
 	"hash"
 	"io"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	semver "github.com/Masterminds/semver/v3"
@@ -21,6 +22,17 @@ func ConnectorPackaging(cp *ndchub.ConnectorPackaging, is_validate_connector_tar
 	// validate uri and checksum fields
 	if is_validate_connector_tarball {
 		if err := checkConnectorTarball(cp); err != nil {
+			return err
+		}
+	}
+
+	// validate test config if provided
+	if cp.Test.TestConfigPath != "" {
+		testConfig, err := ndchub.GetTestConfig(filepath.Join(filepath.Dir(cp.Path), cp.Test.TestConfigPath))
+		if err != nil {
+			return err
+		}
+		if err := TestConfig(testConfig); err != nil {
 			return err
 		}
 	}

@@ -1,0 +1,8 @@
+query MyQuery {
+  users {
+    id
+  }
+  orders {
+    id
+  }
+}

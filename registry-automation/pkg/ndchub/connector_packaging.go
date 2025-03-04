@@ -20,14 +20,27 @@ type Source struct {
 	Hash string `json:"hash"`
 }
 
+type Test struct {
+	TestConfigPath string `json:"test_config_path"`
+}
+
+func (cp *ConnectorPackaging) GetTestConfigPath() string {
+	if cp.Test.TestConfigPath == "" {
+		return ""
+	}
+	return filepath.Join(filepath.Dir(cp.Path), cp.Test.TestConfigPath)
+}
+
 type ConnectorPackaging struct {
 	Namespace string `json:"-"`
 	Name      string `json:"-"`
+	Path      string `json:"-"`
 
 	Version  string   `json:"version"`
 	URI      string   `json:"uri"`
 	Checksum Checksum `json:"checksum"`
 	Source   Source   `json:"source"`
+	Test     Test     `json:"test"`
 }
 
 func GetConnectorPackaging(path string) (*ConnectorPackaging, error) {
@@ -55,6 +68,7 @@ func GetConnectorPackaging(path string) (*ConnectorPackaging, error) {
 	}
 	connectorPackaging.Namespace = filepath.Base(namespaceFolder)
 	connectorPackaging.Name = filepath.Base(connectorFolder)
+	connectorPackaging.Path = path
 
 	return &connectorPackaging, nil
 }

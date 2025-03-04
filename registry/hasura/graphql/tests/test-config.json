@@ -1,0 +1,8 @@
+{
+  "hub_id": "hasura/graphql",
+  "port": 8083,
+  "envs": [
+    "GRAPHQL_ENDPOINT=https://countries.trevorblades.com"
+  ],
+  "snapshots_dir": "snapshots"
+}

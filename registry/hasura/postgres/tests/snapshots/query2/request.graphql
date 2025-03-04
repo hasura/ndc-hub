@@ -1,0 +1,9 @@
+query Query2 {
+  orders {
+    status
+    deliveryDate
+    product {
+      name
+    }
+  }
+}
