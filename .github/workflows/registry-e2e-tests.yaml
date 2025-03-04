@@ -93,7 +93,7 @@ jobs:
       - name: Run e2e tests
         working-directory: ./
         env:
-          HASURA_DDN_PAT: WSM4cGM1ChBIIykOHWRVv3rRsXwN7EdfK83g8xHE36MCUaXwmTRZccQYcMKx9pWd
+          HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT_STAGING }}
           CLI_TAG: latest-staging
           DATA_ENDPOINT: https://data.pro.arusah.com
           AUTH_ENDPOINT: https://auth.pro.arusah.com
