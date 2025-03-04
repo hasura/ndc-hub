@@ -72,6 +72,7 @@ jobs:
   e2e-tests:
     needs: setup-e2e
     runs-on: ubuntu-latest
+    environment: staging
     strategy:
       fail-fast: false
       matrix:
@@ -93,10 +94,8 @@ jobs:
       - name: Run e2e tests
         working-directory: ./
         env:
-          HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT_STAGING }}
+          HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT }}
           CLI_TAG: latest-staging
-          DATA_ENDPOINT: https://data.pro.arusah.com
-          AUTH_ENDPOINT: https://auth.pro.arusah.com
         run: |
           export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
           cd registry-automation/e2e-testing
