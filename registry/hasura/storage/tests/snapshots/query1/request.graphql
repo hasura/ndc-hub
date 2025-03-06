@@ -1,0 +1,13 @@
+query MyQuery($bucket: StorageBucketName) {
+  storageObjects(
+    args: {}
+    where: {
+      bucket: { _eq: $bucket }
+      name: { _eq: "foo.json", _contains: "bar" }
+    }
+  ) {
+    clientId
+    bucket
+    name
+  }
+}
