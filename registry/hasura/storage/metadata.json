@@ -5,7 +5,7 @@
     "title": "Storage Data Connector",
     "logo": "logo.png",
     "tags": ["storage", "s3", "gcs", "blob"],
-    "latest_version": "v0.0.3"
+    "latest_version": "v0.0.5"
   },
   "author": {
     "support_email": "support@hasura.io",
