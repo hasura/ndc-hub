@@ -3,7 +3,7 @@
   "uri": "https://github.com/hasura/ndc-postgres/releases/download/v2.1.0/package.tar.gz",
   "checksum": {
     "type": "sha256",
-    "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" 
+    "value": "8ed4ca01b62be420fcc5bb3f28c89a2eb8038e0e4473d0d485c7e8d2caf87977"
   },
   "source": {
     "hash": "39eb2891ab0471bbc8942b9401a30e358350c516"
