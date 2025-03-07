@@ -1,0 +1,13 @@
+{
+    "hub_id": "hasura/openapi",
+    "port": 8083,
+    "envs": [
+      "NDC_OAS_BASE_URL=http://local.hasura.dev:3000",
+      "NDC_OAS_DOCUMENT_URI=http://local.hasura.dev:3000/openapi.json",
+      "NDC_OAS_FILE_OVERWRITE=false",
+      "NDC_OAS_LAMBDA_PRETTY_LOGS=true"
+    ],
+    "snapshots_dir": "snapshots",
+    "setup_compose_file_path": "compose.yaml"
+  }
+  
