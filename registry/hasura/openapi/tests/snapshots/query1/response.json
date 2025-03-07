@@ -1,0 +1,8 @@
+{
+  "data": {
+    "getApiUsersDetail": {
+      "email": "john@example.com",
+      "id": 1
+    }
+  }
+}

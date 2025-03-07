@@ -1,0 +1,7 @@
+query test($id: Float!) {
+  getApiUsersDetail(id: $id) {
+    email
+    id
+    email
+  }
+}
