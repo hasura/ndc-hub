@@ -1,0 +1,11 @@
+{
+  "hub_id": "hasura/storage",
+  "port": 8083,
+  "envs": [
+    "STORAGE_ENDPOINT=http://minio:9000",
+    "DEFAULT_BUCKET=default",
+    "ACCESS_KEY_ID=test-key",
+    "SECRET_ACCESS_KEY=randomsecret"
+  ],
+  "snapshots_dir": "snapshots"
+}
