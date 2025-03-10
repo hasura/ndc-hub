@@ -1,0 +1,23 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=elastic
+      - xpack.security.enabled=true
+      - logger.org.elasticsearch.level=WARN
+      - ES_LOG_LEVEL=WARN
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - ./data/customers.sh:/usr/share/elasticsearch/config/customers.sh
+      - ./data/init-elasticsearch.sh:/usr/local/bin/init-elasticsearch.sh
+    healthcheck:
+      test: ["CMD", "curl", "-fsSL", "http://localhost:9200/_cluster/health"]
+      interval: 5s
+      retries: 10
+      start_period: 10s
+      timeout: 5s
+    command: [ "sh", "-c", "/usr/local/bin/init-elasticsearch.sh & /bin/bash /usr/local/bin/docker-entrypoint.sh eswrapper" ]
