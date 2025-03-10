@@ -239,7 +239,12 @@ async function run_fixtures(): Promise<void> {
         );
       }
 
-      clear_project_dir();
+      try {
+        clear_project_dir();
+      } catch (err) {
+        console.error(`Error clearing project dir ${connectorID}: ${err}`);
+      }
+
     }
   }
 
