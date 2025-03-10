@@ -11,58 +11,44 @@ efficient and scalable data operations. Additionally, users benefit from all the
 Delivery Network (DDN) platform, including query pushdown capabilities that delegate query operations to the database,
 thereby enhancing query optimization and performance.
 
-This connector implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
-
-- [Connector information in the Hasura Hub](https://hasura.io/connectors/phoenix)
-- [Hasura V3 Documentation](https://hasura.io/docs/3.0)
-
 ## Features
 
 Below, you'll find a matrix of all supported features for the Phoenix connector:
 
 | Feature                         | Supported | Notes |
 | ------------------------------- | --------- | ----- |
-| Native Queries + Logical Models | ✅         |       |
-| Native Mutations                | ❌         |       |
-| Simple Object Query             | ✅         |       |
-| Filter / Search                 | ✅         |       |
-| Simple Aggregation              | ✅         |       |
-| Sort                            | ✅         |       |
-| Paginate                        | ✅         |       |
-| Table Relationships             | ❌         |       |
-| Views                           | ✅         |       |
-| Remote Relationships            | ✅         |       |
-| Custom Fields                   | ❌         |       |
-| Mutations                       | ❌         |       |
-| Distinct                        | ❌         |       |
-| Enums                           | ❌         |       |
-| Naming Conventions              | ❌         |       |
-| Default Values                  | ❌         |       |
-| User-defined Functions          | ❌         |       |
+| Native Queries + Logical Models | ✅        |       |
+| Native Mutations                | ❌        |       |
+| Simple Object Query             | ✅        |       |
+| Filter / Search                 | ✅        |       |
+| Simple Aggregation              | ✅        |       |
+| Sort                            | ✅        |       |
+| Paginate                        | ✅        |       |
+| Table Relationships             | ❌        |       |
+| Views                           | ✅        |       |
+| Remote Relationships            | ✅        |       |
+| Custom Fields                   | ❌        |       |
+| Mutations                       | ❌        |       |
+| Distinct                        | ❌        |       |
+| Enums                           | ❌        |       |
+| Naming Conventions              | ❌        |       |
+| Default Values                  | ❌        |       |
+| User-defined Functions          | ❌        |       |
 
-## Before you get Started
+## Build on Hasura DDN
 
-1. Create a [Hasura Cloud account](https://console.hasura.io)
-2. Install the [CLI](https://hasura.io/docs/3.0/cli/installation/)
-3. Install the [Hasura VS Code extension](https://marketplace.visualstudio.com/items?itemName=HasuraHQ.hasura)
-4. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
-5. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
+[Get started](https://hasura.io/docs/3.0/how-to-build-with-ddn/with-apache-phoenix) by connecting your Apache Phoenix instance to a Hasura DDN project.
 
-## Using the connector
+## Fork the connector
 
-To use the Phoenix connector, follow these steps in a Hasura project:
-(Note: for more information on the following steps, please refer to the Postgres connector
-documentation [here](https://hasura.io/docs/3.0/getting-started/connect-to-data/connect-a-source))
+You can fork the [connector's repo](https://github.com/hasura/ndc-jvm-mono) and iterate on it yourself.
 
+## Learn more about Apache Phoenix
 
-The connector requires a JDBC URL to function.
-For example:
-
-```sh
-JDBC_URL="jdbc:phoenix:localhost:2181:/hbase"
-```
+If you're new to Apache Phoenix, check out their [docs](https://phoenix.apache.org/Phoenix-in-15-minutes-or-less.html).
 
 ## License
 
 The Hasura Phoenix connector is available under the [Apache License
 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
