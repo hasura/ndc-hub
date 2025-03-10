@@ -74,7 +74,7 @@ You need to add the following configuration to enable e2e tests:
         "hash": "c32adbde478147518f65ff465c40a0703239288a"
 +    },
 +    "test": {
-+        "test_config_file_path": "../../tests/test-config.json"
++        "test_config_path": "../../tests/test-config.json"
 +    }
 }
 ```
