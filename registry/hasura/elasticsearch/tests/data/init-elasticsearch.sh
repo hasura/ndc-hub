@@ -11,8 +11,4 @@ echo "Elasticsearch is ready. Adding mappings and data..."
 echo "Adding mapping::customers"
 sh /usr/share/elasticsearch/config/customers.sh
 
-# Add customers data
-# echo "Adding data::customers"
-# sh /usr/share/elasticsearch/data/customers.data.sh
-
 echo "Mappings and data loaded successfully!"

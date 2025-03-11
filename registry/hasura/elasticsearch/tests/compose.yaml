@@ -15,7 +15,7 @@ services:
       - ./data/customers.sh:/usr/share/elasticsearch/config/customers.sh
       - ./data/init-elasticsearch.sh:/usr/local/bin/init-elasticsearch.sh
     healthcheck:
-      test: ["CMD", "curl", "-fsSL", "http://localhost:9200/_cluster/health"]
+      test: ["CMD", "curl", "-sS", "-u elastic:elastic ", "http://localhost:9200/_cluster/health"]
       interval: 5s
       retries: 10
       start_period: 10s
