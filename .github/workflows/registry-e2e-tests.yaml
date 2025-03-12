@@ -94,17 +94,6 @@ jobs:
             echo "$line" >> "$GITHUB_ENV"
             export "$line"
           done
-      - name: Debug dynamic env vars
-        run: |
-          echo "Available dynamic env vars:"
-          printenv | grep '_CONFIG_OPTIONS_ENV'
-      - name: Use in JS
-        run: |
-          node -e '
-            for (const key of Object.keys(process.env).filter(k => k.endsWith("_CONFIG_OPTIONS_ENV"))) {
-              console.log(`Found: ${key} = ${process.env[key]}`);
-            }
-          '
       - name: Install bun
         uses: oven-sh/setup-bun@v2
         with:
