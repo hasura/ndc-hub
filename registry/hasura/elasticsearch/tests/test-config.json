@@ -1,0 +1,10 @@
+{
+  "hub_id": "hasura/elasticsearch",
+  "envs": [
+    "ELASTICSEARCH_URL=http://local.hasura.dev:9200/",
+    "ELASTICSEARCH_USERNAME=elastic",
+    "ELASTICSEARCH_PASSWORD=elastic"
+  ],
+  "snapshots_dir": "snapshots",
+  "setup_compose_file_path": "compose.yaml"
+}
