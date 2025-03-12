@@ -1,5 +1,5 @@
 query Query1 {
-  chinookAlbum(where: { albumid: { _eq: 1 } }) {
+  album(where: {albumid: {_eq: 1}}) {
     title
   }
 }
