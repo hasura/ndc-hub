@@ -90,8 +90,10 @@ jobs:
       - name: Set matching env vars
         run: |
           for secret in $(printenv | grep '_CONFIG_OPTIONS_ENV' | cut -d= -f1); do
-            value=$(printenv $secret)
+            value=$(printenv "$secret")
             echo "$secret=$value" >> $GITHUB_ENV
+            # Export it so that Node.js process can see it
+            export "$secret=$value"
           done
       - name: Install bun
         uses: oven-sh/setup-bun@v2
