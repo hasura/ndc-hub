@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.7.0"
+    "latest_version": "v1.7.1"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -20,6 +20,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-mongodb/",
     "version": [
+      {
+        "tag": "v1.7.1",
+        "hash": "fcc66ef1e7701863134a28a6ed226bf0bcfa2ccb",
+        "is_verified": true
+      },
       {
         "tag": "v1.7.0",
         "hash": "0569e0a5705b637af827f21d4ee83bce5fedefe0",
