@@ -1,0 +1,14 @@
+{
+  "version": "v1.0.10",
+  "uri": "https://storage.googleapis.com/v3-cli/sandeep-test/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "8446a061b536e9af637b40e0c9c3437367372bfc84bb873e9b7d5de33d35ee5a"
+  },
+  "source": {
+    "hash": "aff4d432d90794d5d5daf90bcf61743bcf01b6af"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
