@@ -79,6 +79,7 @@ jobs:
         task: ${{ fromJSON(needs.setup-e2e.outputs.matrix) }}
     env:
       CLI_TAG: latest-staging
+      SECRETS_JSON: ${{ toJson(secrets) }}
     steps:
       - name: test
         run: |
@@ -89,16 +90,14 @@ jobs:
           fetch_depth: 1
       - name: Set matching env vars
         run: |
-          for secret in $(printenv | grep '_CONFIG_OPTIONS_ENV' | cut -d= -f1); do
-            value=$(printenv "$secret")
-            echo "$secret=$value" >> $GITHUB_ENV
-            # Export it so that Node.js process can see it
-            export "$secret=$value"
+          echo "$SECRETS_JSON" | jq -r 'to_entries[] | select(.key | endswith("_CONFIG_OPTIONS_ENV")) | "\(.key)=\(.value)"' | while IFS= read -r line; do
+            echo "$line" >> "$GITHUB_ENV"
+            export "$line"
           done
       - name: Debug dynamic env vars
         run: |
+          echo "Available dynamic env vars:"
           printenv | grep '_CONFIG_OPTIONS_ENV'
-
       - name: Use in JS
         run: |
           node -e '
