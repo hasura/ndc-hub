@@ -40,6 +40,13 @@ jobs:
         run: |
           cat changed_files.json
 
+      - name: Set matching env vars
+        run: |
+          for secret in $(printenv | grep '_CONFIG_OPTIONS_ENV' | cut -d= -f1); do
+            value=$(printenv $secret)
+            echo "$secret=$value" >> $GITHUB_ENV
+          done
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:

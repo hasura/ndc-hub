@@ -168,6 +168,19 @@ export async function connector_init(
     "--add-to-compose-file",
     `"${options.composeFile}"`,
   ];
+  for (const key of Object.keys(process.env).filter(k => k.endsWith('_CONFIG_OPTIONS_ENV'))) {
+    const value = process.env[key];
+    if (value) {
+      try {
+        const options = JSON.parse(value); // Try parsing as JSON array
+        for (const env of options) {
+          args.push("--add-env", `"${env}"`);
+        }
+      } catch (err) {
+        console.error(`Invalid format for ${key}:`, err);
+      }
+    }
+  }
   if (options.envs) {
     for (const env of options.envs) {
       args.push("--add-env", `"${env}"`);
