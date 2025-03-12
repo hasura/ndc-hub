@@ -152,6 +152,10 @@ export async function supergraph_init(
   return undefined;
 }
 
+export function validConnectorName(connectorName: string): string {
+  return connectorName.replace(/-/g, '_');
+}
+
 export async function connector_init(
   dir: string = PROJECT_DIRECTORY,
   ddnCmd: string = ddn(),
@@ -168,7 +172,8 @@ export async function connector_init(
     "--add-to-compose-file",
     `"${options.composeFile}"`,
   ];
-  for (const key of Object.keys(process.env).filter(k => k.endsWith('_CONFIG_OPTIONS_ENV'))) {
+  // Check for environment variables that end with _CONFIG_OPTIONS_ENV and start with the connector name
+  for (const key of Object.keys(process.env).filter(k => k.endsWith('_CONFIG_OPTIONS_ENV') && k.startsWith(options.connectorName.toUpperCase()))) {
     const value = process.env[key];
     if (value) {
       try {
