@@ -152,6 +152,10 @@ export async function supergraph_init(
   return undefined;
 }
 
+export function validConnectorName(connectorName: string): string {
+  return connectorName.replace(/-/g, '_');
+}
+
 export async function connector_init(
   dir: string = PROJECT_DIRECTORY,
   ddnCmd: string = ddn(),
@@ -168,6 +172,20 @@ export async function connector_init(
     "--add-to-compose-file",
     `"${options.composeFile}"`,
   ];
+  // Check for environment variables that end with _CONFIG_OPTIONS_ENV and start with the connector name
+  for (const key of Object.keys(process.env).filter(k => k.endsWith('_CONFIG_OPTIONS_ENV') && k.startsWith(options.connectorName.toUpperCase()))) {
+    const value = process.env[key];
+    if (value) {
+      try {
+        const options = JSON.parse(value); // Try parsing as JSON array
+        for (const env of options) {
+          args.push("--add-env", `"${env}"`);
+        }
+      } catch (err) {
+        console.error(`Invalid format for ${key}:`, err);
+      }
+    }
+  }
   if (options.envs) {
     for (const env of options.envs) {
       args.push("--add-env", `"${env}"`);

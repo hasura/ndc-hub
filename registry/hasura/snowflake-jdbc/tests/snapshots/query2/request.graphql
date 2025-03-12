@@ -1,0 +1,20 @@
+query Query2 {
+  album(where: {albumid: {_eq: 1}}) {
+    title
+    tracks {
+      name
+    }
+    tracksAggregate {
+      _count
+      albumid {
+        _count_distinct
+        _count
+      }
+      milliseconds {
+        max
+        min
+        avg
+      }
+    }
+  }
+}
