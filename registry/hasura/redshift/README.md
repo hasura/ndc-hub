@@ -1,17 +1,19 @@
 # Redshift Connector
 
 [![Docs](https://img.shields.io/badge/docs-v3.x-brightgreen.svg?style=flat)](https://hasura.io/docs/3.0/getting-started/overview/)
+[![ndc-hub](https://img.shields.io/badge/ndc--hub-redshift-blue.svg?style=flat)](https://hasura.io/connectors/redshift-jdbc)
+[![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
+[![Status](https://img.shields.io/badge/status-alpha-yellow.svg?style=flat)](./readme.md)
 
-
-With this connector, Hasura allows you to instantly create a real-time GraphQL API on top of your data models in Amazon Redshift Database.
-This connector supports Redshift's functionalities listed in the table below, allowing for efficient and scalable data
-operations. Additionally, users benefit from all the powerful features of Hasura’s Data Delivery Network (DDN) platform,
-including query pushdown capabilities that delegate query operations to the database, thereby enhancing query
-optimization and performance.
+With this connector, Hasura allows you to instantly create a real-time GraphQL API on top of your data models in
+Redshift. This connector supports Redshift's functionalities listed in the table below, allowing for efficient and
+scalable data operations. Additionally, users benefit from all the powerful features of Hasura’s Data Delivery Network
+(DDN) platform, including query pushdown capabilities that delegate query operations to the database, thereby enhancing
+query optimization and performance.
 
 This connector implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
 
-- [Connector information in the Hasura Hub](https://hasura.io/connectors/redshift)
+- [Connector information in the Hasura Hub](https://hasura.io/connectors/redshift-jdbc)
 - [Hasura V3 Documentation](https://hasura.io/docs/3.0)
 
 ## Features
@@ -29,7 +31,7 @@ Below, you'll find a matrix of all supported features for the Redshift connector
 | Paginate                        | ✅        |       |
 | Table Relationships             | ❌        |       |
 | Views                           | ✅        |       |
-| Remote Relationships            | ❌        |       |
+| Remote Relationships            | ✅        |       |
 | Custom Fields                   | ❌        |       |
 | Mutations                       | ❌        |       |
 | Distinct                        | ❌        |       |
@@ -46,6 +48,10 @@ Below, you'll find a matrix of all supported features for the Redshift connector
 3. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
 4. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
 
+The steps below explain how to initialize and configure a connector on your local machine (typically for development
+purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
+[here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
+
 ## Using the Redshift connector
 
 With the [context set](https://hasura.io/docs/3.0/cli/commands/ddn_context_set/) for an existing subgraph, initialize
@@ -57,12 +63,10 @@ ddn connector init -i
 
 When the wizard runs, you'll be prompted to enter the following env vars necessary for your connector to function:
 
-| Name              | Description                  | Required |
-|-------------------|------------------------------|----------|
-| REDSHIFT_JDBC_URL | JDBC URL of your Redshift DB | Yes      |
-| REDSHIFT_USERNAME | Username of your Redshift DB | Yes      |
-| REDSHIFT_PASSWORD | Password of your Redshift DB | Yes      |
-
+| Name         | Description                                                  | Required |
+| ------------ | ------------------------------------------------------------ | -------- |
+| JDBC_URL     | The JDBC URL to connect to the database                      | Yes      |
+| JDBC_SCHEMAS | A comma-separated list of schemas to include in the metadata | No       |
 
 After the CLI initializes the connector, you'll need to:
 

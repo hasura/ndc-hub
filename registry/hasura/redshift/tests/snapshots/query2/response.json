@@ -1,0 +1,53 @@
+{
+  "data": {
+    "album": [
+      {
+        "title": "For Those About To Rock We Salute You",
+        "tracks": [
+          {
+            "name": "For Those About To Rock (We Salute You)"
+          },
+          {
+            "name": "Put The Finger On You"
+          },
+          {
+            "name": "Let's Get It Up"
+          },
+          {
+            "name": "Inject The Venom"
+          },
+          {
+            "name": "Snowballed"
+          },
+          {
+            "name": "Evil Walks"
+          },
+          {
+            "name": "C.O.D."
+          },
+          {
+            "name": "Breaking The Rules"
+          },
+          {
+            "name": "Night Of The Long Knives"
+          },
+          {
+            "name": "Spellbound"
+          }
+        ],
+        "tracksAggregate": {
+          "_count": 10,
+          "albumid": {
+            "_count_distinct": 1,
+            "_count": 10
+          },
+          "milliseconds": {
+            "max": "343719",
+            "min": "199836",
+            "avg": "240041.500000"
+          }
+        }
+      }
+    ]
+  }
+}
