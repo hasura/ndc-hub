@@ -40,17 +40,17 @@ Docs for the Storage data connector:
 
 Below, you'll find a matrix of all supported features for the Storage connector:
 
-| Feature                | Supported | Notes |
-| ---------------------- | --------- | ----- |
-| List Buckets           | ✅        |       |
-| Create Bucket          | ✅        |       |
-| Update Bucket          | ✅        |       |
-| Delete Bucket          | ✅        |       |
-| List Objects           | ✅        |       |
-| Upload Object          | ✅        |       |
-| Download Object        | ✅        |       |
-| Delete Object          | ✅        |       |
-| Generate Presigned-URL | ✅        |       |
+| Service                  | Type     | List Buckets | Create Bucket | Update Bucket | Delete Bucket | List Objects | Upload | Download | Delete Object | Soft-Delete | Presigned-URL |
+| ------------------------ | -------- | ------------ | ------------- | ------------- | ------------- | ------------ | ------ | -------- | ------------- | ----------- | ------------- |
+| AWS S3 (\*)              | `s3`     | ✅           | ✅            | ✅            | ✅            | ✅           | ✅     | ✅       | ✅            | ❌          | ✅            |
+| Google Cloud Storage     | `gcs`    | ✅           | ✅            | ✅            | ✅            | ✅           | ✅     | ✅       | ✅            | ✅          | ✅            |
+| Azure Blob Storage       | `azblob` | ✅           | ✅            | ✅            | ✅            | ✅           | ✅     | ✅       | ✅            | ✅          | ✅            |
+| File System              | `fs`     | ✅           | ✅            | ✅            | ✅            | ✅           | ✅     | ✅       | ✅            | ❌          | ❌            |
+| MinIO (\*)               | `s3`     | ✅           | ✅            | ✅            | ✅            | ✅           | ✅     | ✅       | ✅            | ❌          | ✅            |
+| Cloudflare R2 (\*)       | `s3`     | ✅           | ✅            | ✅            | ✅            | ✅           | ✅     | ✅       | ✅            | ❌          | ✅            |
+| DigitalOcean Spaces (\*) | `s3`     | ✅           | ✅            | ✅            | ✅            | ✅           | ✅     | ✅       | ✅            | ❌          | ✅            |
+
+(\*): Support Amazon S3 Compatible Cloud Storage providers. The connector uses [MinIO Go Client SDK](https://github.com/minio/minio-go) behind the scenes.
 
 ## Prerequisites
 
