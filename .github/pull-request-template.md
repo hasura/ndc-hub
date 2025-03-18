@@ -7,9 +7,11 @@
 <!-- If there's a relevant issue or discussion, on Linear, GitHub, Slack etc, reference it here. -->
 
 <!--
-Note: All features must be documented on ddn-docs.
+## CONNECTOR REGISTRY UPDATES REQUIRED DOCS LABELS
 
-> **You MUST add ONE of these labels:**
+Note: All connector features must be documented on ddn-docs.
+
+> **To have your connector update PR approved you MUST add ONE of these labels:**
    - `docs-updated`
    - `docs-not-required`
 -->
