@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.3"
+    "latest_version": "v1.0.4"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -20,6 +20,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-jdbc",
     "version": [
+      {
+        "tag": "snowflake/v1.0.4",
+        "hash": "95e709645d1c3e1acd4867b87bd1c6bf5dd97aa9",
+        "is_verified": true
+      },
       {
         "tag": "snowflake/v1.0.3",
         "hash": "fffe0d850fc415278f778952ffd1df53ef0f4064",
