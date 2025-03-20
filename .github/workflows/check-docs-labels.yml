@@ -3,7 +3,7 @@ name: Check Documentation Labels
 on:
   pull_request:
     types: [opened, labeled, unlabeled]
-    branches: [ main, master, 'test-workflow' ]  # Add your test branch here
+    branches: [ main, master, 'test-workflow' ]
 
 jobs:
   check-labels:
