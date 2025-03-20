@@ -1,0 +1,23 @@
+name: Check Documentation Labels
+
+on:
+  pull_request:
+    types: [opened, labeled, unlabeled]
+
+jobs:
+  check-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Documentation Labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const requiredLabels = ['docs-updated', 'docs-not-required'];
+            const prLabels = context.payload.pull_request.labels.map(label => label.name);
+            const hasRequiredLabel = requiredLabels.some(label => prLabels.includes(label));
+            
+            if (!hasRequiredLabel) {
+              core.setFailed('Pull request must have either "docs-updated" or "docs-not-required" label');
+            } else {
+              core.setOutput('status', 'success');
+            } 
