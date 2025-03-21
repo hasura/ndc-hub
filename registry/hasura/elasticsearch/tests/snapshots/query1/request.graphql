@@ -1,0 +1,7 @@
+query MyQuery {
+  customers(args: {}) {
+    customerId
+    email
+    id
+  }
+}

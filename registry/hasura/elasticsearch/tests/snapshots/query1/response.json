@@ -1,0 +1,31 @@
+{
+  "data": {
+    "customers": [
+      {
+        "customerId": "CUST001",
+        "email": "john.doe@example.com",
+        "id": "1"
+      },
+      {
+        "customerId": "CUST002",
+        "email": "jane.smith@example.com",
+        "id": "2"
+      },
+      {
+        "customerId": "CUST003",
+        "email": "alice.j@example.com",
+        "id": "3"
+      },
+      {
+        "customerId": "CUST004",
+        "email": "bob.brown@example.com",
+        "id": "4"
+      },
+      {
+        "customerId": "CUST005",
+        "email": "charlie.d@example.com",
+        "id": "5"
+      }
+    ]
+  }
+}

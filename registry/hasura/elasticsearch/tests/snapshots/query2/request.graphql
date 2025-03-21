@@ -1,0 +1,7 @@
+query MyQuery {
+  customersAggregate(args: {}) {
+    name {
+      _count
+    }
+  }
+}
