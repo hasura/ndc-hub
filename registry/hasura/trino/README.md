@@ -11,87 +11,37 @@ scalable data operations. Additionally, users benefit from all the powerful feat
 (DDN) platform, including query pushdown capabilities that delegate query operations to the database, thereby enhancing
 query optimization and performance.
 
-This connector implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
-
-- [Connector information in the Hasura Hub](https://hasura.io/connectors/trino)
-- [Hasura V3 Documentation](https://hasura.io/docs/3.0)
-
 ## Features
 
 Below, you'll find a matrix of all supported features for the Trino connector:
 
 | Feature                         | Supported | Notes |
 | ------------------------------- | --------- | ----- |
-| Native Queries + Logical Models | ✅         |       |
-| Native Mutations                | ❌         |       |
-| Simple Object Query             | ✅         |       |
-| Filter / Search                 | ✅         |       |
-| Simple Aggregation              | ✅         |       |
-| Sort                            | ✅         |       |
-| Paginate                        | ✅         |       |
-| Table Relationships             | ✅         |       |
-| Views                           | ✅         |       |
-| Remote Relationships            | ✅         |       |
-| Custom Fields                   | ❌         |       |
-| Mutations                       | ❌         |       |
-| Distinct                        | ❌         |       |
-| Enums                           | ❌         |       |
-| Naming Conventions              | ❌         |       |
-| Default Values                  | ❌         |       |
-| User-defined Functions          | ❌         |       |
+| Native Queries + Logical Models | ✅        |       |
+| Native Mutations                | ❌        |       |
+| Simple Object Query             | ✅        |       |
+| Filter / Search                 | ✅        |       |
+| Simple Aggregation              | ✅        |       |
+| Sort                            | ✅        |       |
+| Paginate                        | ✅        |       |
+| Table Relationships             | ✅        |       |
+| Views                           | ✅        |       |
+| Remote Relationships            | ✅        |       |
+| Custom Fields                   | ❌        |       |
+| Mutations                       | ❌        |       |
+| Distinct                        | ❌        |       |
+| Enums                           | ❌        |       |
+| Naming Conventions              | ❌        |       |
+| Default Values                  | ❌        |       |
+| User-defined Functions          | ❌        |       |
 
-## Prerequisites
+## Build on Hasura DDN
 
-1. Create a [Hasura Cloud account](https://console.hasura.io)
-2. Please ensure you have the [DDN CLI](https://hasura.io/docs/3.0/cli/installation) and
-   [Docker](https://docs.docker.com/engine/install/) installed
-3. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
-4. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
+[Get started](https://hasura.io/docs/3.0/how-to-build-with-ddn/with-trino) by connecting your Trino query engine to a Hasura DDN project.
 
-The steps below explain how to initialize and configure a connector on your local machine (typically for development
-purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
-[here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
+## Fork the connector
 
-## Using the Trino connector
-
-With the [context set](https://hasura.io/docs/3.0/cli/commands/ddn_context_set/) for an existing subgraph, initialize
-the connector:
-
-```sh
-ddn connector init -i
-```
-
-When the wizard runs, you'll be prompted to enter the following env vars necessary for your connector to function:
-
-| Name     | Description                             | Required |
-| -------- | --------------------------------------- | -------- |
-| JDBC_URL | The JDBC URL to connect to the database | Yes      |
-
-After the CLI initializes the connector, you'll need to:
-
-- [Introspect](https://hasura.io/docs/3.0/cli/commands/ddn_connector_introspect) the source.
-- Add your [models](https://hasura.io/docs/3.0/cli/commands/ddn_model_add),
-  [commands](https://hasura.io/docs/3.0/cli/commands/ddn_command_add), and
-  [relationships](https://hasura.io/docs/3.0/cli/commands/ddn_relationship_add).
-- Create a [new build](https://hasura.io/docs/3.0/cli/commands/ddn_supergraph_build_local).
-- Test it by [running your project along with the connector](https://hasura.io/docs/3.0/cli/commands/ddn_run#examples).
-  
-## Example JDBC Configuration
-
-Supposing you have a MySQL datasource `example_mysql` in your Trino instance's catalog, and a database named `chinook`, you might use a JDBC URL of the format:
-- `jdbc:trino://localhost:8080/example_mysql/chinook?user=trino`
-
-Ensure that your MySQL instance in the Trino catalog is configured with `case-insensitive-name-matching=true` for proper SQL query functionalty.
-
-A full example might be:
-```ini
-connector.name=mysql
-connection-url=jdbc:mysql://host.docker.internal:3306
-connection-user=root
-connection-password=Password123
-unsupported-type-handling=convert-to-varchar
-case-insensitive-name-matching=true
-```
+You can fork the [connector's repo](https://github.com/hasura/trino-data-connector) and iterate on it yourself.
 
 ## License
 
