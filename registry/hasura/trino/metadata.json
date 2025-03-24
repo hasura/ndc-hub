@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.2"
+    "latest_version": "v1.0.3"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -33,6 +33,11 @@
       {
         "tag": "trino/v1.0.2",
         "hash": "63745e6b8284f08d6dad8ff8b71e901f063869f5",
+        "is_verified": true
+      },
+      {
+        "tag": "trino/v1.0.3",
+        "hash": "2cfff3261070c00c0b6ce98d4530cbc98c5e47f6",
         "is_verified": true
       }
     ]
