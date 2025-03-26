@@ -1,6 +1,6 @@
 {
   "version": "v1.0.2",
-  "uri": "https://github.com/hasura/ndc-jdbc/releases/download/bigquery/v1.0.2/bigquery-connector-v1.0.2.tar.gz",
+  "uri": "https://raw.githubusercontent.com/hasura/ndc-jdbc-assets/master/bigquery/v1.0.2/bigquery-connector-v1.0.2.tar.gz",
   "checksum": {
     "type": "sha256",
     "value": "8ca2222727d877dd6a44373a8265db59df0e01fa3c7be1ea1029c218e6be1a9b"
