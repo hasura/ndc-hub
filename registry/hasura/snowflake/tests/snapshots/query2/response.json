@@ -1,9 +1,9 @@
 {
   "data": {
-    "album": [
+    "ddnChinookCiDataAlbum": [
       {
         "title": "For Those About To Rock We Salute You",
-        "tracks": [
+        "ddnChinookCiDataTracks": [
           {
             "name": "For Those About To Rock (We Salute You)"
           },
@@ -35,7 +35,7 @@
             "name": "Spellbound"
           }
         ],
-        "tracksAggregate": {
+        "ddnChinookCiDataTracksAggregate": {
           "_count": 10,
           "albumid": {
             "_count_distinct": 1,
