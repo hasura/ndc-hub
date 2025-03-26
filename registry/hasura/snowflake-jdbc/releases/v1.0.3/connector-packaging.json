@@ -1,6 +1,6 @@
 {
   "version": "v1.0.3",
-  "uri": "https://github.com/hasura/ndc-jdbc/releases/download/snowflake/v1.0.3/snowflake-connector-v1.0.3.tar.gz",
+  "uri": "https://raw.githubusercontent.com/hasura/ndc-jdbc-assets/master/snowflake/v1.0.3/snowflake-connector-v1.0.3.tar.gz",
   "checksum": {
     "type": "sha256",
     "value": "7039eca39f4fc5a2fd9a36251419e53f708325d5185928d23e7901cdd1cb04fe"

@@ -1,6 +1,6 @@
 {
   "version": "v1.0.0",
-  "uri": "https://github.com/hasura/ndc-jdbc/releases/download/athena/v1.0.0/athena-connector-v1.0.0.tar.gz",
+  "uri": "https://raw.githubusercontent.com/hasura/ndc-jdbc-assets/master/athena/v1.0.0/athena-connector-v1.0.0.tar.gz",
   "checksum": {
     "type": "sha256",
     "value": "8e93cb700a8f67cc5f0083804b94b1dce2ca418d8b9b61f6bdf50ff66f395e26"
