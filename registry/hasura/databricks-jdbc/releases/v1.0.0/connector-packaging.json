@@ -1,6 +1,6 @@
 {
   "version": "v1.0.0",
-  "uri": "https://github.com/hasura/ndc-jdbc-assets/blob/master/databricks/v1.0.0/package.tar.gz",
+  "uri": "https://raw.githubusercontent.com/hasura/ndc-jdbc-assets/master/databricks/v1.0.0/package.tar.gz",
   "checksum": {
     "type": "sha256",
     "value": "f441c6f8b711d00e8cb6846ff568605c08fe1c95de958db0b4cd5fd656f35d70"
