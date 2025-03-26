@@ -1,6 +1,6 @@
 {
   "version": "v1.0.1",
-  "uri": "https://github.com/hasura/ndc-jdbc/releases/download/databricks/v1.0.1/databricks-connector-v1.0.1.tar.gz",
+  "uri": "https://github.com/hasura/ndc-jdbc-assets/blob/master/databricks/v1.0.1/databricks-connector-v1.0.1.tar.gz",
   "checksum": {
     "type": "sha256",
     "value": "0a9bfa29ed53c576e2a232fc8b98e5fcb6e25bd773715417987c7c13f62bf6bb"

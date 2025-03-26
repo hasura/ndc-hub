@@ -1,6 +1,6 @@
 {
   "version": "v1.0.1",
-  "uri": "https://github.com/hasura/ndc-jdbc/releases/download/redshift/v1.0.1/redshift-connector-v1.0.1.tar.gz",
+  "uri": "https://github.com/hasura/ndc-jdbc-assets/blob/master/redshift/v1.0.1/redshift-connector-v1.0.1.tar.gz",
   "checksum": {
     "type": "sha256",
     "value": "62aba63b88dc1c3cba520efcba0481d814998de300a1a3e3b5c23cfbe3281fe1"
