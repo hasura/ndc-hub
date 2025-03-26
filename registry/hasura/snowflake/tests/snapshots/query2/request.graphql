@@ -1,7 +1,7 @@
 query Query2 {
   ddnChinookCiDataAlbum(where: {albumid: {_eq: 1}}) {
     title
-    tracks {
+    ddnChinookCiDataTracks {
       name
     }
     ddnChinookCiDataTracksAggregate {
