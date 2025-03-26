@@ -1,10 +1,10 @@
 query Query2 {
-  album(where: {albumid: {_eq: 1}}) {
+  ddnChinookCiDataAlbum(where: {albumid: {_eq: 1}}) {
     title
     tracks {
       name
     }
-    tracksAggregate {
+    ddnChinookCiDataTracksAggregate {
       _count
       albumid {
         _count_distinct
