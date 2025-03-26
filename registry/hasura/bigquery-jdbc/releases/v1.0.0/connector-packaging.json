@@ -1,6 +1,6 @@
 {
   "version": "v1.0.0",
-  "uri": "https://github.com/hasura/ndc-jdbc/releases/download/bigquery%2Fv1.0.0/package.tar.gz",
+  "uri": "https://github.com/hasura/ndc-jdbc-assets/blob/master/bigquery/v1.0.0/package.tar.gz",
   "checksum": {
     "type": "sha256",
     "value": "d18ae67dd362689e7a09dede0209063c325a679f5246f4261848c40e09c64fe2"
