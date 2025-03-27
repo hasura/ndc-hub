@@ -4,8 +4,8 @@
       "type": "object",
       "properties": {
         "version": {
-          "type": "string",
-          "const": "v1"
+          "const": "v1",
+          "type": "string"
         },
         "packagingDefinition": {
           "anyOf": [
@@ -540,19 +540,16 @@
               "type": "object",
               "properties": {
                 "type": {
-                  "const": "Binary",
-                  "type": "string"
+                  "type": "string",
+                  "const": "Docker"
                 },
-                "name": {
-                  "type": "string"
-                },
-                "version": {
+                "dockerImage": {
                   "type": "string"
                 }
               },
               "required": [
-                "name",
-                "version"
+                "dockerImage",
+                "type"
               ]
             },
             {
@@ -609,16 +606,19 @@
               "type": "object",
               "properties": {
                 "type": {
-                  "type": "string",
-                  "const": "Docker"
+                  "const": "Binary",
+                  "type": "string"
                 },
-                "dockerImage": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
                   "type": "string"
                 }
               },
               "required": [
-                "dockerImage",
-                "type"
+                "name",
+                "version"
               ]
             }
           ]
@@ -663,8 +663,7 @@
         "commands",
         "dockerComposeWatch",
         "packagingDefinition",
-        "supportedEnvironmentVariables",
-        "version"
+        "supportedEnvironmentVariables"
       ]
     },
     {
@@ -676,8 +675,8 @@
         },
         "ndcSpecVersion": {
           "enum": [
-            "0.1",
-            "0.2"
+            "v0.1",
+            "v0.2"
           ],
           "type": "string"
         },
@@ -1214,19 +1213,16 @@
               "type": "object",
               "properties": {
                 "type": {
-                  "const": "Binary",
-                  "type": "string"
+                  "type": "string",
+                  "const": "Docker"
                 },
-                "name": {
-                  "type": "string"
-                },
-                "version": {
+                "dockerImage": {
                   "type": "string"
                 }
               },
               "required": [
-                "name",
-                "version"
+                "dockerImage",
+                "type"
               ]
             },
             {
@@ -1276,22 +1272,6 @@
               },
               "required": [
                 "platforms",
-                "type"
-              ]
-            },
-            {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "const": "Docker"
-                },
-                "dockerImage": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "dockerImage",
                 "type"
               ]
             }

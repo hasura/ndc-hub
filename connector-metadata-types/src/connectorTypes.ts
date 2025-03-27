@@ -1,23 +1,23 @@
-export type ConnectorMetadataDefinition = 
+export type ConnectorMetadataDefinition =
   | ConnectorMetadataDefinitionV1
   | ConnectorMetadataDefinitionV2;
 
-export type ConnectorMetadataDefinitionV1 = {
-  version: "v1";
-  packagingDefinition: PackagingDefinition;
-  nativeToolchainDefinition?: NativeToolchainDefinition;
-  supportedEnvironmentVariables: EnvironmentVariableDefinition[];
-  commands: Commands;
-  cliPlugin?: CliPluginDefinition;
-  dockerComposeWatch: DockerComposeWatch;
-  documentationPage?: string;
-};
-
-export type NDCSpecVersion = "0.1" | "0.2";
+export type NDCSpecVersion = "v0.1" | "v0.2";
 
 export type ConnectorMetadataDefinitionV2 = {
   version: "v2";
   ndcSpecVersion: NDCSpecVersion;
+  packagingDefinition: PackagingDefinition;
+  nativeToolchainDefinition?: NativeToolchainDefinition;
+  supportedEnvironmentVariables: EnvironmentVariableDefinition[];
+  commands: Commands;
+  cliPlugin?: CliPluginDefinitionV2;
+  dockerComposeWatch: DockerComposeWatch;
+  documentationPage?: string;
+};
+
+export type ConnectorMetadataDefinitionV1 = {
+  version?: "v1";
   packagingDefinition: PackagingDefinition;
   nativeToolchainDefinition?: NativeToolchainDefinition;
   supportedEnvironmentVariables: EnvironmentVariableDefinition[];
@@ -30,6 +30,8 @@ export type ConnectorMetadataDefinitionV2 = {
 export type CliPluginDefinition =
   | BinaryCliPluginDefinition
   | DockerCliPluginDefinition;
+
+export type CliPluginDefinitionV2 = DockerCliPluginDefinition | BinaryInlineCliPluginDefinition;
 
 export type PackagingDefinition =
   | PrebuiltDockerImagePackaging
@@ -102,11 +104,11 @@ export type BinaryCliPluginPlatform = {
    * - linux-amd64: Linux on x86-64 architecture
    */
   selector:
-    | "darwin-arm64"
-    | "linux-arm64"
-    | "darwin-amd64"
-    | "windows-amd64"
-    | "linux-amd64";
+  | "darwin-arm64"
+  | "linux-arm64"
+  | "darwin-amd64"
+  | "windows-amd64"
+  | "linux-amd64";
   /**
    * The URI of the CLI plugin.
    * This CLI binary plugin should be a URL from where the binary can be downloaded,
