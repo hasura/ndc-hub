@@ -3,10 +3,10 @@
   "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/oracle%2Fv1.0.13/package.tar.gz",
   "checksum": {
     "type": "sha256",
-    "value": "2938049697bceb0c2ee8d75b3b57291b7200355432e5fa4fd9cb333293a746c2"
+    "value": "2263c5cb7e57d641c6e963e3adae5c3fd511ea730ef0d7d5c91213e04c71433d"
   },
   "source": {
-    "hash": "2cfff3261070c00c0b6ce98d4530cbc98c5e47f6"
+    "hash": "16f916fede271489f645239201debc653f852453"
   },
   "test": {
     "test_config_path": "../../tests/test-config.json"
