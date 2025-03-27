@@ -5,15 +5,26 @@ This uses the [Rust Data Connector SDK](https://github.com/hasura/ndc-hub#rusk-s
 
 ClickHouse is a powerful open-source columnar database that offers a range of features designed for speed and efficiency in processing large volumes of data. ClickHouse is an excellent choice for a database when you are dealing with large volumes of data and require high-speed data retrieval, aggregation, and analysis. It's particularly well-suited for real-time analytics and handling time-series data, log data, or any scenario where read operations vastly outnumber writes. ClickHouse thrives in environments where query performance and the ability to generate reports quickly are critical, such as in financial analysis, IoT data management, and online analytical processing (OLAP). Furthermore, its column-oriented architecture makes it ideal for queries that need to scan large datasets but only access a subset of columns.
 
-## Prerequisites
+This native data connector implements the following Hasura Data Domain Specification features:
 
-1. Create a [Hasura Cloud account](https://console.hasura.io)
-2. Please ensure you have the [DDN CLI](https://hasura.io/docs/3.0/cli/installation) and [Docker](https://docs.docker.com/engine/install/) installed
-3. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
-4. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
-5. Create a [ClickHouse account](https://clickhouse.cloud/signUp?loc=nav-get-started) if you don't already have one.
-6. Make sure to make your ClickHouse service open to the public or add Hasura's IP to the allowlist.
+| Feature                                                                                                                             | Supported |
+| ----------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| [Simple Queries](https://hasura.io/docs/3.0/graphql-api/queries/simple-queries/)                                                    | ✅        |
+| [Nested Queries](https://hasura.io/docs/3.0/graphql-api/queries/nested-queries/)                                                    | ✅        |
+| [Query Result Sorting](https://hasura.io/docs/3.0/graphql-api/queries/sorting/)                                                     | ✅        |
+| [Query Result Pagination](https://hasura.io/docs/3.0/graphql-api/queries/pagination/)                                               | ✅        |
+| [Multiple Query Arguments](https://hasura.io/docs/3.0/graphql-api/queries/multiple-arguments/)                                      | ✅        |
+| [Multiple Queries in a Request](https://hasura.io/docs/3.0/graphql-api/queries/multiple-queries/)                                   | ✅        |
+| [Variables, Aliases, Fragments, Directives](https://hasura.io/docs/3.0/graphql-api/queries/variables-aliases-fragments-directives/) | ✅        |
+| [Query Filter: Value Comparison](https://hasura.io/docs/3.0/graphql-api/queries/filters/comparison-operators/)                      | ✅        |
+| [Query Filter: Boolean Expressions](https://hasura.io/docs/3.0/graphql-api/queries/filters/boolean-operators/)                      | ✅        |
+| [Query Filter: Text](https://hasura.io/docs/3.0/graphql-api/queries/filters/text-search-operators/)                                 | ✅        |
+| [Query Filter: Nested Objects](https://hasura.io/docs/3.0/graphql-api/queries/filters/nested-objects/)                              | ✅        |
 
-## Using the ClickHouse connector
+## Build on Hasura DDN
 
-Check out the [Hasura docs here](https://hasura.io/docs/3.0/getting-started/build/connect-to-data/connect-a-source/?db=ClickHouse) to get started with the ClickHouse connector.
+[Get started](https://hasura.io/docs/3.0/how-to-build-with-ddn/with-clickhouse) by connecting your ClickHouse instance to a Hasura DDN project.
+
+## Fork the connector
+
+You can fork the [connector's repo](https://github.com/hasura/ndc-clickhouse) and iterate on it yourself.
