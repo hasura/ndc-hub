@@ -1,0 +1,8 @@
+{
+  "data": {
+    "getAccountsAccount": {
+      "email": "site@stripe.com",
+      "type": "standard"
+    }
+  }
+}

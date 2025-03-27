@@ -1,0 +1,6 @@
+query MyQuery {
+  getAccount {
+    email
+    type
+  }
+}
