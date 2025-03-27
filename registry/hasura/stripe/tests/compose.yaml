@@ -8,15 +8,10 @@ services:
         [
           "CMD",
           "wget",
-          "-nv",
-          "-t1",
-          "--spider",
+          "-qO-",
           "--header",
           "Authorization: Bearer sk_test_123",
           "http://localhost:12111/v1/account",
-          "||",
-          "exit",
-          "1",
         ]
       interval: 5s
       timeout: 5s
