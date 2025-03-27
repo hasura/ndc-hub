@@ -1,6 +1,6 @@
 {
   "version": "v1.0.0",
-  "uri": "https://raw.githubusercontent.com/hasura/ndc-jdbc-assets/master/bigquery/v1.0.0/package.tar.gz",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/bigquery/v1.0.0/package.tar.gz",
   "checksum": {
     "type": "sha256",
     "value": "d18ae67dd362689e7a09dede0209063c325a679f5246f4261848c40e09c64fe2"
