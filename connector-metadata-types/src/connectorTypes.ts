@@ -1,5 +1,23 @@
-export type ConnectorMetadataDefinition = {
-  version?: "v1";
+export type ConnectorMetadataDefinition = 
+  | ConnectorMetadataDefinitionV1
+  | ConnectorMetadataDefinitionV2;
+
+export type ConnectorMetadataDefinitionV1 = {
+  version: "v1";
+  packagingDefinition: PackagingDefinition;
+  nativeToolchainDefinition?: NativeToolchainDefinition;
+  supportedEnvironmentVariables: EnvironmentVariableDefinition[];
+  commands: Commands;
+  cliPlugin?: CliPluginDefinition;
+  dockerComposeWatch: DockerComposeWatch;
+  documentationPage?: string;
+};
+
+export type NDCSpecVersion = "0.1" | "0.2";
+
+export type ConnectorMetadataDefinitionV2 = {
+  version: "v2";
+  ndcSpecVersion: NDCSpecVersion;
   packagingDefinition: PackagingDefinition;
   nativeToolchainDefinition?: NativeToolchainDefinition;
   supportedEnvironmentVariables: EnvironmentVariableDefinition[];
