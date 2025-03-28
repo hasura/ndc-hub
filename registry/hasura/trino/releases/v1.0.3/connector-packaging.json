@@ -3,10 +3,10 @@
   "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/trino%2Fv1.0.3/package.tar.gz",
   "checksum": {
     "type": "sha256",
-    "value": "b3f2d3546822a856b1f55f9495e45a6769294d4e458ed56e79e9c0d325b9ef87"
+    "value": "2b4fbf11a89185ae97af4ed7532571d98bf75a92befa555e9d75dca0081188c9"
   },
   "source": {
-    "hash": "2cfff3261070c00c0b6ce98d4530cbc98c5e47f6"
+    "hash": "16f916fede271489f645239201debc653f852453"
   },
   "test": {
     "test_config_path": "../../tests/test-config.json"
