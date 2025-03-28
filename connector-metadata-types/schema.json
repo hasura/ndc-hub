@@ -673,7 +673,8 @@
           "type": "string",
           "const": "v2"
         },
-        "ndcSpecVersion": {
+        "ndcSpecGeneration": {
+          "description": "Represents the version ranges (or \"generations\") of the NDC Specification.\n\nThis type refers to the value of DataConnectorLink.definition.schema.version,\nwhich indicates the generation of NDC Specification rather than a precise\nversion number (such as v0.1.6).",
           "enum": [
             "v0.1",
             "v0.2"
@@ -1316,7 +1317,7 @@
       "required": [
         "commands",
         "dockerComposeWatch",
-        "ndcSpecVersion",
+        "ndcSpecGeneration",
         "packagingDefinition",
         "supportedEnvironmentVariables",
         "version"

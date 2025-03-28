@@ -2,11 +2,18 @@ export type ConnectorMetadataDefinition =
   | ConnectorMetadataDefinitionV1
   | ConnectorMetadataDefinitionV2;
 
-export type NDCSpecVersion = "v0.1" | "v0.2";
+/**
+ * Represents the version ranges (or "generations") of the NDC Specification.
+ *
+ * This type refers to the value of DataConnectorLink.definition.schema.version,
+ * which indicates the generation of NDC Specification rather than a precise
+ * version number (such as v0.1.6).
+ */
+export type NDCSpecGeneration = "v0.1" | "v0.2";
 
 export type ConnectorMetadataDefinitionV2 = {
   version: "v2";
-  ndcSpecVersion: NDCSpecVersion;
+  ndcSpecGeneration: NDCSpecGeneration;
   packagingDefinition: PackagingDefinition;
   nativeToolchainDefinition?: NativeToolchainDefinition;
   supportedEnvironmentVariables: EnvironmentVariableDefinition[];
@@ -31,7 +38,9 @@ export type CliPluginDefinition =
   | BinaryCliPluginDefinition
   | DockerCliPluginDefinition;
 
-export type CliPluginDefinitionV2 = DockerCliPluginDefinition | BinaryInlineCliPluginDefinition;
+export type CliPluginDefinitionV2 =
+  | DockerCliPluginDefinition
+  | BinaryInlineCliPluginDefinition;
 
 export type PackagingDefinition =
   | PrebuiltDockerImagePackaging
@@ -104,11 +113,11 @@ export type BinaryCliPluginPlatform = {
    * - linux-amd64: Linux on x86-64 architecture
    */
   selector:
-  | "darwin-arm64"
-  | "linux-arm64"
-  | "darwin-amd64"
-  | "windows-amd64"
-  | "linux-amd64";
+    | "darwin-arm64"
+    | "linux-arm64"
+    | "darwin-amd64"
+    | "windows-amd64"
+    | "linux-amd64";
   /**
    * The URI of the CLI plugin.
    * This CLI binary plugin should be a URL from where the binary can be downloaded,
