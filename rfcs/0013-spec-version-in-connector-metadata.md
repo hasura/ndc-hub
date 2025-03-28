@@ -11,7 +11,7 @@ Include the NDC spec version directly within the `./hasura-connector/connector-m
 ## Implementation
 Add two new top-level fields to the connector metadata YAML:
 
-> Note: If `version` is `v1` or undefined, the `ndcSpecVersion` is assumed to be `0.1`.
+> Note: If `version` is `v1` or undefined, the `ndcSpecVersion` is assumed to be `v0.1`.
 
 ```diff
 ++version: v2
