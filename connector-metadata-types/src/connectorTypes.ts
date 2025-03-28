@@ -1,4 +1,29 @@
-export type ConnectorMetadataDefinition = {
+export type ConnectorMetadataDefinition =
+  | ConnectorMetadataDefinitionV1
+  | ConnectorMetadataDefinitionV2;
+
+/**
+ * Represents the version ranges (or "generations") of the NDC Specification.
+ *
+ * This type refers to the value of DataConnectorLink.definition.schema.version,
+ * which indicates the generation of NDC Specification rather than a precise
+ * version number (such as v0.1.6).
+ */
+export type NDCSpecGeneration = "v0.1" | "v0.2";
+
+export type ConnectorMetadataDefinitionV2 = {
+  version: "v2";
+  ndcSpecGeneration: NDCSpecGeneration;
+  packagingDefinition: PackagingDefinition;
+  nativeToolchainDefinition?: NativeToolchainDefinition;
+  supportedEnvironmentVariables: EnvironmentVariableDefinition[];
+  commands: Commands;
+  cliPlugin?: CliPluginDefinitionV2;
+  dockerComposeWatch: DockerComposeWatch;
+  documentationPage?: string;
+};
+
+export type ConnectorMetadataDefinitionV1 = {
   version?: "v1";
   packagingDefinition: PackagingDefinition;
   nativeToolchainDefinition?: NativeToolchainDefinition;
@@ -12,6 +37,10 @@ export type ConnectorMetadataDefinition = {
 export type CliPluginDefinition =
   | BinaryCliPluginDefinition
   | DockerCliPluginDefinition;
+
+export type CliPluginDefinitionV2 =
+  | DockerCliPluginDefinition
+  | BinaryInlineCliPluginDefinition;
 
 export type PackagingDefinition =
   | PrebuiltDockerImagePackaging
