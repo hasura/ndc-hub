@@ -15,7 +15,7 @@ Add two new top-level fields to the connector metadata YAML:
 
 ```diff
 ++version: v2
-++ndcSpecVersion: 0.2
+++ndcSpecVersion: v0.2
 packagingDefinition:
   type: PrebuiltDockerImage
   dockerImage: "ghcr.io/hasura/ndc-athena-jdbc:v1.0.0"
