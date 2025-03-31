@@ -55,15 +55,13 @@ The data connector is open source and can be found in the [ndc-http GitHub repos
 | OAuth 2.0       | ✅        | Built-in support for the `client_credentials` grant. Other grant types require forwarding access tokens from headers by the Hasura engine |
 | mTLS            | ✅        |                                                                                                                                           |
 
-## Deployment
+## Build on Hasura DDN
 
-The connector is hosted by Hasura and can be used from the [Hasura v3 Console](https://console.hasura.io).
+[Get started](https://hasura.io/docs/3.0/how-to-build-with-ddn/with-http) by connecting your existing API to a Hasura DDN project.
 
-## Usage
+## Fork the connector
 
-The Hasura HTTP connector can be deployed using the [Hasura CLI](https://hasura.io/docs/3.0/cli/overview) by following either the [Quick Start Guide](https://hasura.io/docs/3.0/getting-started/overview/) or [deploying the connector](https://hasura.io/docs/3.0/connectors/deployment).
-
-Explore, request, and contribute pre-built configurations of popular services in the [HTTP Connector Recipes](https://github.com/hasura/ndc-http-recipes/tree/main/recipes) repository.
+You can fork the [connector's repo](https://github.com/hasura/ndc-http) and iterate on it yourself.
 
 ## Troubleshooting
 
