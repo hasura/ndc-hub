@@ -1,0 +1,42 @@
+{
+    "overview": {
+      "namespace": "hasura",
+      "description": "Connect to a DynamoDB database and expose it to Hasura v3 Project",
+      "title": "DynamoDB Connector",
+      "logo": "logo.png",
+      "tags": ["database"],
+      "latest_version": "v0.1.1"
+    },
+    "author": {
+      "support_email": "support@hasura.io",
+      "homepage": "https://hasura.io",
+      "name": "Hasura"
+    },
+    "is_verified": true,
+    "is_hosted_by_hasura": true,
+    "packages": [
+      {
+        "version": "0.1.1",
+        "uri": "https://github.com/hasura/ndc-dynamodb/releases/download/v0.1.1/package.tar.gz",
+        "checksum": {
+          "type": "sha256",
+          "value": "17dc787eb150d85ea3e8c0aef977d4930b24c11f09673ed3138ea65565001803"
+        },
+        "source": {
+          "hash": "ce61f5f562a2c34180becc74d4d5f28ba0840a1f"
+        }
+      }
+    ],
+    "source_code": {
+      "is_open_source": true,
+      "repository": "https://github.com/hasura/ndc-dynamodb/",
+      "version": [
+        {
+          "tag": "v0.1.1",
+          "hash": "ce61f5f562a2c34180becc74d4d5f28ba0840a1f",
+          "is_verified": true
+        }
+      ]
+    }
+  }
+  
