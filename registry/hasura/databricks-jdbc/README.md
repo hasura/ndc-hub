@@ -52,30 +52,9 @@ The steps below explain how to initialize and configure a connector on your loca
 purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
 [here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
 
-## Using the Databricks connector
+## Build on Hasura DDN
 
-With the [context set](https://hasura.io/docs/3.0/cli/commands/ddn_context_set/) for an existing subgraph, initialize
-the connector:
-
-```sh
-ddn connector init -i
-```
-
-When the wizard runs, you'll be prompted to enter the following env vars necessary for your connector to function:
-
-| Name         | Description                                                  | Required |
-| ------------ | ------------------------------------------------------------ | -------- |
-| JDBC_URL     | The JDBC URL to connect to the database                      | Yes      |
-| JDBC_SCHEMAS | A comma-separated list of schemas to include in the metadata | Yes      |
-
-After the CLI initializes the connector, you'll need to:
-
-- [Introspect](https://hasura.io/docs/3.0/cli/commands/ddn_connector_introspect) the source.
-- Add your [models](https://hasura.io/docs/3.0/cli/commands/ddn_model_add),
-  [commands](https://hasura.io/docs/3.0/cli/commands/ddn_command_add), and
-  [relationships](https://hasura.io/docs/3.0/cli/commands/ddn_relationship_add).
-- Create a [new build](https://hasura.io/docs/3.0/cli/commands/ddn_supergraph_build_local).
-- Test it by [running your project along with the connector](https://hasura.io/docs/3.0/cli/commands/ddn_run#examples).
+[Get started](https://hasura.io/docs/3.0/how-to-build-with-ddn/with-databricks) by connecting your Databricks workspace to a Hasura DDN project.
 
 ## License
 
