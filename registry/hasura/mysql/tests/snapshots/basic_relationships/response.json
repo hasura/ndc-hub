@@ -1,0 +1,12 @@
+{
+  "data": {
+    "chinookAlbum": [
+      {
+        "title": "For Those About To Rock We Salute You",
+        "artist": {
+          "name": "AC/DC"
+        }
+      }
+    ]
+  }
+}
