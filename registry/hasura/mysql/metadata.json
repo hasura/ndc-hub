@@ -88,6 +88,11 @@
         "tag": "mysql/v1.0.14",
         "hash": "21481f84183d0fff9b642b94285a9644f935785e",
         "is_verified": true
+      },
+      {
+        "tag": "mysql/v1.0.15",
+        "hash": "4af9b1e6e51a5225d3d8c69fa1106938fefbda97",
+        "is_verified": true
       }
     ]
   }
