@@ -3,7 +3,7 @@
     "chinookAlbum": [
       {
         "title": "For Those About To Rock We Salute You",
-        "artist": {
+        "chinookArtist": {
           "name": "AC/DC"
         }
       }
