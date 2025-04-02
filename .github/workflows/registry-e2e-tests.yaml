@@ -101,6 +101,7 @@ jobs:
       - name: Run e2e tests
         working-directory: ./
         env:
+          BIGQUERY_KEY_JSON: ${{ secrets.BIGQUERY_KEY_JSON }}
           HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT }}
           CLI_TAG: latest-staging
         run: |
