@@ -1,0 +1,9 @@
+{
+  "data": {
+    "customersAggregate": {
+      "name": {
+        "_count": 5
+      }
+    }
+  }
+}

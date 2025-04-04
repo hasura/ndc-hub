@@ -1,0 +1,5 @@
+{
+  "hub_id": "hasura/athena",
+  "port": 8080,
+  "snapshots_dir": "snapshots"
+}

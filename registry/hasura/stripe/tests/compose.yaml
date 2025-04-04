@@ -1,0 +1,19 @@
+services:
+  stripe-mock:
+    image: stripe/stripe-mock:v0.193.0
+    ports:
+      - "12111:12111"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-qO-",
+          "--header",
+          "Authorization: Bearer sk_test_123",
+          "http://localhost:12111/v1/account",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s

@@ -42,7 +42,7 @@ jobs:
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v46.0.1
         with:
           json: true
           escape_json: false

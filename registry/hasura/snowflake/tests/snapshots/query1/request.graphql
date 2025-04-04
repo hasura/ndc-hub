@@ -1,0 +1,5 @@
+query Query1 {
+  ddnChinookCiDataAlbum(where: {albumid: {_eq: 1}}) {
+    title
+  }
+}

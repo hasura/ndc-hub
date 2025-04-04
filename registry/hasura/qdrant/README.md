@@ -10,12 +10,6 @@
 The Hasura Qdrant Connector allows for connecting to a Qdrant database to give you an instant GraphQL API on top of your
 Qdrant data.
 
-This connector is built using the [Typescript Data Connector SDK](https://github.com/hasura/ndc-sdk-typescript) and
-implements the [Data Connector Spec](https://github.com/hasura/ndc-spec).
-
-- [See the listing in the Hasura Hub](https://hasura.io/connectors/qdrant)
-- [Hasura V3 Documentation](https://hasura.io/docs/3.0/index/)
-
 ## Features
 
 Below, you'll find a matrix of all supported features for the Qdrant connector:
@@ -35,54 +29,13 @@ Below, you'll find a matrix of all supported features for the Qdrant connector:
 | Nested Relationships            | ❌        |                                                                    |
 | Vector Search                   | ✅        |                                                                    |
 
-## Prerequisites
+## Build on Hasura DDN
 
-1. Create a [Hasura Cloud account](https://console.hasura.io)
-2. Please ensure you have the [DDN CLI](https://hasura.io/docs/3.0/cli/installation) and
-   [Docker](https://docs.docker.com/engine/install/) installed
-3. [Create a supergraph](https://hasura.io/docs/3.0/getting-started/init-supergraph)
-4. [Create a subgraph](https://hasura.io/docs/3.0/getting-started/init-subgraph)
-5. Have a [Qdrant](https://qdrant.tech/) hosted database, or a locally running Qdrant database — for supplying data to
-   your API.
+[Get started](https://hasura.io/docs/3.0/how-to-build-with-ddn/with-qdrant) by connecting your Qdrant cluster to a Hasura DDN project.
 
-The steps below explain how to initialize and configure a connector on your local machine (typically for development
-purposes).You can learn how to deploy a connector to Hasura DDN — after it's been configured —
-[here](https://hasura.io/docs/3.0/getting-started/deployment/deploy-a-connector).
+## Fork the connector
 
-## Using the Qdrant connector
-
-With the [context set](https://hasura.io/docs/3.0/cli/commands/ddn_context_set/) for an existing subgraph, initialize
-the connector:
-
-```sh
-ddn connector init -i
-```
-
-When the wizard runs, you'll be prompted to enter the following env vars necessary for your connector to function:
-
-| Name           | Description                                   |
-| -------------- | --------------------------------------------- |
-| QDRANT_URL     | The connection string for the Qdrant database |
-| QDRANT_API_KEY | The Qdrant API Key                            |
-
-After the CLI initializes the connector, you'll need to:
-
-- [Introspect](https://hasura.io/docs/3.0/cli/commands/ddn_connector_introspect) the source.
-- Add your [models](https://hasura.io/docs/3.0/cli/commands/ddn_model_add),
-  [commands](https://hasura.io/docs/3.0/cli/commands/ddn_command_add), and
-  [relationships](https://hasura.io/docs/3.0/cli/commands/ddn_relationship_add).
-- Create a [new build](https://hasura.io/docs/3.0/cli/commands/ddn_supergraph_build_local).
-- Test it by [running your project along with the connector](https://hasura.io/docs/3.0/cli/commands/ddn_run#examples).
-
-## Documentation
-
-View the full documentation for the Qdrant connector
-[here](https://github.com/hasura/ndc-qdrant/blob/main/docs/index.md).
-
-## Contributing
-
-Check out our [contributing guide](https://github.com/hasura/ndc-qdrant/blob/main/docs/contributing.md) for more
-details.
+You can fork the [connector's repo](https://github.com/hasura/ndc-qdrant) and iterate on it yourself.
 
 ## License
 

@@ -27,6 +27,7 @@ import {
   supergraph_build_create,
   run_cloud_tests,
   project_delete,
+  validConnectorName,
 } from "./utils";
 
 clear_project_dir();
@@ -90,6 +91,7 @@ async function run_fixtures(): Promise<void> {
     }
 
     const connectorID = `${testConfig.hub_id}:${job.connector_version}`;
+    const connectorName = validConnectorName(job.connector_name);
 
     try {
       console.log(`Testing connector ${connectorID}`);
@@ -97,7 +99,7 @@ async function run_fixtures(): Promise<void> {
       await supergraph_init(PROJECT_DIRECTORY, false, ddn());
 
       await connector_init(PROJECT_DIRECTORY, ddn(), {
-        connectorName: job.connector_name,
+        connectorName: connectorName,
         hubID: connectorID,
         port: testConfig.port || 8083,
         composeFile: "compose.yaml",
@@ -126,7 +128,7 @@ async function run_fixtures(): Promise<void> {
                 PROJECT_DIRECTORY,
                 "app",
                 "connector",
-                job.connector_name,
+                connectorName,
               ),
             },
           },
@@ -134,16 +136,16 @@ async function run_fixtures(): Promise<void> {
         await sleep(10000);
       }
 
-      await connector_introspect(PROJECT_DIRECTORY, ddn(), job.connector_name);
+      await connector_introspect(PROJECT_DIRECTORY, ddn(), connectorName);
 
-      await track_all_models(PROJECT_DIRECTORY, ddn(), job.connector_name);
+      await track_all_models(PROJECT_DIRECTORY, ddn(), connectorName);
 
-      await track_all_commands(PROJECT_DIRECTORY, ddn(), job.connector_name);
+      await track_all_commands(PROJECT_DIRECTORY, ddn(), connectorName);
 
       await track_all_relationships(
         PROJECT_DIRECTORY,
         ddn(),
-        job.connector_name,
+        connectorName,
       );
 
       await supergraph_build_local(PROJECT_DIRECTORY, ddn());
@@ -219,7 +221,7 @@ async function run_fixtures(): Promise<void> {
                   PROJECT_DIRECTORY,
                   "app",
                   "connector",
-                  job.connector_name,
+                  connectorName,
                 ),
               },
             },
@@ -239,7 +241,12 @@ async function run_fixtures(): Promise<void> {
         );
       }
 
-      clear_project_dir();
+      try {
+        clear_project_dir();
+      } catch (err) {
+        console.error(`Error clearing project dir ${connectorID}: ${err}`);
+      }
+
     }
   }
 
