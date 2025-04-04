@@ -1,0 +1,5 @@
+{
+  "hub_id": "hasura/python",
+  "port": 8083,
+  "snapshots_dir": "snapshots"
+}
