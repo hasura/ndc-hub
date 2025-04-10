@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.3"
+    "latest_version": "v1.0.4"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -38,6 +38,11 @@
       {
         "tag": "bigquery/v1.0.0",
         "hash": "39cd01841217f8e2e46f895d5fa341f07c55a889",
+        "is_verified": true
+      },
+      {
+        "tag": "bigquery/v0.0.1",
+        "hash": "88b00b1114514f511b3915356f5efbef8717b8f8",
         "is_verified": true
       }
     ]

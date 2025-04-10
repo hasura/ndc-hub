@@ -1,0 +1,9 @@
+{
+  "data": {
+    "users": [
+      {
+        "email": "seandemo@hasura.io"
+      }
+    ]
+  }
+}

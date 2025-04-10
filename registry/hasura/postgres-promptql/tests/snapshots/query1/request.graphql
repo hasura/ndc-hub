@@ -1,0 +1,5 @@
+query Query1($email: Text!) {
+  users(where: { email: { _eq: $email } }) {
+    email
+  }
+}
