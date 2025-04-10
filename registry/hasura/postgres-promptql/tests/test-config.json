@@ -2,7 +2,7 @@
   "hub_id": "hasura/postgres-promptql",
   "port": 8083,
   "envs": [
-    "CONNECTION_URI=postgresql://read_only_user:readonlyuser@35.236.11.122:5432/v3-docs-sample-app"
+    "JDBC_URL=jdbc:postgresql://read_only_user:readonlyuser@35.236.11.122:5432/v3-docs-sample-app"
   ],
   "snapshots_dir": "snapshots"
 }
