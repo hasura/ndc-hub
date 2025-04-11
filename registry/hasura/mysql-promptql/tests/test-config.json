@@ -2,8 +2,7 @@
   "hub_id": "hasura/mysql-promptql",
   "port": 8083,
   "envs": [
-    "JDBC_URL=jdbc:mysql://local.hasura.dev:3310/Chinook?user=root&password=Password123",
-    "JDBC_SCHEMAS=\"\""
+    "JDBC_URL=jdbc:mysql://local.hasura.dev:3310/Chinook?user=root&password=Password123"
   ],
   "snapshots_dir": "snapshots",
   "setup_compose_file_path": "compose.yaml"
