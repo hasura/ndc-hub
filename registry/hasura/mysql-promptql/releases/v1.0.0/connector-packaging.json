@@ -3,10 +3,10 @@
   "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/mysql/1.0.0/mysql-connector-v1.0.0.tar.gz",
   "checksum": {
     "type": "sha256",
-    "value": "133457e92fc269790bda03ce03662e643e679cd6440e689fbb971c98e541ccd2"
+    "value": "69b2e8e38bf163b9fe6dcb59c640da0c38b7f1626b8d048d9875e8e3c922e302"
   },
   "source": {
-    "hash": "b4c7a2f83b6cbda181a18f22f824c3f495343e2c"
+    "hash": "14124a9791b8242c71bca015d5839c86a184731e"
   },
   "test": {
     "test_config_path": "../../tests/test-config.json"
