@@ -1,0 +1,10 @@
+{
+  "hub_id": "hasura/stripe",
+  "port": 8083,
+  "snapshots_dir": "snapshots",
+  "setup_compose_file_path": "compose.yaml",
+  "envs": [
+    "STRIPE_SERVER_URL=http://local.hasura.dev:12111",
+    "STRIPE_BEARER_AUTH_TOKEN=sk_test_123"
+  ]
+}

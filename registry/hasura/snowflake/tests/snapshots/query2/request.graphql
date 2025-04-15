@@ -1,0 +1,20 @@
+query Query2 {
+  ddnChinookCiDataAlbum(where: {albumid: {_eq: 1}}) {
+    title
+    ddnChinookCiDataTracks {
+      name
+    }
+    ddnChinookCiDataTracksAggregate {
+      _count
+      albumid {
+        _count_distinct
+        _count
+      }
+      milliseconds {
+        max
+        min
+        avg
+      }
+    }
+  }
+}

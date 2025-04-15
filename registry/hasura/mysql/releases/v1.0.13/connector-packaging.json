@@ -1,0 +1,14 @@
+{
+  "version": "v1.0.13",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.13/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "d81b4c1bd3762f1e080a5857e3626d068ffe474693b769ef1a6a6c62b1fd733e"
+  },
+  "source": {
+    "hash": "16f916fede271489f645239201debc653f852453"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
