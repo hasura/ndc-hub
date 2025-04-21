@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+
+	"github.com/hasura/ndc-hub/registry-automation/pkg"
 
 	"log"
 	"os"
@@ -559,6 +562,10 @@ func processNewlyAddedConnectorVersions(ciCtx Context, newlyAddedConnectorVersio
 			connectorVersion, uploadConnectorVersionErr = uploadConnectorVersionPackage(ciCtx, connectorName, version, connectorVersionPath, isNewConnector)
 
 			if uploadConnectorVersionErr != nil {
+				if errors.Is(uploadConnectorVersionErr, errV2Connector) {
+					fmt.Printf("Skipping v2 connector upload: %s - %s", version, connectorName)
+					continue
+				}
 				fmt.Printf("Error while processing version and connector: %s - %s, Error: %v", version, connectorName, uploadConnectorVersionErr)
 				encounteredError = true
 				break
@@ -596,6 +603,8 @@ func cleanupUploadedConnectorVersions(client StorageClientInterface, connectorVe
 	return nil
 }
 
+var errV2Connector = errors.New("v2 connectors are not required to be published")
+
 // uploadConnectorVersionPackage uploads the connector version package to the registry
 func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version string, changedConnectorVersionPath string, isNewConnector bool) (ConnectorVersion, error) {
 
@@ -614,9 +623,17 @@ func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version s
 		return connectorVersion, fmt.Errorf("invalid or undefined TGZ URL: %v", tgzUrl)
 	}
 
-	connectorVersionMetadata, connectorMetadataTgzPath, err := getConnectorVersionMetadata(tgzUrl, connector, version)
+	connectorVersionMetadata, connectorMetadataTgzPath, err := pkg.GetConnectorVersionMetadata(tgzUrl,
+		connector.Namespace, connector.Name, version)
 	if err != nil {
 		return connectorVersion, err
+	}
+
+	if connectorVersionMetadata["version"] != nil {
+		packagingSpecVersion := connectorVersionMetadata["version"].(string)
+		if packagingSpecVersion == "v2" {
+			return connectorVersion, errV2Connector
+		}
 	}
 
 	uploadedTgzUrl, err := uploadConnectorVersionDefinition(ciCtx, connector.Namespace, connector.Name, version, connectorMetadataTgzPath)
@@ -640,43 +657,6 @@ func uploadConnectorVersionDefinition(ciCtx Context, connectorNamespace, connect
 		return "", err
 	}
 	return uploadedTgzUrl, nil
-}
-
-// Downloads the TGZ File from the URL specified by `tgzUrl`, extracts the TGZ file and returns the content of the
-// connector-definition.yaml present in the .hasura-connector folder.
-func getConnectorVersionMetadata(tgzUrl string, connector Connector, connectorVersion string) (map[string]interface{}, string, error) {
-	var connectorVersionMetadata map[string]interface{}
-	tgzPath, err := getTempFilePath("extracted_tgz")
-	if err != nil {
-		return connectorVersionMetadata, "", fmt.Errorf("failed to get the temp file path: %v", err)
-	}
-	err = downloadFile(tgzUrl, tgzPath, map[string]string{})
-
-	if err != nil {
-		return connectorVersionMetadata, "", fmt.Errorf("failed to download the connector version metadata file from the URL: %v - err: %v", tgzUrl, err)
-	}
-
-	extractedTgzFolderPath := "extracted_tgz"
-
-	if _, err := os.Stat(extractedTgzFolderPath); os.IsNotExist(err) {
-		err := os.Mkdir(extractedTgzFolderPath, 0755)
-		if err != nil {
-			return connectorVersionMetadata, "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
-		}
-	}
-
-	connectorVersionMetadataYamlFilePath, err := extractTarGz(tgzPath, extractedTgzFolderPath+"/"+connector.Namespace+"/"+connector.Name+"/"+connectorVersion)
-	if err != nil {
-		return connectorVersionMetadata, "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
-	} else {
-		fmt.Println("Extracted metadata file at :", connectorVersionMetadataYamlFilePath)
-	}
-
-	connectorVersionMetadata, err = readYAMLFile(connectorVersionMetadataYamlFilePath)
-	if err != nil {
-		return connectorVersionMetadata, "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
-	}
-	return connectorVersionMetadata, tgzPath, nil
 }
 
 // buildRegistryPayload builds the payload for the registry upsert API
