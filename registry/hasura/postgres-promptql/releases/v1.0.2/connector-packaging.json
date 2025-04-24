@@ -3,7 +3,7 @@
   "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/postgres/1.0.2/postgres-connector-v1.0.2.tar.gz",
   "checksum": {
     "type": "sha256",
-    "value": "2959c475e97b6e97d6895678a11fd39603de203eb1bb7a266e3785c3f663f183"
+    "value": "5b05b2b604a16c7fff3848b6dd620b18d3a5bae8dbb583c36c515cb9aa8fe7fa"
   },
   "source": {
     "hash": "0c6ab552fd0806219a6b05a98a0256e1142023e6"
