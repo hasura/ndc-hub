@@ -231,6 +231,7 @@ affected_rows
 
 // registryDbMutation is a function to insert data into the registry database, all the mutations are done in a single transaction.
 func registryDbMutationStaging(client GraphQLClientInterface, newConnectors NewConnectorsInsertInput, connectorOverviewUpdates []ConnectorOverviewUpdate, connectorVersionInserts []ConnectorVersion) error {
+	fmt.Printf("connector version inserts are %+v\n", connectorVersionInserts)
 	var respData map[string]interface{}
 	ctx := context.Background()
 	mutationQuery := `
