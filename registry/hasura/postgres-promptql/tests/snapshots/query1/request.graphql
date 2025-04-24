@@ -1,4 +1,4 @@
-query Query1($email: Text!) {
+query Query1($email: String1!) {
   publicUsers(where: { email: { _eq: $email } }) {
     email
   }
