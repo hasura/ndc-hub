@@ -118,6 +118,22 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 	}
 	fmt.Println("Completed validating latest versions")
 
+	fmt.Println("Validating Packaging spec contents")
+	for _, cp := range connectorPkgs {
+		packagingSpec, err := ndchub.GetPackagingSpec(cp.connectorPackage.URI, cp.connectorPackage.Namespace, cp.connectorPackage.Name, cp.connectorPackage.Version)
+		if err != nil {
+			fmt.Println("error getting packaging spec for", cp.connectorPackage.URI, err)
+			hasError = true
+			continue
+		}
+		if err := packagingSpec.Validate(); err != nil {
+			fmt.Println("error validating packaging spec for", cp.connectorPackage.Namespace,
+				cp.connectorPackage.Name, cp.connectorPackage.Version, err)
+			hasError = true
+		}
+	}
+	fmt.Println("Completed validating Packaging spec contents")
+
 	if hasError {
 		fmt.Println("Exiting with a non-zero error code due to the error(s) in validation")
 		os.Exit(1)
