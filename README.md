@@ -62,6 +62,7 @@ You need to add the following configuration to enable e2e tests:
     - The Environment variable `CONNECTOR_CONTEXT_DIR` is available in the compose file. This is the path to the connector directory in the local project during the test. You can mount this directory to your service to access the connector config and make any changes/setup your connector before introspection (like [here](./registry/hasura/nodejs/tests/compose.yaml)).
     - If the service in the compose.yaml is a shortlived service (like [here](./registry/hasura/nodejs/tests/compose.yaml)  which is used to modify the `functions.ts`  and exits), you can add a `restart: "no"` to the service to prevent it from restarting after it exits and the recommendation is to add a small `sleep` at the end of the service to ensure that the service exits after the changes are made.
 - Refer this `test-config.json` file in the `connector-packaging.json` file of your connector release. If you followed the above file structure, it will be
+
 ```diff
 {
     "version": "v0.0.1",
