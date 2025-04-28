@@ -632,8 +632,6 @@ func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version s
 		return connectorVersion, err
 	}
 
-	fmt.Printf("connector version metadata is %+v", connectorVersionMetadata)
-
 	if connectorVersionMetadata["version"] != nil {
 		packagingSpecVersion := connectorVersionMetadata["version"].(string)
 		if packagingSpecVersion == "v2" {
@@ -676,7 +674,6 @@ func buildRegistryPayload(
 ) (ConnectorVersion, error) {
 	var connectorVersion ConnectorVersion
 	var connectorVersionDockerImage string = ""
-	fmt.Printf("connector version metadata is %+v", connectorVersionMetadata)
 	connectorVersionPackagingDefinition, ok := connectorVersionMetadata["packagingDefinition"].(map[string]interface{})
 	if !ok {
 		return connectorVersion, fmt.Errorf("could not find the 'packagingDefinition' of the connector %s version %s in the connector's metadata", connectorName, version)
