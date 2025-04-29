@@ -674,7 +674,7 @@ func buildRegistryPayload(
 ) (ConnectorVersion, error) {
 	var connectorVersion ConnectorVersion
 	var connectorVersionDockerImage string = ""
-	connectorVersionPackagingDefinition, ok := connectorVersionMetadata["packagingDefinition"].(map[interface{}]interface{})
+	connectorVersionPackagingDefinition, ok := connectorVersionMetadata["packagingDefinition"].(map[string]interface{})
 	if !ok {
 		return connectorVersion, fmt.Errorf("could not find the 'packagingDefinition' of the connector %s version %s in the connector's metadata", connectorName, version)
 	}
