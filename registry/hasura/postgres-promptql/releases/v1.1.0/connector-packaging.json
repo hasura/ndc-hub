@@ -1,0 +1,14 @@
+{
+  "version": "v1.1.0",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/postgres/1.1.0/postgres-connector-v1.1.0.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "62f1ce9974622d96889900823dc251dfbdb7a7ec48eb35241ed288940ef73675"
+  },
+  "source": {
+    "hash": "69495a0379a9c1892a76c67d1b085e09210d16cf"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
