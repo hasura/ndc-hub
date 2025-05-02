@@ -164,7 +164,7 @@ export async function connector_init(
   const args: string[] = [
     "connector",
     "init",
-    `"${options.connectorName}"`,
+    `${options.connectorName}`,
     "--hub-connector",
     `"${options.hubID}"`,
     "--configure-port",
