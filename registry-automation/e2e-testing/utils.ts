@@ -199,7 +199,7 @@ export async function connector_init(
     // Handle BigQuery service account key file if environment variable exists
     if (process.env.BIGQUERY_KEY_JSON) {
       // Create directory structure if it doesn't exist
-      const keyDir = path.join(dir, `"app/connector/${options.connectorName}"`);
+      const keyDir = path.join(dir, `app/connector/${options.connectorName}`);
       fs.mkdirSync(keyDir, { recursive: true });
 
       // Write key file
