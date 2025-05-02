@@ -195,6 +195,7 @@ export async function connector_init(
     cwd: dir,
   });
 
+  // TODO: It would be great if this were also driven by configuration.
   if (options.hubID.includes("bigquery-jdbc")) {
     // Handle BigQuery service account key file if environment variable exists
     if (process.env.BIGQUERY_KEY_JSON) {
