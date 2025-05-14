@@ -1,0 +1,14 @@
+{
+  "version": "v1.1.1",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/oracle%2Fv1.1.1/oracle-connector-v1.1.1.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "f08c58383d35e58250d826499c5348e4f37241c0e2c9af2f3363ad47fc86f4f8"
+  },
+  "source": {
+    "hash": "0188ca25050fedd7c3dc6499a40ffda9cc0ef19d"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
