@@ -1,5 +1,7 @@
 # Hasura Native Data Connector Hub: ndc-hub
 
+[![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg?style=flat)](LICENSE.txt)
+
 This repository provides:
 
 1. a registry of connectors and
@@ -78,3 +80,12 @@ You need to add the following configuration to enable e2e tests:
 +    }
 }
 ```
+
+## Other docs
+
+For more docs on the NDC Hub, see [here](./docs/index.md).
+
+## License
+
+The Hasura Native Data Connector Hub is available under the 
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
