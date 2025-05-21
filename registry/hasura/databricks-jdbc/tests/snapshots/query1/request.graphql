@@ -1,5 +1,5 @@
 query Query1 {
-  awsdatacatalogChinookAlbum(where: {albumid: {_eq: 1}}) {
+  chinookDefaultAlbums(where: {albumId: {_eq: 1}}) {
     title
   }
 }
