@@ -1,0 +1,14 @@
+{
+  "version": "v1.15.0",
+  "uri": "https://github.com/hasura/ndc-nodejs-lambda/releases/download/v1.15.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "20847132642fa91204ec764c7278170dc422329d39d8c836003963dc959ba400"
+  },
+  "source": {
+    "hash": "a938528e5acf630240ede44b237bc4e6a1d22fef"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
