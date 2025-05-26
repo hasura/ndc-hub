@@ -50,7 +50,7 @@ func init() {
 
 	e2eCmd.AddCommand(e2eChangedCmd, e2eLatest, e2eAll)
 
-	rootCmd.AddCommand(e2eCmd)
+	RootCmd.AddCommand(e2eCmd)
 }
 
 func e2eChanged(cmd *cobra.Command, args []string) {
