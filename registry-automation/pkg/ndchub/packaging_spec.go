@@ -401,12 +401,12 @@ func (def *ConnectorMetadataDefinition) GetArtifacts(artifactsPath string) (*Con
 	}
 
 	// download CLI plugins
-	DownloadPluginBinaries(artifactsDirPath, WithConnectorMetadata(def))
+	err := DownloadPluginBinaries(artifactsDirPath, WithConnectorMetadata(def))
 
 	return &ConnectorArtifacts{
 		DockerImages:  dockerImages,
 		ArtifactsDirPath: artifactsDirPath,
-	}, nil
+	}, err
 }
 
 func getTempArtifactsPath(namespace, connectorName, version string) (string, error) {

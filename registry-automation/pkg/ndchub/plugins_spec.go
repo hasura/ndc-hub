@@ -53,13 +53,14 @@ func WithConnectorMetadata(md *ConnectorMetadataDefinition) ManifestOption {
     }
 }
 
-func DownloadPluginBinaries(artifactsDirPath string, opts ...ManifestOption) {
+func DownloadPluginBinaries(artifactsDirPath string, opts ...ManifestOption) error {
 	manifest, err := DownloadPluginsManifest(opts...)
 	if err != nil {
-		log.Fatalf("Failed to download plugins manifest: %v", err)
+		return fmt.Errorf("failed to download plugins manifest: %w", err)
 	}
 	if manifest == nil {
-		return
+		// manifest is nil, which means the cli plugin is likely a Docker image or not required
+		return nil
 	}
 
 	for _, platform := range manifest.Platforms {
@@ -67,9 +68,10 @@ func DownloadPluginBinaries(artifactsDirPath string, opts ...ManifestOption) {
 		filePath := filepath.Join(artifactsDirPath, fileName)
 
 		if err := pkg.DownloadFile(platform.URI, filePath, map[string]string{"sha256": platform.SHA256}); err != nil {
-			log.Fatalf("Failed to download plugin binary for %s: %v", platform.Selector, err)
+			return fmt.Errorf("failed to download plugin binary for %s: %w", platform.Selector, err)
 		}
 	}
+	return nil
 }
 
 func DownloadPluginsManifest(opts ...ManifestOption) (*PluginManifest, error) {
