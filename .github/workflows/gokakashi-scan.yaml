@@ -1,0 +1,54 @@
+name: Vulnerability Scan using Gokakashi
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/gokakashi-scan.yaml # run on changes to this workflow file
+      - registry-automation/** # run on changes to the registry automation files
+  schedule:
+    - cron: '0 0 * * *' # everyday at midnight
+
+jobs:
+  gokakashi-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch_depth: 1
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22.x
+
+      - name: Download gokakashi
+        id: download_gokakashi
+        run: |
+          # Define URL and output path
+          URL="https://github.com/shinobistack/gokakashi/releases/download/v0.2.0/gokakashi-linux-amd64"
+          DEST="$RUNNER_TEMP/gokakashi"
+
+          # Download and make it executable
+          curl -L "$URL" -o "$DEST"
+          chmod +x "$DEST"
+          echo "Gokakashi binary downloaded to $DEST"
+
+          echo "gokakashi_path=$DEST" >> "$GITHUB_OUTPUT"
+
+      - name: Run Gokakashi Scan
+        run: |
+          cd registry-automation
+          go run main.go scan gokakashi \
+            --files "../registry/*/*/releases/*/connector-packaging.json" \
+            --server "${{ secrets.GOKAKASHI_SERVER_URL }}" \
+            --token "${{ secrets.GOKAKASHI_API_TOKEN }}" \
+            --policy ci-platform \
+            --cf-access-client-id "${{ secrets.GOKAKASHI_CF_ACCESS_CLIENT_ID }}" \
+            --cf-access-client-secret "${{ secrets.GOKAKASHI_CF_ACCESS_CLIENT_SECRET }}" \
+            --binary-path "$GOKAKASHI_PATH"
+        env:
+          GOKAKASHI_PATH: ${{ steps.download_gokakashi.outputs.gokakashi_path }}

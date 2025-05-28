@@ -2,6 +2,8 @@ package ndchub
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/hasura/ndc-hub/registry-automation/pkg"
 	"gopkg.in/yaml.v3"
@@ -20,6 +22,11 @@ type ConnectorMetadataDefinition struct {
 
 	// https://github.com/hasura/ndc-hub/blob/main/rfcs/0007-packaging-documentation-page.md
 	DocumentationPage *string `json:"documentationPage,omitempty" yaml:"documentationPage,omitempty"`
+
+	// metadata for the connector, not a part of the packaging spec
+	Namespace string `json:"-" yaml:"-"`
+	Name 	string `json:"-" yaml:"-"`
+	VersionStr string `json:"-" yaml:"-"`
 }
 
 type PackagingType string
@@ -59,6 +66,14 @@ type PackagingDefinition struct {
 	Type        PackagingType `json:"type" yaml:"type"`
 	DockerImage *string       `json:"dockerImage,omitempty" yaml:"dockerImage,omitempty"`
 }
+
+func (p PackagingDefinition) GetDockerImage() string {
+	if p.Type == PrebuiltDockerImage {
+		return *p.DockerImage
+	}
+	return ""
+}
+
 type EnvironmentVariableDefinition struct {
 	Name         string  `json:"name" yaml:"name"`
 	Description  string  `json:"description" yaml:"description"`
@@ -75,6 +90,35 @@ type Commands struct {
 	UpgradeConfiguration       *Command `json:"upgradeConfiguration,omitempty" yaml:"upgradeConfiguration,omitempty"`
 }
 
+func (c *Commands) GetDockerImages() []string {
+	dockerImageSet := make(map[string]bool)
+	if c.Update != nil {
+		if img := c.Update.GetDockerImage(); img != "" {
+			dockerImageSet[img] = true
+		}
+	}
+	if c.Watch != nil {
+		if img := c.Watch.GetDockerImage(); img != "" {
+			dockerImageSet[img] = true
+		}
+	}
+	if c.PrintSchemaAndCapabilities != nil {
+		if img := c.PrintSchemaAndCapabilities.GetDockerImage(); img != "" {
+			dockerImageSet[img] = true
+		}
+	}
+	if c.UpgradeConfiguration != nil {
+		if img := c.UpgradeConfiguration.GetDockerImage(); img != "" {
+			dockerImageSet[img] = true
+		}
+	}
+	dockerImages := make([]string, 0, len(dockerImageSet))
+	for img := range dockerImageSet {
+		dockerImages = append(dockerImages, img)
+	}
+	return dockerImages
+}
+
 type CliPluginType string
 
 const (
@@ -86,6 +130,13 @@ const (
 type CliPluginDefinition struct {
 	Binary *BinaryCliPluginDefinition
 	Docker *DockerCliPluginDefinition
+}
+
+func (c *CliPluginDefinition) GetDockerImage() string {
+	if c.Docker != nil {
+		return c.Docker.GetDockerImage()
+	}
+	return "";
 }
 
 type BinaryCliPluginDefinition struct {
@@ -126,6 +177,10 @@ type DockerCliPluginDefinition struct {
 	DockerImage string        `json:"dockerImage" yaml:"dockerImage"`
 }
 
+func (d *DockerCliPluginDefinition) GetDockerImage() string {
+	return d.DockerImage
+}
+
 type CommandType string
 
 const (
@@ -139,6 +194,13 @@ type DockerizedCommand struct {
 	CommandArgs []string    `json:"commandArgs" yaml:"commandArgs"`
 }
 
+func (d *DockerizedCommand) GetDockerImage() string {
+	if d.Type == DockerizedCommandType {
+		return d.DockerImage
+	}
+	return ""
+}
+
 type ShellScriptCommand struct {
 	Type       CommandType `json:"type" yaml:"type"`
 	Bash       string      `json:"bash" yaml:"bash"`
@@ -149,6 +211,13 @@ type Command struct {
 	String             *string
 	DockerizedCommand  *DockerizedCommand
 	ShellScriptCommand *ShellScriptCommand
+}
+
+func (c *Command) GetDockerImage() string {
+	if c.DockerizedCommand != nil {
+		return c.DockerizedCommand.GetDockerImage()
+	}
+	return ""
 }
 
 func (x *Command) UnmarshalYAML(n *yaml.Node) error {
@@ -308,19 +377,103 @@ func (def *ConnectorMetadataDefinition) Validate() error {
 	return nil
 }
 
-func GetPackagingSpec(uri, namespace, name, version string) (*ConnectorMetadataDefinition, error) {
-	def, _, err := pkg.GetConnectorVersionMetadata(uri, namespace, name, version)
+
+
+// GetArtifacts will return the artifacts for the connector
+// It will have a list of all Docker images that the connector uses (if any). There can be multiple because there might be a connector image and a plugin image.
+//
+// arg artifactsPath is the path where the artifacts will be downloaded. If it is not provided, a random path will be generated.
+func (def *ConnectorMetadataDefinition) GetArtifacts(artifactsPath string) (*ConnectorArtifacts, error) {
+	// Get the docker images
+	dockerImages := def.GetDockerImages()
+
+	// Get the plugin dir path
+	artifactsDirPath := ""
+
+	if artifactsPath != "" {
+		artifactsDirPath = artifactsPath
+	} else {
+		artifactPath, err := getTempArtifactsPath(def.Namespace, def.Name, string(*def.Version))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get temp artifacts path: %v", err)
+		}
+		artifactsDirPath = artifactPath
+	}
+
+	// download CLI plugins
+	err := DownloadPluginBinaries(artifactsDirPath, WithConnectorMetadata(def))
+
+	return &ConnectorArtifacts{
+		DockerImages:  dockerImages,
+		ArtifactsDirPath: artifactsDirPath,
+	}, err
+}
+
+func getTempArtifactsPath(namespace, connectorName, version string) (string, error) {
+	// Get the present working directory
+	pwd := os.Getenv("PWD")
+	if pwd == "" {
+		return "", fmt.Errorf("failed to get the present working directory")
+	}
+	// Create a temp path for the artifacts
+	tempPath := filepath.Join(pwd, "artifacts", namespace, connectorName, version)
+	if _, err := os.Stat(tempPath); os.IsNotExist(err) {
+		err := os.MkdirAll(tempPath, 0755)
+		if err != nil {
+			return "", fmt.Errorf("failed to create temp path for artifacts: %v",	 err)
+		}
+	}
+	return tempPath, nil
+
+}
+
+// GetDockerImages will return the docker images for the connector (if any)
+// There can be multiple because there might be a connector image and a plugin image.
+func (def *ConnectorMetadataDefinition) GetDockerImages() []string {
+	// fmt.Printf("GetDockerImages: %v\n", def)
+	dockerImages := make(map[string]bool) // map to avoid duplicates
+	if def.PackagingDefinition.GetDockerImage() != "" {
+		dockerImages[def.PackagingDefinition.GetDockerImage()] = true
+	}
+
+	if def.CliPlugin !=  nil && def.CliPlugin.GetDockerImage() != "" {
+		dockerImages[def.CliPlugin.GetDockerImage()] = true
+	}
+
+	for _, img := range def.Commands.GetDockerImages() {
+		dockerImages[img] = true
+	}
+
+	dockerImgArr := make([]string, 0, len(dockerImages))
+	for k := range dockerImages {
+    	dockerImgArr = append(dockerImgArr, k)
+	}
+	return dockerImgArr
+}
+
+func GetPackagingSpec(uri, namespace, name, version string) (connectorMetadataDefinition *ConnectorMetadataDefinition, tgzPath string, extractedTgzPath string, err error) {
+	def, tgzPath, extractedTgzPath, err := pkg.GetConnectorVersionMetadata(uri, namespace, name, version)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	defBytes, err := yaml.Marshal(def)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	var spec ConnectorMetadataDefinition
 	err = yaml.Unmarshal(defBytes, &spec)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal connector-metadata.yaml: %v", err)
+		return nil, "", "", fmt.Errorf("failed to unmarshal connector-metadata.yaml: %v", err)
 	}
-	return &spec, nil
+
+	spec.Namespace = namespace
+	spec.Name = name
+	spec.VersionStr = version
+
+	return &spec, tgzPath, extractedTgzPath, nil
+}
+
+type ConnectorArtifacts struct {
+	DockerImages []string
+	ArtifactsDirPath string
 }

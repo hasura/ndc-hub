@@ -18,7 +18,7 @@ var validateCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(validateCmd)
+	RootCmd.AddCommand(validateCmd)
 }
 
 func executeValidateCmd(cmd *cobra.Command, args []string) {
@@ -120,7 +120,7 @@ func executeValidateCmd(cmd *cobra.Command, args []string) {
 
 	fmt.Println("Validating Packaging spec contents")
 	for _, cp := range connectorPkgs {
-		packagingSpec, err := ndchub.GetPackagingSpec(cp.connectorPackage.URI, cp.connectorPackage.Namespace, cp.connectorPackage.Name, cp.connectorPackage.Version)
+		packagingSpec, _, _, err := ndchub.GetPackagingSpec(cp.connectorPackage.URI, cp.connectorPackage.Namespace, cp.connectorPackage.Name, cp.connectorPackage.Version)
 		if err != nil {
 			fmt.Println("error getting packaging spec for", cp.connectorPackage.URI, err)
 			hasError = true

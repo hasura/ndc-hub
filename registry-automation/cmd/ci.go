@@ -34,7 +34,7 @@ var ciCmd = &cobra.Command{
 var ciCmdArgs ConnectorRegistryArgs
 
 func init() {
-	rootCmd.AddCommand(ciCmd)
+	RootCmd.AddCommand(ciCmd)
 
 	// Path for the changed files in the PR
 	var changedFilesPathEnv = os.Getenv("CHANGED_FILES_PATH")
@@ -626,7 +626,7 @@ func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version s
 		return connectorVersion, fmt.Errorf("invalid or undefined TGZ URL: %v", tgzUrl)
 	}
 
-	connectorVersionMetadata, connectorMetadataTgzPath, err := pkg.GetConnectorVersionMetadata(tgzUrl,
+	connectorVersionMetadata, connectorMetadataTgzPath,  _, err := pkg.GetConnectorVersionMetadata(tgzUrl,
 		connector.Namespace, connector.Name, version)
 	if err != nil {
 		return connectorVersion, err
