@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/hasura/ndc-hub/registry-automation/cmd"
 	"github.com/hasura/ndc-hub/registry-automation/pkg/ndchub"
@@ -89,8 +90,12 @@ func runGokakashiCmd(cmd *cobra.Command, args []string) {
 		if err != nil {
 			err = fmt.Errorf("failed to download artifacts for file %s: %w. Skipping scan", file, err)
 			log.Printf("%s", err)
-			errors = append(errors, err)
-			shouldExitWithNonZero = true
+			if shouldIgnoreError(file, err) {
+				log.Printf("silently ignoring this error and skipping scan")
+			} else {
+				errors = append(errors, err)
+				shouldExitWithNonZero = true
+			}
 			continue
 		}
 		if len(artifacts) == 0 {
@@ -141,6 +146,26 @@ func downloadArtifactsForGokakashi(file string) ([]*ndchub.ConnectorArtifacts, e
 		return nil, fmt.Errorf("failed to download artifacts: %w", err)
 	}
 	return artifacts, nil
+}
+
+// there are some botched releases which will result in the perpetual failure of this command
+// since these errors are not actionable, and were introduced at the very beginning of the connector development, we'll ignore them
+func shouldIgnoreError(file string, err error) bool {
+	if strings.HasSuffix(file, "registry/hasura/elasticsearch/releases/v0.1.1/connector-packaging.json") &&
+		strings.Contains(err.Error(), "failed to download manifest: 404 Not Found") {
+		return true
+	}
+
+	if strings.HasSuffix(file, "registry/hasura/elasticsearch/releases/v0.2.0/connector-packaging.json") &&
+		strings.Contains(err.Error(), "failed to download manifest: 404 Not Found") {
+		return true
+	}
+
+	if strings.HasSuffix(file, "registry/hasura/mongodb/releases/v0.0.1/connector-packaging.json") &&
+		strings.Contains(err.Error(), "failed to download manifest: 404 Not Found") {
+		return true
+	}
+	return false
 }
 
 func getFiles(path string) ([]string, error) {
