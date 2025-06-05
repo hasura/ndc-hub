@@ -1,0 +1,14 @@
+{
+  "version": "v1.8.1",
+  "uri": "https://github.com/hasura/ndc-mongodb/releases/download/v1.8.1/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "145417173eceba51e05684e39b6f3d1cfb42549e05a27d6857817c18e4abd747"
+  },
+  "source": {
+    "hash": "f4f3b8e1e1f754625e2890a332e733bf557246cc"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
