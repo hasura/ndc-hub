@@ -59,9 +59,11 @@ ddn connector init -i
 
 When the wizard runs, you'll be prompted to enter the following env vars necessary for your connector to function:
 
-| Name     | Description                             | Required |
-| -------- | --------------------------------------- | -------- |
-| JDBC_URL | The JDBC URL to connect to the database | Yes      |
+| Name         | Description                             | Required |
+|--------------|-----------------------------------------|----------|
+| JDBC_URL     | The JDBC URL to connect to the database | Yes      |
+| JDBC_SCHEMAS | The SCHEMAS to introspect               | No       |
+
 
 After the CLI initializes the connector, you'll need to:
 
