@@ -1,5 +1,9 @@
 {
   "hub_id": "hasura/oracle-promptql",
   "port": 8080,
+  "envs": [
+    "JDBC_URL=jdbc:oracle:thin:@//143.198.2.62:1521/FREEPDB1?user=chinook&password=d7P3uWuBxvo88puyu2NT",
+    "SCHEMA=CHINOOK"
+  ],
   "snapshots_dir": "snapshots"
 }
