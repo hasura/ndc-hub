@@ -5,7 +5,8 @@ services:
       dockerfile_inline: |
         FROM ubuntu:latest
         COPY functions.ts functions.ts
-    command: ["sh", "-c", "cp ./functions.ts /app/functions.ts; sleep 60"]
+        COPY index.ts index.ts
+    command: ["sh", "-c", "cp ./functions.ts /app/functions.ts; cp ./index.ts /app/index.ts; sleep 60"]
     volumes:
       - ${CONNECTOR_CONTEXT_DIR}:/app
     restart: "no"
