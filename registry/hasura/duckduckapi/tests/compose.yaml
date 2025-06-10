@@ -1,0 +1,16 @@
+services:
+  ubuntu-service:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM ubuntu:latest
+        COPY functions.ts functions.ts
+    command: ["sh", "-c", "cp ./functions.ts /app/functions.ts; sleep 60"]
+    volumes:
+      - ${CONNECTOR_CONTEXT_DIR}:/app
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/functions.ts"]
+      interval: 1s
+      timeout: 5s
+      retries: 3
