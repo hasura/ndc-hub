@@ -24,12 +24,3 @@ export async function getMessages(): Promise<any[]> {
   return messages;
 }
 
-/**
- * Get message count
- */
-export async function getMessageCount(): Promise<number> {
-  const db = await getDB();
-
-  const result = await db.get('SELECT COUNT(*) as count FROM messages');
-  return result.count;
-}
