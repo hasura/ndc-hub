@@ -1,3 +1,5 @@
-query QueryWithName($name: String) {
-  helloQuery(name: $name)
+query Messages {
+  messages {
+   text
+  }
 }
