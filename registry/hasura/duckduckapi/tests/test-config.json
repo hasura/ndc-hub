@@ -1,0 +1,6 @@
+{
+    "hub_id": "hasura/duckduckapi",
+    "port": 8083,
+    "setup_compose_file_path": "compose.yaml",
+    "snapshots_dir": "snapshots"
+}

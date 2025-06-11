@@ -1,0 +1,5 @@
+query Messages {
+  messages {
+   text
+  }
+}
