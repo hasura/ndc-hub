@@ -9,6 +9,6 @@
     "hash": "3094854eb502ccf79d912267087de4cbfc0de5df"
   },
   "test": {
-    "test_config_path": "../../tests/tests-config.json"
+    "test_config_path": "../../tests/test-config.json"
   }
 }
