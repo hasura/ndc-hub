@@ -94,6 +94,21 @@ jobs:
             echo "$line" >> "$GITHUB_ENV"
             export "$line"
           done
+      - name: Set custom connector env vars
+        run: |
+         # Extract BigQuery key JSON from secrets if it exists
+          if echo "$SECRETS_JSON" | jq -e 'has("BIGQUERY_KEY_JSON")' > /dev/null; then
+            # Extract the key and save it to an environment variable
+            BIGQUERY_KEY_JSON=$(echo "$SECRETS_JSON" | jq -r '.BIGQUERY_KEY_JSON')
+            echo "BIGQUERY_KEY_JSON<<EOF" >> $GITHUB_ENV
+            echo "$BIGQUERY_KEY_JSON" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+
+            echo "Successfully set BIGQUERY_KEY_JSON environment variable"
+          else
+            echo "Warning: BIGQUERY_KEY_JSON not found in secrets"
+          fi
+
       - name: Install bun
         uses: oven-sh/setup-bun@v2
         with:

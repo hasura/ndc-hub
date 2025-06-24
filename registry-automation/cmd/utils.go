@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 func generateGCPObjectName(namespace, connectorName, version string) string {
@@ -31,8 +32,14 @@ func readJSONFile[T any](location string) (T, error) {
 // Note: The location is relative to the root of the repository
 func readFile(location string) ([]byte, error) {
 	// Read the file
+	var fileBytes []byte
+	var err error
 
-	fileBytes, err := os.ReadFile("../" + location)
+	if filepath.IsAbs(location) {
+		fileBytes, err = os.ReadFile(location)
+	} else {
+		fileBytes, err = os.ReadFile("../" + location) // previous behavior; written for backwards compatibility
+	}
 	if err != nil {
 		return fileBytes, fmt.Errorf("error reading file at location: %s %v", location, err)
 	}

@@ -1,0 +1,5 @@
+{
+  "hub_id": "hasura/databricks-jdbc",
+  "port": 8080,
+  "snapshots_dir": "snapshots"
+}

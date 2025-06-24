@@ -194,6 +194,26 @@ export async function connector_init(
   await runCommand(ddnCmd, args, {
     cwd: dir,
   });
+
+  // TODO: It would be great if this were also driven by configuration.
+  if (options.hubID.includes("bigquery-jdbc")) {
+    // Handle BigQuery service account key file if environment variable exists
+    if (process.env.BIGQUERY_KEY_JSON) {
+      // Create directory structure if it doesn't exist
+      const keyDir = path.join(dir, `app/connector/${options.connectorName}`);
+      fs.mkdirSync(keyDir, { recursive: true });
+
+      // Write key file
+      const keyPath = path.join(keyDir, "key.json");
+      fs.writeFileSync(keyPath, process.env.BIGQUERY_KEY_JSON);
+      console.log(`Created BigQuery key.json at ${keyPath}`);
+    } else {
+      console.error("BIGQUERY_KEY_JSON environment variable not found. Skipping key file creation.");
+    }
+  }
+
+
+
 }
 
 export async function connector_introspect(

@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,16 +16,15 @@ import (
 // Downloads the TGZ File from the URL specified by `tgzUrl`, extracts the TGZ file and returns the content of the
 // connector-definition.yaml present in the .hasura-connector folder.
 func GetConnectorVersionMetadata(tgzUrl string, namespace, name,
-	connectorVersion string) (map[string]interface{}, string, error) {
-	var connectorVersionMetadata map[string]interface{}
-	tgzPath, err := getTempFilePath("extracted_tgz")
+	connectorVersion string) (connectorVersionMetadata map[string]interface{}, tgzPath string, extractedTargzPath string, err error) {
+	tgzPath, err = getTempFilePath("extracted_tgz")
 	if err != nil {
-		return connectorVersionMetadata, "", fmt.Errorf("failed to get the temp file path: %v", err)
+		return connectorVersionMetadata, "", "", fmt.Errorf("failed to get the temp file path: %v", err)
 	}
-	err = downloadFile(tgzUrl, tgzPath, map[string]string{})
+	err = DownloadFile(tgzUrl, tgzPath, map[string]string{})
 
 	if err != nil {
-		return connectorVersionMetadata, "", fmt.Errorf("failed to download the connector version metadata file from the URL: %v - err: %v", tgzUrl, err)
+		return connectorVersionMetadata, "", "", fmt.Errorf("failed to download the connector version metadata file from the URL: %v - err: %v", tgzUrl, err)
 	}
 
 	extractedTgzFolderPath := "extracted_tgz"
@@ -31,32 +32,34 @@ func GetConnectorVersionMetadata(tgzUrl string, namespace, name,
 	if _, err := os.Stat(extractedTgzFolderPath); os.IsNotExist(err) {
 		err := os.Mkdir(extractedTgzFolderPath, 0755)
 		if err != nil {
-			return connectorVersionMetadata, "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
+			return connectorVersionMetadata, "", "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
 		}
 	}
 
-	connectorVersionMetadataYamlFilePath, err := extractTarGz(tgzPath,
-		extractedTgzFolderPath+"/"+namespace+"/"+name+"/"+connectorVersion)
+	extractedTargzPath, err = filepath.Abs(filepath.Join(extractedTgzFolderPath, namespace, name, connectorVersion))
 	if err != nil {
-		return connectorVersionMetadata, "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
+		return connectorVersionMetadata, "", "", fmt.Errorf("failed to get the absolute path for the extracted TGZ file: %v", err)
+	}
+
+	log.Printf("Extracting the connector version metadata file from the TGZ file at: %s\n", extractedTargzPath)
+	connectorVersionMetadataYamlFilePath, err := extractTarGz(tgzPath, extractedTargzPath)
+	if err != nil {
+		return connectorVersionMetadata, "", "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
 	} else {
-		fmt.Println("Extracted metadata file at :", connectorVersionMetadataYamlFilePath)
+		log.Println("Extracted metadata file at :", connectorVersionMetadataYamlFilePath)
 	}
 
 	connectorVersionMetadata, err = readYAMLFile(connectorVersionMetadataYamlFilePath)
 	if err != nil {
-		return connectorVersionMetadata, "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
+		return connectorVersionMetadata, "", "", fmt.Errorf("failed to read the connector version metadata file: %v", err)
 	}
-	return connectorVersionMetadata, tgzPath, nil
+	return connectorVersionMetadata, tgzPath, extractedTargzPath,  nil
 }
 
 func extractTarGz(src, dest string) (string, error) {
-	// Create the destination directory
-	// Get the present working directory
-	pwd := os.Getenv("PWD")
-	filepath := pwd + "/" + dest
+	filePath := dest
 
-	if err := os.MkdirAll(filepath, 0755); err != nil {
+	if err := os.MkdirAll(filePath, 0755); err != nil {
 		return "", fmt.Errorf("error creating destination directory: %v", err)
 	}
 	var stdout, stderr bytes.Buffer
@@ -71,7 +74,7 @@ func extractTarGz(src, dest string) (string, error) {
 			err, stdout.String(), stderr.String())
 	}
 
-	return fmt.Sprintf("%s/.hasura-connector/connector-metadata.yaml", filepath), nil
+	return filepath.Join(filePath, ".hasura-connector", "connector-metadata.yaml"), nil
 }
 
 // Write a function that accepts a file path to a YAML file and returns
@@ -122,7 +125,7 @@ func getTempFilePath(directory string) (string, error) {
 
 }
 
-func downloadFile(sourceURL, destination string, headers map[string]string) error {
+func DownloadFile(sourceURL, destination string, headers map[string]string) error {
 	// Create a new HTTP client
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -133,6 +136,8 @@ func downloadFile(sourceURL, destination string, headers map[string]string) erro
 			return nil
 		},
 	}
+
+	log.Printf("Downloading file from %s to %s", sourceURL, destination)
 
 	// Create a new GET request
 	req, err := http.NewRequest("GET", sourceURL, nil)

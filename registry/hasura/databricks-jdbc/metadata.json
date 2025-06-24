@@ -4,9 +4,7 @@
     "description": "Connect to a Databricks database and expose it to Hasura v3 Project",
     "title": "Databricks Connector",
     "logo": "logo.png",
-    "tags": [
-      "database"
-    ],
+    "tags": ["database"],
     "latest_version": "v1.2.3"
   },
   "author": {

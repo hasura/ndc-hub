@@ -14,7 +14,7 @@ Mutations.
 
 This Connector implements the [Data Connector Spec](https://github.com/hasura/ndc-spec)
 
-- [See the listing in the Hasura Hub](https://hasura.io/connectors/open-api-lambda)
+- [See the listing in the Hasura Hub](https://hasura.io/connectors/openapi)
 - [Hasura DDN Documentation](https://hasura.io/docs/3.0)
 - [Hasura DDN Quickstart](https://hasura.io/docs/3.0/getting-started/quickstart)
 - [NodeJS Lambda Connector](https://github.com/hasura/ndc-nodejs-lambda)
