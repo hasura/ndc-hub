@@ -5,7 +5,7 @@
     "title": "Databricks Connector",
     "logo": "logo.png",
     "tags": ["database"],
-    "latest_version": "v1.2.2"
+    "latest_version": "v1.2.3"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -26,6 +26,11 @@
       {
         "tag": "databricks/v1.0.0",
         "hash": "39cd01841217f8e2e46f895d5fa341f07c55a889",
+        "is_verified": true
+      },
+      {
+        "tag": "databricks/v1.2.3",
+        "hash": "2117e19524ab95c68ee83de3733db9ff2e1cc2d6",
         "is_verified": true
       }
     ]
