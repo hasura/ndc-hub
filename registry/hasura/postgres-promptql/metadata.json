@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.2.2"
+    "latest_version": "v1.2.3"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -23,6 +23,11 @@
       {
         "tag": "postgres/v1.0.0",
         "hash": "361bfc46bef7ae7569302e58e9fc808cc1851b6e",
+        "is_verified": true
+      },
+      {
+        "tag": "postgres/v1.2.3",
+        "hash": "35f401843805d94380dee07bff1f5be59a9d708b",
         "is_verified": true
       }
     ]
