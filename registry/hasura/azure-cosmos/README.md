@@ -70,6 +70,7 @@ After the CLI initializes the connector, you'll need to:
 - Create a [new build](https://hasura.io/docs/3.0/cli/commands/ddn_supergraph_build_local).
 - Test it by [running your project along with the connector](https://hasura.io/docs/3.0/cli/commands/ddn_run#examples).
 
+
 ## Contributing
 
 We're happy to receive any contributions from the community. Please refer to our
