@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - registry/**/connector-packing.json
+      - registry/**/connector-packaging.json
       - .github/workflows/pr-scan.yaml
 
 jobs:
