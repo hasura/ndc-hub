@@ -5,7 +5,7 @@
     "title": "GraphQL Native Data Connector",
     "logo": "logo.svg",
     "tags": [],
-    "latest_version": "v0.2.0"
+    "latest_version": "v0.2.3"
   },
   "author": {
     "support_email": "support@hasura.io",
