@@ -1,5 +1,5 @@
-query Query1($email: String1!) {
-  publicUsers(where: { email: { _eq: $email } }) {
+query Query1 {
+  testdbUsers(where: { id: { _eq: "1" } }) {
     email
   }
 }

@@ -1,8 +1,8 @@
 {
   "data": {
-    "publicUsers": [
+    "testDbUsers": [
       {
-        "email": "seandemo@hasura.io"
+        "email": "john@example.com"
       }
     ]
   }
