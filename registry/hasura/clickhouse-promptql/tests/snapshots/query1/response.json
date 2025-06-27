@@ -1,6 +1,6 @@
 {
   "data": {
-    "testDbUsers": [
+    "testdbUsers": [
       {
         "email": "john@example.com"
       }
