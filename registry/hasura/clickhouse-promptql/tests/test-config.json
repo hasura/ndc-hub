@@ -1,0 +1,9 @@
+{
+  "hub_id": "hasura/clickhouse-promptql",
+  "port": 8083,
+  "setup_compose_file_path": "compose.yaml",
+  "envs": [
+    "JDBC_URL=jdbc:clickhouse://local.hasura.dev:8123/testdb?user=admin&password=password"
+  ],
+  "snapshots_dir": "snapshots"
+}

@@ -1,0 +1,9 @@
+{
+  "data": {
+    "testdbUsers": [
+      {
+        "email": "john@example.com"
+      }
+    ]
+  }
+}
