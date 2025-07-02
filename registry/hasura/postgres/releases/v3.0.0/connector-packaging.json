@@ -1,0 +1,14 @@
+{
+  "version": "v3.0.0",
+  "uri": "https://github.com/hasura/ndc-postgres/releases/download/v3.0.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "b581303a993a11e0eab46b0a3fb82bef88eb884423117f15948ee4088f5668f3"
+  },
+  "source": {
+    "hash": "0e4091024cc91edd25f50df4bbb0ca97adc8079a"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
