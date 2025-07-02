@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.9"
+    "latest_version": "v1.1.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -68,6 +68,11 @@
       {
         "tag": "snowflake/v1.0.9",
         "hash": "16f916fede271489f645239201debc653f852453",
+        "is_verified": true
+      },
+      {
+        "tag": "snowflake/v1.0.10",
+        "hash": "f79b82f984271a69be8927faa1c0dbd4799cdd73",
         "is_verified": true
       }
     ]
