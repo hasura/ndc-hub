@@ -1,4 +1,4 @@
-query Query1($status: Text!, $email: Text!) {
+query Query1($status: String1!, $email: String1!) {
   users(where: { email: { _like: $email } }) {
     email
     orders(where: { status: { _eq: $status } }) {
