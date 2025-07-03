@@ -1,0 +1,14 @@
+{
+  "version": "v3.0.0",
+  "uri": "https://github.com/hasura/ndc-postgres/releases/download/v3.0.0/package.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": ""
+  },
+  "source": {
+    "hash": "f2c2a5295770e6039fd0a4e6efc91ea5883fd3e6"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
