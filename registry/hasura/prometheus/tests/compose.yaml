@@ -6,4 +6,10 @@ services:
       - "--web.enable-lifecycle"
     ports:
       - 9090:9090
-    restart: always
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "/bin/promtool", "check", "healthy"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
