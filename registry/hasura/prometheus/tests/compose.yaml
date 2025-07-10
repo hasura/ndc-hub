@@ -1,0 +1,18 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    volumes:
+      - ./prometheus.yml:/etc/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    ports:
+      - 9090:9090
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "/bin/promtool", "check", "healthy"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+

@@ -1,0 +1,9 @@
+query Query2 {
+  prometheusAlerts {
+    value
+    state
+    annotations
+    labels
+    activeAt
+  }
+}
