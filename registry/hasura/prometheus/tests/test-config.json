@@ -1,6 +1,6 @@
 {
   "hub_id": "hasura/prometheus",
-  "port": 9090,
+  "port": 8883,
   "envs": [
     "CONNECTION_URL=http://local.hasura.dev:9090"
   ],
