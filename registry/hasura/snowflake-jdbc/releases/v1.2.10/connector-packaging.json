@@ -1,0 +1,14 @@
+{
+  "version": "v1.2.10",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/snowflake/1.2.10/snowflake-connector-v1.2.10.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "19b64ff150560686cf7847c2c3e1038bbc239c1e41670af7b645344e7b99057d"
+  },
+  "source": {
+    "hash": "6f309e16d8516adac3751ab2e02e681e61149cfa"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
