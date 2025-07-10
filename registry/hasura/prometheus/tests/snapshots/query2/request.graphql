@@ -1,5 +1,5 @@
 query Query2 {
-  prometheus_alerts {
+  prometheusAlerts {
     value
     state
     annotations
