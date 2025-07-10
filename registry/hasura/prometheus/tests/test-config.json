@@ -4,5 +4,6 @@
   "envs": [
     "CONNECTION_URL=http://local.hasura.dev:9090"
   ],
-  "snapshots_dir": "snapshots"
+  "snapshots_dir": "snapshots",
+  "setup_compose_file_path": "compose.yaml"
 }
