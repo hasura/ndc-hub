@@ -1,0 +1,11 @@
+query Query1($query: String!) {
+  promql_query(
+    query: $query, 
+    flat: true, 
+    start: "2025-01-01T00:00:00Z", 
+    end: "2025-01-02T00:00:00Z"
+  ) {
+    timestamp
+    value
+  }
+}

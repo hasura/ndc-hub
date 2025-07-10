@@ -7,5 +7,8 @@
   },
   "source": {
     "hash": "b9841bb802d44a28cafb478de6b507f067402372"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
   }
 }

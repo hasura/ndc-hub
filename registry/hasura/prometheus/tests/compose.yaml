@@ -1,0 +1,9 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    command:
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    ports:
+      - 9090:9090
+    restart: always
