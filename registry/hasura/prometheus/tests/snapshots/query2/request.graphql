@@ -4,6 +4,6 @@ query Query2 {
     state
     annotations
     labels
-    active_at
+    activeAt
   }
 }
