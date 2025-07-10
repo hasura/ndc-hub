@@ -4,8 +4,10 @@
     "description": "Connect to a Databricks database and expose it to Hasura v3 Project",
     "title": "Databricks Connector",
     "logo": "logo.png",
-    "tags": ["database"],
-    "latest_version": "v1.3.0"
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.3.1"
   },
   "author": {
     "support_email": "support@hasura.io",
