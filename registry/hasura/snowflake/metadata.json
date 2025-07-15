@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.0.9"
+    "latest_version": "v1.1.1"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -68,6 +68,16 @@
       {
         "tag": "snowflake/v1.0.9",
         "hash": "16f916fede271489f645239201debc653f852453",
+        "is_verified": true
+      },
+      {
+        "tag": "snowflake/v1.1.0",
+        "hash": "ab9ac4dded9583569046c719657d8e01eb129d54",
+        "is_verified": true
+      },
+      {
+        "tag": "snowflake/v1.1.1",
+        "hash": "aba26c184156fbd0f91856066a37cfab8c910615",
         "is_verified": true
       }
     ]
