@@ -1,5 +1,8 @@
 {
   "hub_id": "hasura/snowflake",
   "port": 8080,
+  "envs": [
+    "FULLY_QUALIFY_NAMES=true"
+  ],
   "snapshots_dir": "snapshots"
 }
