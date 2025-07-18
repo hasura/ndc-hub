@@ -1,5 +1,5 @@
 query Query1($input: String1!) {
-  playlist(where: { name: { _contains: $input } }) {
+  chinookMysqlChinookPlaylist(where: { name: { _contains: $input } }) {
     name
     playlistid
   }
