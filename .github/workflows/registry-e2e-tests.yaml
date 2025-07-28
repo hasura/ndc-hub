@@ -117,6 +117,13 @@ jobs:
           echo "📋 Available connectors:"
           docker compose -f ddn-workspace/compose.yaml run --rm --entrypoint="" ddn-native-workspace show_supported_connector_versions.sh || echo "⚠️ Connector discovery failed"
 
+      - name: Login to DDN
+        env:
+          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.HASURA_DDN_PAT }}
+        run: |
+          echo "🔑 Logging in to DDN"
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn auth login --access-token $DDN_WORKSPACE_ACCESS_TOKEN
+
       - name: Initialize DDN supergraph
         run: |
           echo "🚀 Initializing DDN supergraph"
