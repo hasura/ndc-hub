@@ -284,7 +284,7 @@ RUN chmod +x ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNE
 ######### MySQL PromptQL End   #########
 
 COPY ./sample-projects/ /sample-projects
-COPY show_supported_connector_versions.sh ${BIN_PATH}/show_supported_connector_versions.sh
+COPY scripts/show_supported_connector_versions.sh ${BIN_PATH}/show_supported_connector_versions.sh
 RUN chmod +x ${BIN_PATH}/show_supported_connector_versions.sh
 RUN chgrp -R 0 ${HOME} /workspace /sample-projects \
     && chmod -R g=u ${HOME} /workspace /sample-projects
@@ -318,11 +318,9 @@ RUN apt-get update \
     && mkdir -p $XDG_DATA_HOME  \
     && mkdir -p $XDG_STATE_HOME \
     && mkdir -p $XDG_CACHE_HOME \
-    && chsh -s /bin/bash \
-    && chgrp -R 0 ${HOME} /workspace /sample-projects && chmod -R g=u ${HOME} /workspace /sample-projects
+    && chsh -s /bin/bash 
 
 COPY --from=workspace-builder ${HOME} ${HOME}
-COPY --from=workspace-builder /sample-projects /sample-projects
 COPY --from=workspace-builder /nix/store /nix/store
 
 ENV CODE_SERVER_PORT=8123
