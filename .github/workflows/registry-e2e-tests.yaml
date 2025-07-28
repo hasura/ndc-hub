@@ -98,6 +98,8 @@ jobs:
 
 
       - name: Test DDN Workspace
+        env:
+          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.HASURA_DDN_PAT }}
         run: |
           echo "🧪 Testing DDN Workspace image"
           docker compose -f ddn-workspace/compose.yaml up -d
@@ -114,6 +116,23 @@ jobs:
           # Test connector discovery
           echo "📋 Available connectors:"
           docker compose -f ddn-workspace/compose.yaml run --rm --entrypoint="" ddn-native-workspace show_supported_connector_versions.sh || echo "⚠️ Connector discovery failed"
+
+      - name: Initialize DDN supergraph
+        run: |
+          echo "🚀 Initializing DDN supergraph"
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn supergraph init .
+      
+      - name: Initialize DDN connector
+        run: |
+          echo "🔌 Initializing DDN connector"
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn connector init mypostgres_promptql --hub-connector hasura/postgres-promptql --add-env JDBC_URL=jdbc:postgresql://35.236.11.122:5432/v3-docs-sample-app?user=read_only_user&password=readonlyuser
+
+      - name: Introspect DDN connector
+        run: |
+          echo "🔍 Introspecting DDN connector"
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn connector introspect mypostgres_promptql
+
+
           
   e2e-tests:
     needs: [setup-e2e, build-ddn-workspace]
