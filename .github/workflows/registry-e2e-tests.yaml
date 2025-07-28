@@ -101,6 +101,12 @@ jobs:
         run: |
           echo "🧪 Testing DDN Workspace image"
           docker compose -f ddn-workspace/compose.yaml up -d
+
+          echo "Waiting for DDN Workspace to be ready..."
+          sleep 10
+
+          docker compose -f ddn-workspace/compose.yaml ps
+      
           
           # Test basic functionality
           docker compose -f ddn-workspace/compose.yaml run --rm --entrypoint="" ddn-workspace echo "✅ Image runs successfully"
