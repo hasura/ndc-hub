@@ -100,11 +100,11 @@ jobs:
           echo "🧪 Testing DDN Workspace image"
           
           # Test basic functionality
-          docker run --rm --entrypoint="" ddn-workspace:${{ github.sha }} echo "✅ Image runs successfully"
+          docker run --rm --entrypoint="" ddn-workspace:v0.1 echo "✅ Image runs successfully"
           
           # Test connector discovery
           echo "📋 Available connectors:"
-          docker run --rm --entrypoint="" ddn-workspace:${{ github.sha }} show_supported_connector_versions.sh || echo "⚠️ Connector discovery failed"
+          docker run --rm --entrypoint="" ddn-workspace:v0.1 show_supported_connector_versions.sh || echo "⚠️ Connector discovery failed"
 
   e2e-tests:
     needs: [setup-e2e, build-ddn-workspace]
