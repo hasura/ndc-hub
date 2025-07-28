@@ -69,8 +69,48 @@ jobs:
             exit 1
           fi
 
+  build-ddn-workspace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch_depth: 1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build DDN Workspace
+        run: |
+          echo "🚀 Building DDN Workspace"
+          
+          if [ ! -f "ddn-workspace/Dockerfile" ]; then
+            echo "❌ Dockerfile not found at ddn-workspace/Dockerfile"
+            ls -la ddn-workspace/ || echo "ddn-workspace directory not found"
+            exit 1
+          fi
+          
+          echo "✅ Found Dockerfile, building..."
+          docker build \
+            -f ddn-workspace/Dockerfile \
+            -t ddn-workspace:${{ github.sha }} \
+            .
+          
+          echo "✅ DDN Workspace built successfully"
+
+      - name: Test DDN Workspace
+        run: |
+          echo "🧪 Testing DDN Workspace image"
+          
+          # Test basic functionality
+          docker run --rm --entrypoint="" ddn-workspace:${{ github.sha }} echo "✅ Image runs successfully"
+          
+          # Test connector discovery
+          echo "📋 Available connectors:"
+          docker run --rm --entrypoint="" ddn-workspace:${{ github.sha }} show_supported_connector_versions.sh || echo "⚠️ Connector discovery failed"
+
   e2e-tests:
-    needs: setup-e2e
+    needs: [setup-e2e, build-ddn-workspace]
     runs-on: ubuntu-latest
     environment: staging
     strategy:
