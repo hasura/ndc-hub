@@ -95,6 +95,9 @@ jobs:
             -f ddn-workspace/Dockerfile \
             -t ddn-workspace:${{ github.sha }} \
             .
+
+          echo "🔨 Building compose image..."
+          docker compose -f ddn-workspace/compose.yaml build
           
           echo "✅ DDN Workspace built successfully"
 
