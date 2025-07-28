@@ -96,7 +96,7 @@ RUN apt-get update \
     && curl -fL  https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/bin/yq && \
     chmod +x /usr/bin/yq
 
-COPY install-code-server.sh entrypoint.sh ${BIN_PATH}/
+COPY scripts/install-code-server.sh scripts/entrypoint.sh ${BIN_PATH}/
 RUN chmod +x ${BIN_PATH}/install-code-server.sh \
     && chmod +x ${BIN_PATH}/entrypoint.sh \
     && ${BIN_PATH}/install-code-server.sh "${CODE_SERVER_VERSION}"
@@ -283,7 +283,6 @@ RUN printf '#!/bin/sh\n\
 RUN chmod +x ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 ######### MySQL PromptQL End   #########
 
-COPY ./sample-projects/ /sample-projects
 COPY scripts/show_supported_connector_versions.sh ${BIN_PATH}/show_supported_connector_versions.sh
 RUN chmod +x ${BIN_PATH}/show_supported_connector_versions.sh
 RUN chgrp -R 0 ${HOME} /workspace /sample-projects \
