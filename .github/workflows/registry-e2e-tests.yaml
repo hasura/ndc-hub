@@ -90,13 +90,7 @@ jobs:
             exit 1
           fi
           
-          echo "✅ Found Dockerfile, building..."
-          docker build \
-            -f ddn-workspace/Dockerfile \
-            -t ddn-workspace:${{ github.sha }} \
-            .
-
-          echo "🔨 Building compose image..."
+          echo "✅ Found Dockerfile, building compose image..."
           docker compose -f ddn-workspace/compose.yaml build
           
           echo "✅ DDN Workspace built successfully"
