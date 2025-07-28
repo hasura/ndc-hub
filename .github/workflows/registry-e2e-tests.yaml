@@ -95,17 +95,19 @@ jobs:
           
           echo "✅ DDN Workspace built successfully"
 
+
+
       - name: Test DDN Workspace
         run: |
           echo "🧪 Testing DDN Workspace image"
           
           # Test basic functionality
-          docker run --rm --entrypoint="" ddn-workspace:v0.1 echo "✅ Image runs successfully"
-          
+          docker compose -f ddn-workspace/compose.yaml run --rm --entrypoint="" ddn-workspace echo "✅ Image runs successfully"
+
           # Test connector discovery
           echo "📋 Available connectors:"
-          docker run --rm --entrypoint="" ddn-workspace:v0.1 show_supported_connector_versions.sh || echo "⚠️ Connector discovery failed"
-
+          docker compose -f ddn-workspace/compose.yaml run --rm --entrypoint="" ddn-workspace show_supported_connector_versions.sh || echo "⚠️ Connector discovery failed"
+          
   e2e-tests:
     needs: [setup-e2e, build-ddn-workspace]
     runs-on: ubuntu-latest
