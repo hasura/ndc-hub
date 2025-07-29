@@ -3,7 +3,7 @@
   "uri": "https://github.com/hasura/ndc-http/releases/download/v0.12.1/connector-definition.tgz",
   "checksum": {
     "type": "sha256",
-    "value": "80825de8d35f60dabdc3cd2e3a035c588e46b4fdf7f35f67c19205cd4a4595ef"
+    "value": "ce8542c4ba83fd0444d877e223439076e6095d70fceb2e184b7a95e751021e0f"
   },
   "source": {
     "hash": "154ef080b4554266fad31f460d07d058b2055975"
