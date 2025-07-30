@@ -113,7 +113,9 @@ ENV PATH="${XDG_DATA_HOME}/mise/shims:${PATH}"
 RUN npm update -g npm
 
 ######### Install DDN CLI   #########
-RUN curl -fsSL https://graphql-engine-cdn.hasura.io/ddn/cli/v4/get.sh | VERSION=${CLI_VERSION} INSTALL_PATH=${BIN_PATH} bash
+RUN curl -fsSL https://graphql-engine-cdn.hasura.io/ddn/cli/internal/staging/main/latest/cli-ddn-linux-amd64 -o ${BIN_PATH}/ddn \
+    && chmod +x ${BIN_PATH}/ddn
+
 
 ######### Nodejs Lambda - NoOP #########
 
