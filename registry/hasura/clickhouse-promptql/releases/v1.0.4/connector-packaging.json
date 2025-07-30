@@ -1,0 +1,14 @@
+{
+  "version": "v1.0.4",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/clickhouse/1.0.4/clickhouse-connector-v1.0.4.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "18a1eab2044a7d76f73a9821ee1ff59779a75734365df1e0d1f32ebf2d18ad14"
+  },
+  "source": {
+    "hash": "16110a95f1c8b6cdeff4fdd4b72dfec6776f504c"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
