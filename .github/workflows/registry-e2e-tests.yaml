@@ -145,6 +145,8 @@ jobs:
             
             echo "🔧 Creating test directory..."
             mkdir -p test-supergraph
+
+            cd test-supergraph
             
             echo "🚀 Initializing DDN supergraph..."
             ddn supergraph init .
