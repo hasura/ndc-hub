@@ -142,6 +142,12 @@ jobs:
           echo "🚀 Setting up DDN supergraph and connector"
           docker compose -f ddn-workspace/compose.yaml exec --user root -e DDN_WORKSPACE_ACCESS_TOKEN ddn-native-workspace bash -c '
             set -e  # Exit on any error
+
+            # Activate mise to use the correct node version
+            eval "$(mise activate bash)"
+
+            echo "Checking Java"
+            java --version
             
             echo "🔧 Creating test directory..."
             mkdir -p test-supergraph
