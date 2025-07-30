@@ -69,8 +69,109 @@ jobs:
             exit 1
           fi
 
+  build-ddn-workspace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch_depth: 1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build DDN Workspace
+        run: |
+          # Remove any existing images
+          docker compose -f ddn-workspace/compose.yaml down --rmi all || true
+          
+          # Clean build cache
+          docker builder prune -f 
+
+          
+          echo "🚀 Building DDN Workspace"
+          
+          if [ ! -f "ddn-workspace/Dockerfile" ]; then
+            echo "❌ Dockerfile not found at ddn-workspace/Dockerfile"
+            ls -la ddn-workspace/ || echo "ddn-workspace directory not found"
+            exit 1
+          fi
+          
+          echo "✅ Found Dockerfile, building compose image..."
+          DOCKER_BUILDKIT=1 docker compose -f ddn-workspace/compose.yaml build \
+            --progress=plain \
+            --parallel \
+            --memory=4g \
+            --build-arg BUILDKIT_INLINE_CACHE=1
+          
+          echo "✅ DDN Workspace built successfully"
+
+
+
+      - name: Test DDN Workspace
+        env:
+          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.HASURA_DDN_PAT }}
+        run: |
+          echo "🧪 Testing DDN Workspace image"
+          docker compose -f ddn-workspace/compose.yaml up -d
+
+          echo "Waiting for DDN Workspace to be ready..."
+          sleep 10
+
+          docker compose -f ddn-workspace/compose.yaml ps
+      
+          
+          # Test basic functionality
+          docker compose -f ddn-workspace/compose.yaml run --rm --entrypoint="" ddn-native-workspace echo "✅ Image runs successfully"
+
+          # Test connector discovery
+          echo "📋 Available connectors:"
+          docker compose -f ddn-workspace/compose.yaml run --rm --entrypoint="" ddn-native-workspace show_supported_connector_versions.sh || echo "⚠️ Connector discovery failed"
+
+      - name: Login to DDN
+        env:
+          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
+        run: |
+          echo "🔑 Logging in to DDN"
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn auth login --access-token $DDN_WORKSPACE_ACCESS_TOKEN
+
+      - name: Setup DDN supergraph and connector
+        env:
+          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
+        run: |
+          echo "🚀 Setting up DDN supergraph and connector"
+          docker compose -f ddn-workspace/compose.yaml exec --user root -e DDN_WORKSPACE_ACCESS_TOKEN ddn-native-workspace bash -c '
+            set -e  # Exit on any error
+
+            # Activate mise to use the correct node version
+            eval "$(mise activate bash)"
+
+            echo "Checking Java"
+            java --version
+            
+            echo "🔧 Creating test directory..."
+            mkdir -p test-supergraph
+
+            cd test-supergraph
+            
+            echo "🚀 Initializing DDN supergraph..."
+            ddn supergraph init .
+            
+            echo "🔌 Initializing DDN connector..."
+            ddn connector init mypostgres_promptql \
+              --hub-connector hasura/postgres-promptql \
+              --add-env "JDBC_URL=jdbc:postgresql://35.236.11.122:5432/v3-docs-sample-app?user=read_only_user&password=readonlyuser"
+            
+            echo "🔍 Introspecting DDN connector..."
+            ddn connector introspect mypostgres_promptql
+            
+            echo "✅ DDN setup completed successfully!"
+          '
+
+
+          
   e2e-tests:
-    needs: setup-e2e
+    needs: [setup-e2e, build-ddn-workspace]
     runs-on: ubuntu-latest
     environment: staging
     strategy:
