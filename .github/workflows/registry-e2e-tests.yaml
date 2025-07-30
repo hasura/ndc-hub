@@ -82,6 +82,13 @@ jobs:
 
       - name: Build DDN Workspace
         run: |
+          # Remove any existing images
+          docker compose -f ddn-workspace/compose.yaml down --rmi all || true
+          
+          # Clean build cache
+          docker builder prune -f 
+
+          
           echo "🚀 Building DDN Workspace"
           
           if [ ! -f "ddn-workspace/Dockerfile" ]; then
@@ -127,7 +134,7 @@ jobs:
         run: |
           echo "🔑 Logging in to DDN"
           docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn auth login --access-token $DDN_WORKSPACE_ACCESS_TOKEN
-          
+
       - name: Setup DDN supergraph and connector
         env:
           DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
