@@ -91,7 +91,11 @@ jobs:
           fi
           
           echo "✅ Found Dockerfile, building compose image..."
-          docker compose -f ddn-workspace/compose.yaml build
+          DOCKER_BUILDKIT=1 docker compose -f ddn-workspace/compose.yaml build \
+            --progress=plain \
+            --parallel \
+            --memory=4g \
+            --build-arg BUILDKIT_INLINE_CACHE=1
           
           echo "✅ DDN Workspace built successfully"
 
