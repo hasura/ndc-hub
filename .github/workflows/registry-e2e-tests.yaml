@@ -124,6 +124,11 @@ jobs:
           echo "🔑 Logging in to DDN"
           docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn auth login --access-token $DDN_WORKSPACE_ACCESS_TOKEN
 
+      - name: Fix container permissions
+        run: |
+          echo "🔧 Fixing container permissions"
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace chown -R $(id -u):$(id -g) .
+
       - name: Initialize DDN supergraph
         run: |
           echo "🚀 Initializing DDN supergraph"
