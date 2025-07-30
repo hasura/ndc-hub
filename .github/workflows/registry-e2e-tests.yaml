@@ -122,28 +122,28 @@ jobs:
           DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
         run: |
           echo "🔑 Logging in to DDN"
-          docker compose -f ddn-workspace/compose.yaml run --rm ddn-native-workspace ddn auth login --access-token $DDN_WORKSPACE_ACCESS_TOKEN
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn auth login --access-token $DDN_WORKSPACE_ACCESS_TOKEN
+
+      - name: Fix container permissions
+        run: |
+          echo "🔧 Fixing container permissions"
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace sudo chown -R $(id -u):$(id -g) .
 
       - name: Initialize DDN supergraph
-        env:
-          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
         run: |
           echo "🚀 Initializing DDN supergraph"
-          docker compose -f ddn-workspace/compose.yaml run --rm ddn-native-workspace ddn supergraph init .
-
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn supergraph init .
+      
       - name: Initialize DDN connector
-        env:
-          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
         run: |
           echo "🔌 Initializing DDN connector"
-          docker compose -f ddn-workspace/compose.yaml run --rm ddn-native-workspace ddn connector init mypostgres_promptql --hub-connector hasura/postgres-promptql --add-env JDBC_URL=jdbc:postgresql://35.236.11.122:5432/v3-docs-sample-app?user=read_only_user&password=readonlyuser
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn connector init mypostgres_promptql --hub-connector hasura/postgres-promptql --add-env JDBC_URL=jdbc:postgresql://35.236.11.122:5432/v3-docs-sample-app?user=read_only_user&password=readonlyuser
 
       - name: Introspect DDN connector
-        env:
-          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
         run: |
           echo "🔍 Introspecting DDN connector"
-          docker compose -f ddn-workspace/compose.yaml run --rm ddn-native-workspace ddn connector introspect mypostgres_promptql
+          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn connector introspect mypostgres_promptql
+
 
           
   e2e-tests:
