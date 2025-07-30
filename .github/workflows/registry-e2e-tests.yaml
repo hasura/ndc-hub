@@ -127,26 +127,31 @@ jobs:
         run: |
           echo "🔑 Logging in to DDN"
           docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn auth login --access-token $DDN_WORKSPACE_ACCESS_TOKEN
-
-      - name: Fix container permissions
+          
+      - name: Setup DDN supergraph and connector
+        env:
+          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
         run: |
-          echo "🔧 Fixing container permissions"
-          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace sudo chown -R $(id -u):$(id -g) .
-
-      - name: Initialize DDN supergraph
-        run: |
-          echo "🚀 Initializing DDN supergraph"
-          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn supergraph init .
-      
-      - name: Initialize DDN connector
-        run: |
-          echo "🔌 Initializing DDN connector"
-          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn connector init mypostgres_promptql --hub-connector hasura/postgres-promptql --add-env JDBC_URL=jdbc:postgresql://35.236.11.122:5432/v3-docs-sample-app?user=read_only_user&password=readonlyuser
-
-      - name: Introspect DDN connector
-        run: |
-          echo "🔍 Introspecting DDN connector"
-          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn connector introspect mypostgres_promptql
+          echo "🚀 Setting up DDN supergraph and connector"
+          docker compose -f ddn-workspace/compose.yaml exec -e DDN_WORKSPACE_ACCESS_TOKEN ddn-native-workspace bash -c '
+            set -e  # Exit on any error
+            
+            echo "🔧 Creating test directory..."
+            mkdir -p test-supergraph
+            
+            echo "🚀 Initializing DDN supergraph..."
+            ddn supergraph init .
+            
+            echo "🔌 Initializing DDN connector..."
+            ddn connector init mypostgres_promptql \
+              --hub-connector hasura/postgres-promptql \
+              --add-env "JDBC_URL=jdbc:postgresql://35.236.11.122:5432/v3-docs-sample-app?user=read_only_user&password=readonlyuser"
+            
+            echo "🔍 Introspecting DDN connector..."
+            ddn connector introspect mypostgres_promptql
+            
+            echo "✅ DDN setup completed successfully!"
+          '
 
 
           
