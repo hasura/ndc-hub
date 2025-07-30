@@ -140,7 +140,7 @@ jobs:
           DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
         run: |
           echo "🚀 Setting up DDN supergraph and connector"
-          docker compose -f ddn-workspace/compose.yaml exec -e DDN_WORKSPACE_ACCESS_TOKEN ddn-native-workspace bash -c '
+          docker compose -f ddn-workspace/compose.yaml exec --user root -e DDN_WORKSPACE_ACCESS_TOKEN ddn-native-workspace bash -c '
             set -e  # Exit on any error
             
             echo "🔧 Creating test directory..."
