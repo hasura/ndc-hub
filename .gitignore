@@ -13,3 +13,4 @@
 registry-automation/extracted_tgz
 
 .idea
+registry/*/*/*.backup
