@@ -1,5 +1,5 @@
 {
-  "version": "v1.2.4.alpha.1",
+  "version": "v1.2.4-alpha.1",
   "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/bigquery/1.2.4.alpha.1/bigquery-connector-v1.2.4.alpha.1.tar.gz",
   "checksum": {
     "type": "sha256",
