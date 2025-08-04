@@ -5,6 +5,23 @@
         "title": "For Those About To Rock We Salute You",
         "tracks": []
       }
+      {
+        "title": "The Final Concerts (Disc 2)",
+        "tracks": [
+          {
+            "name": "Space Truckin'"
+          },
+          {
+            "name": "Going Down / Highway Star"
+          },
+          {
+            "name": "Mistreated (Alternate Version)"
+          },
+          {
+            "name": "You Fool No One (Alternate Version)"
+          }
+        ]
+      }
     ]
   }
 }
