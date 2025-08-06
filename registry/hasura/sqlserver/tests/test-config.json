@@ -1,0 +1,9 @@
+{
+  "hub_id": "hasura/sqlserver",
+  "port": 8080,
+  "envs": [
+    "CONNECTION_URI=Server=local.hasura.dev,1433;Database=Chinook;User Id=sa;Password=Password123;TrustServerCertificate=true;"
+  ],
+  "snapshots_dir": "snapshots",
+  "setup_compose_file_path": "compose.yaml"
+}
