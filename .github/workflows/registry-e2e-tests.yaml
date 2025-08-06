@@ -85,17 +85,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Setup build cache
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
       - name: Build DDN Workspace with updated connectors
         timeout-minutes: 20
         run: |
@@ -110,20 +99,14 @@ jobs:
             exit 1
           fi
           
-          # Build with cache and without problematic flags
-          docker buildx build \
-            --file ddn-workspace/Dockerfile \
-            --tag ddn-workspace:test \
-            --cache-from type=local,src=/tmp/.buildx-cache \
-            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
-            --load \
-            --progress=plain \
+    
+          # Disable BuildKit entirely and use regular docker build
+          DOCKER_BUILDKIT=0 docker build \
+            -t ddn-workspace:test \
+            -f ddn-workspace/Dockerfile \
+            --no-cache \
             ./ddn-workspace
-          
-          # Move cache
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-          
+                
           echo "✅ DDN Workspace built successfully"
 
       - name: Test DDN Workspace basic functionality
