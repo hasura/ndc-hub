@@ -14,9 +14,9 @@ jobs:
       matrix: ${{ steps.e2e-test-matrix.outputs.matrix }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
-          fetch_depth: 1
+          fetch-depth: 1
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
@@ -70,24 +70,26 @@ jobs:
           fi
 
   build-ddn-workspace:
+    needs: setup-e2e
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
-          fetch_depth: 1
+          fetch-depth: 1
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build DDN Workspace
         run: |
+          set -e
+          
           # Remove any existing images
           docker compose -f ddn-workspace/compose.yaml down --rmi all || true
           
           # Clean build cache
-          docker builder prune -f 
-
+          docker builder prune -f
           
           echo "🚀 Building DDN Workspace"
           
@@ -101,75 +103,47 @@ jobs:
           DOCKER_BUILDKIT=1 docker compose -f ddn-workspace/compose.yaml build \
             --progress=plain \
             --parallel \
-            --memory=4g \
             --build-arg BUILDKIT_INLINE_CACHE=1
           
           echo "✅ DDN Workspace built successfully"
-
-
 
       - name: Test DDN Workspace
         env:
           DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.HASURA_DDN_PAT }}
         run: |
+          set -e
+          
           echo "🧪 Testing DDN Workspace image"
           docker compose -f ddn-workspace/compose.yaml up -d
-
-          echo "Waiting for DDN Workspace to be ready..."
-          sleep 10
-
+          
+          # Wait for container to be healthy
+          echo "⏳ Waiting for DDN Workspace to be ready..."
+          for i in {1..30}; do
+            if docker compose -f ddn-workspace/compose.yaml exec -T ddn-native-workspace echo "ready" 2>/dev/null; then
+              echo "✅ DDN Workspace is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ DDN Workspace failed to start"
+              docker compose -f ddn-workspace/compose.yaml logs
+              exit 1
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+          
           docker compose -f ddn-workspace/compose.yaml ps
-      
           
           # Test basic functionality
           docker compose -f ddn-workspace/compose.yaml run --rm --entrypoint="" ddn-native-workspace echo "✅ Image runs successfully"
-
+          
           # Test connector discovery
           echo "📋 Available connectors:"
           docker compose -f ddn-workspace/compose.yaml run --rm --entrypoint="" ddn-native-workspace show_supported_connector_versions.sh || echo "⚠️ Connector discovery failed"
-
-      - name: Login to DDN
-        env:
-          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
-        run: |
-          echo "🔑 Logging in to DDN"
-          docker compose -f ddn-workspace/compose.yaml exec ddn-native-workspace ddn auth login --access-token $DDN_WORKSPACE_ACCESS_TOKEN
-
-      - name: Setup DDN supergraph and connector
-        env:
-          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
-        run: |
-          echo "🚀 Setting up DDN supergraph and connector"
-          docker compose -f ddn-workspace/compose.yaml exec --user root -e DDN_WORKSPACE_ACCESS_TOKEN ddn-native-workspace bash -c '
-            set -e  # Exit on any error
-
-            # Activate mise to use the correct node version
-            eval "$(mise activate bash)"
-
-            echo "Checking Java"
-            java --version
-            
-            echo "🔧 Creating test directory..."
-            mkdir -p test-supergraph
-
-            cd test-supergraph
-            
-            echo "🚀 Initializing DDN supergraph..."
-            ddn supergraph init .
-            
-            echo "🔌 Initializing DDN connector..."
-            ddn connector init mypostgres_promptql \
-              --hub-connector hasura/postgres-promptql \
-              --add-env "JDBC_URL=jdbc:postgresql://35.236.11.122:5432/v3-docs-sample-app?user=read_only_user&password=readonlyuser"
-            
-            echo "🔍 Introspecting DDN connector..."
-            ddn connector introspect mypostgres_promptql
-            
-            echo "✅ DDN setup completed successfully!"
-          '
-
-
           
+          # Cleanup
+          docker compose -f ddn-workspace/compose.yaml down
+
   e2e-tests:
     needs: [setup-e2e, build-ddn-workspace]
     runs-on: ubuntu-latest
@@ -180,52 +154,171 @@ jobs:
         task: ${{ fromJSON(needs.setup-e2e.outputs.matrix) }}
     env:
       CLI_TAG: latest-staging
-      SECRETS_JSON: ${{ toJson(secrets) }}
     steps:
-      - name: test
-        run: |
-          echo "Running e2e tests for ${{ toJSON(matrix.task) }}"
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
-          fetch_depth: 1
-      - name: Set matching env vars
-        run: |
-          echo "$SECRETS_JSON" | jq -r 'to_entries[] | select(.key | endswith("_CONFIG_OPTIONS_ENV")) | "\(.key)=\(.value)"' | while IFS= read -r line; do
-            echo "$line" >> "$GITHUB_ENV"
-            export "$line"
-          done
-      - name: Set custom connector env vars
-        run: |
-         # Extract BigQuery key JSON from secrets if it exists
-          if echo "$SECRETS_JSON" | jq -e 'has("BIGQUERY_KEY_JSON")' > /dev/null; then
-            # Extract the key and save it to an environment variable
-            BIGQUERY_KEY_JSON=$(echo "$SECRETS_JSON" | jq -r '.BIGQUERY_KEY_JSON')
-            echo "BIGQUERY_KEY_JSON<<EOF" >> $GITHUB_ENV
-            echo "$BIGQUERY_KEY_JSON" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
+          fetch-depth: 1
 
-            echo "Successfully set BIGQUERY_KEY_JSON environment variable"
-          else
-            echo "Warning: BIGQUERY_KEY_JSON not found in secrets"
+      - name: Prepare test configuration
+        run: |
+          set -e
+          
+          # Create test job file
+          JOB_JSON='${{ toJSON(matrix.task) }}'
+          echo "Test configuration: $JOB_JSON"
+          echo "$JOB_JSON" | jq -c '[.]' > registry-automation/e2e-testing/test-job.json
+          
+          # Verify file was created
+          echo "Created test-job.json with contents:"
+          cat registry-automation/e2e-testing/test-job.json
+
+      - name: Prepare environment variables
+        run: |
+          set -e
+          
+          # Create env file for docker compose
+          cat > ddn-workspace/.env <<EOF
+          HASURA_DDN_PAT=${{ secrets.HASURA_DDN_PAT }}
+          DDN_WORKSPACE_ACCESS_TOKEN=${{ secrets.DDN_STAGING_PAT }}
+          CLI_TAG=${CLI_TAG}
+          TEST_JOB_FILE=/workspace/e2e-testing/test-job.json
+          NDC_HUB_GIT_REPO_FILE_PATH=/workspace
+          EOF
+          
+          # Add all _CONFIG_OPTIONS_ENV variables
+          env | grep -E ".*_CONFIG_OPTIONS_ENV" >> ddn-workspace/.env || true
+          
+          # Handle BigQuery credentials if present
+          if [ -n "${{ secrets.BIGQUERY_KEY_JSON }}" ]; then
+            echo "${{ secrets.BIGQUERY_KEY_JSON }}" > registry-automation/e2e-testing/bigquery-key.json
+            echo "BIGQUERY_KEY_JSON_FILE=/workspace/e2e-testing/bigquery-key.json" >> ddn-workspace/.env
           fi
 
-      - name: Install bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.2.4
-      - name: Run e2e tests
-        working-directory: ./
-        env:
-          HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT }}
-          CLI_TAG: latest-staging
+      - name: Start DDN Workspace with volume mounts
         run: |
-          export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
-          cd registry-automation/e2e-testing
-          JOB_JSON='${{ toJSON(matrix.task) }}'
-          echo "$JOB_JSON"
-          echo "$JOB_JSON" | jq -c '[.]' > test-job.json
-          cat test-job.json
-          bun install
-          export TEST_JOB_FILE=test-job.json
-          bun run start-ndc
+          set -e
+          
+          echo "🚀 Starting DDN Workspace with test volumes"
+          
+          # Create a custom compose override file for volumes
+          cat > ddn-workspace/compose.override.yaml <<EOF
+          services:
+            ddn-native-workspace:
+              volumes:
+                - $(pwd)/registry-automation/e2e-testing:/workspace/e2e-testing
+                - $(pwd)/registry:/workspace/registry:ro
+                - $(pwd)/registry-automation:/workspace/registry-automation:ro
+          EOF
+          
+          # Start the workspace
+          docker compose -f ddn-workspace/compose.yaml -f ddn-workspace/compose.override.yaml up -d
+          
+          # Wait for container to be healthy
+          echo "⏳ Waiting for DDN Workspace to be ready..."
+          for i in {1..30}; do
+            if docker compose -f ddn-workspace/compose.yaml exec -T ddn-native-workspace echo "ready" 2>/dev/null; then
+              echo "✅ DDN Workspace is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ DDN Workspace failed to start"
+              docker compose -f ddn-workspace/compose.yaml logs
+              exit 1
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+      - name: Login to DDN
+        run: |
+          set -e
+          
+          echo "🔑 Logging in to DDN"
+          docker compose -f ddn-workspace/compose.yaml exec -T ddn-native-workspace \
+            ddn auth login --access-token ${{ secrets.DDN_STAGING_PAT }}
+
+      - name: Run E2E tests
+        run: |
+          set -e
+          
+          echo "🧪 Running E2E tests for: ${{ toJSON(matrix.task) }}"
+          
+          # Pass environment variables from .env file
+          docker compose -f ddn-workspace/compose.yaml exec -T \
+            --env-file ddn-workspace/.env \
+            --user root \
+            ddn-native-workspace bash -c '
+              set -e
+              
+              # Activate mise for correct node/bun versions
+              eval "$(mise activate bash)" || true
+              
+              # Install bun if not already available
+              if ! command -v bun &> /dev/null; then
+                echo "📦 Installing bun..."
+                curl -fsSL https://bun.sh/install | bash
+                export PATH="$HOME/.bun/bin:$PATH"
+              fi
+              
+              # Verify bun installation
+              bun --version
+              
+              # Navigate to e2e testing directory
+              cd /workspace/e2e-testing
+              
+              # Verify test job file exists
+              if [ ! -f "test-job.json" ]; then
+                echo "❌ test-job.json not found!"
+                ls -la
+                exit 1
+              fi
+              
+              echo "📦 Installing dependencies..."
+              bun install
+              
+              echo "🚀 Starting E2E tests..."
+              bun run start-ndc
+          '
+
+      - name: Collect test results
+        if: always()
+        run: |
+          echo "📊 Collecting test results and logs"
+          
+          # Show container logs
+          docker compose -f ddn-workspace/compose.yaml logs --tail=100 || true
+          
+          # List test directory contents
+          docker compose -f ddn-workspace/compose.yaml exec -T ddn-native-workspace \
+            ls -la /workspace/e2e-testing/ || true
+          
+          # If there are test results, they should already be in the mounted volume
+          if [ -d "registry-automation/e2e-testing/results" ]; then
+            echo "Test results found:"
+            ls -la registry-automation/e2e-testing/results/
+          fi
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-test-results-${{ strategy.job-index }}
+          path: |
+            registry-automation/e2e-testing/results/
+            registry-automation/e2e-testing/*.log
+          if-no-files-found: ignore
+
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "🧹 Cleaning up"
+          
+          # Stop and remove containers
+          docker compose -f ddn-workspace/compose.yaml -f ddn-workspace/compose.override.yaml down || true
+          
+          # Remove sensitive files
+          rm -f ddn-workspace/.env
+          rm -f ddn-workspace/compose.override.yaml
+          rm -f registry-automation/e2e-testing/bigquery-key.json
+          rm -f registry-automation/e2e-testing/test-job.json
