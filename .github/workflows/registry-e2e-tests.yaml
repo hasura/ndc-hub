@@ -242,7 +242,7 @@ jobs:
           docker save ddn-workspace:test | gzip > ddn-workspace.tar.gz
           
       - name: Upload DDN Workspace image
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ddn-workspace-image
           path: ddn-workspace.tar.gz
