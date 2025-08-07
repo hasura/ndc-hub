@@ -1,0 +1,29 @@
+{
+  "data": {
+    "sequenceGenerator": {
+      "error": null,
+      "accessedArtifactIds": ["input"],
+      "modifiedArtifacts": [
+        {
+          "data": [
+            {
+              "number": 0
+            },
+            {
+              "number": 1
+            },
+            {
+              "number": 2
+            },
+            {
+              "number": 3
+            },
+            {
+              "number": 4
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

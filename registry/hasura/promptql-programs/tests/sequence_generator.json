@@ -1,0 +1,59 @@
+{
+  "identifier": "sequence_generator",
+  "title": "sequence_generator",
+  "artifact_type": "automation",
+  "data": {
+    "code": "# Identifier: sequence_generator\n# Input Schema: {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"limit\": {\"type\": \"integer\"}}}}\n# Output Schema: {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"number\": {\"type\": \"integer\"}}}}\n\n# Get input configuration\ninput_data = executor.get_artifact('input')\nconfig = input_data[0]\nlimit = config['limit']\n\n# Generate sequence\nresult = [{'number': i} for i in range(limit)]\n\n# Store the result\nexecutor.store_artifact('output', 'Output Data', 'table', result)",
+    "input_schema": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "output_schema": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "tests": [
+      {
+        "input": [
+          {
+            "limit": 5
+          }
+        ],
+        "output": [
+          {
+            "number": 0
+          },
+          {
+            "number": 1
+          },
+          {
+            "number": 2
+          },
+          {
+            "number": 3
+          },
+          {
+            "number": 4
+          }
+        ],
+        "timestamp": "2025-08-04T10:07:21.535624+00:00",
+        "execution_context": "runtime_execution"
+      }
+    ],
+    "source_thread": "5a9004e0-2246-440b-8680-766c7c22883f"
+  }
+}

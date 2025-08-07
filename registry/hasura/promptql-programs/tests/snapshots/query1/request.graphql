@@ -1,0 +1,11 @@
+mutation test {
+  sequenceGenerator(input: { limit: 5 }) {
+    error
+    accessedArtifactIds
+    modifiedArtifacts {
+      data {
+        number
+      }
+    }
+  }
+}

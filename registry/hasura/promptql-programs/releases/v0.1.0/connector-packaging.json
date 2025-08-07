@@ -1,0 +1,14 @@
+{
+  "version": "v0.1.0",
+  "uri": "https://github.com/hasura/ndc-promptql-programs/releases/download/v0.1.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "edbd02613c9a3530327fabbb2373669c18438829b71bebc43e1daed4d3dc3d29"
+  },
+  "source": {
+    "hash": "9eaaac7ddc72db21a2a97f7f3de0657d930385ea"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
