@@ -130,6 +130,7 @@ async function run_fixtures(): Promise<void> {
                 "connector",
                 connectorName,
               ),
+              SUBGRAPH_DIR: path.join(PROJECT_DIRECTORY, "app"),
             },
           },
         );
@@ -223,6 +224,7 @@ async function run_fixtures(): Promise<void> {
                   "connector",
                   connectorName,
                 ),
+                SUBGRAPH_DIR: path.join(PROJECT_DIRECTORY, "app"),
               },
             },
           );

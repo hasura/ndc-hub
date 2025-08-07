@@ -1,0 +1,6 @@
+- argument: headers
+  value:
+    httpHeaders:
+      forward:
+        - "test" # Modify as per what all headers you need to forward. If you do not need header forwarding, still put a dummy header value here.
+      additional: {}
