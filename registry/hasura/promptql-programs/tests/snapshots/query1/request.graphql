@@ -1,8 +1,8 @@
 mutation test {
-  sequence_generator(input: { limit: 5 }) {
+  sequenceGenerator(input: { limit: 5 }) {
     error
-    accessed_artifact_ids
-    modified_artifacts {
+    accessedArtifactIds
+    modifiedArtifacts {
       data {
         number
       }
