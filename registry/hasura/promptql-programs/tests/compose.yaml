@@ -27,6 +27,6 @@ services:
           "-f",
           "/app/connector/promptql_programs/programs/sequence_generator.json",
         ]
-      interval: 1s
+      interval: 5s
       timeout: 5s
       retries: 3
