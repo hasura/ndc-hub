@@ -1,10 +1,10 @@
 {
   "overview": {
     "namespace": "hasura",
-    "description": "The PromptQL Programs connector lets you invoke already created PromptQL Programs (Automations) as commands",
+    "description": "Integrates PromptQL Programs (Automations) as commands",
     "title": "PromptQL Programs Connector",
     "tags": [],
-    "latest_version": "v0.1.0"
+    "latest_version": "v0.2.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -20,6 +20,11 @@
       {
         "tag": "v0.1.0",
         "hash": "9eaaac7ddc72db21a2a97f7f3de0657d930385ea",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.2.0",
+        "hash": "af74e335fbb14405446ab5f49c9ac93e30aacee5",
         "is_verified": true
       }
     ]

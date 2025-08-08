@@ -32,7 +32,7 @@ Choose the hasura/promptql-programs connector from the list and enter the requir
 Docs for getting execute program API endpoint details - https://promptql.io/docs/promptql-apis/execute-program-api/
 - Add Argument presets to the connector for header forwarding
 
-Add the following to `promptql_programs.hml` file under `definition` section to enable header forwarding. (Even if you don't need header forwarding add a dummy configuration)
+Add the following to `app/metadata/promptql_programs.hml` file under `definition` section to enable header forwarding. (Even if you don't need header forwarding add a dummy configuration)
 ```yaml
 argumentPresets:
     - argument: headers
