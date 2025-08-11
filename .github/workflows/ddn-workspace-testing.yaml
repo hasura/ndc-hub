@@ -86,8 +86,8 @@ jobs:
           MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
           echo "Test matrix: $MATRIX"
           
-          # Initialize build args
-          BUILD_ARGS=""
+          # Initialize build args file
+          echo "" > build_args.txt
           
           # Process each connector in the matrix
           echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
@@ -101,17 +101,17 @@ jobs:
             ARG_NAME=$(echo "$CONNECTOR_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
             BUILD_ARG="--build-arg ${ARG_NAME}_VERSION=$CONNECTOR_VERSION"
             
-            BUILD_ARGS="$BUILD_ARGS $BUILD_ARG"
             echo "Added build arg: $BUILD_ARG"
+            
+            # Append to build args file
+            echo "$BUILD_ARG" >> build_args.txt
           done
           
-          # Write build args to file to persist across loop
-          echo "$BUILD_ARGS" > build_args.txt
+          # Read all build args from file and combine into single line
+          FINAL_BUILD_ARGS=$(cat build_args.txt | tr '\n' ' ' | sed 's/^ *//' | sed 's/ *$//')
           
-          # Read back and set output
-          FINAL_BUILD_ARGS=$(cat build_args.txt)
           echo "build_args=$FINAL_BUILD_ARGS" >> "$GITHUB_OUTPUT"
-          echo "Generated build args: $FINAL_BUILD_ARGS"
+          echo "Final generated build args: $FINAL_BUILD_ARGS"
 
       - name: Build DDN Workspace with updated connector versions
         timeout-minutes: 20
