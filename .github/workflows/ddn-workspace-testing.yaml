@@ -417,17 +417,17 @@ jobs:
             VALID_CONNECTOR_NAME=\$(echo '$CONNECTOR_NAME' | tr '-' '_')
             echo \"Using valid connector name: \$VALID_CONNECTOR_NAME\"
             
-            echo '2️⃣ Initializing connector: $VALID_CONNECTOR_NAME'
-            ddn connector init $VALID_CONNECTOR_NAME \\
+            echo '2️⃣ Initializing connector: \$VALID_CONNECTOR_NAME'
+            ddn connector init \$VALID_CONNECTOR_NAME \\
               --hub-connector $HUB_ID:$CONNECTOR_VERSION \\
               --configure-port $PORT
             
             echo '3️⃣ Running connector introspection...'
-            ddn connector introspect $VALID_CONNECTOR_NAME
+            ddn connector introspect \$VALID_CONNECTOR_NAME
             
             echo '✅ DDN workspace introspection test PASSED'
             echo 'Introspected files:'
-            find app/connector/$CONNECTOR_NAME -type f | head -10
+            find app/connector/\$VALID_CONNECTOR_NAME -type f | head -10
           "
           
           echo "✅ DDN Workspace test completed successfully for $CONNECTOR_NAME"
