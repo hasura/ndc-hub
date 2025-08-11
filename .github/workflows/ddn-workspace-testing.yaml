@@ -411,12 +411,12 @@ jobs:
             cd /tmp/test-project
             
             echo '1️⃣ Initializing supergraph...'
-            ddn supergraph init --dir . --no-ddn-file
+            ddn supergraph init .
             
             echo '2️⃣ Initializing connector: $CONNECTOR_NAME'
             ddn connector init $CONNECTOR_NAME \\
               --hub-connector $HUB_ID:$CONNECTOR_VERSION \\
-              --port $PORT
+              --configure-port $PORT
             
             echo '3️⃣ Running connector introspection...'
             ddn connector introspect $CONNECTOR_NAME
