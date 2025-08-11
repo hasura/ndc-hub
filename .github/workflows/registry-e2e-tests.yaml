@@ -12,12 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.e2e-test-matrix.outputs.matrix }}
-      changed_connectors: ${{ steps.parse-connectors.outputs.connectors }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch_depth: 1
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
@@ -35,6 +34,10 @@ jobs:
           DELETED_FILES: ${{ steps.connector-version-changed-files.outputs.deleted_files }}
         run: |
           echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > changed_files.json
+
+      - name: List changed files
+        id: list_files
+        run: |
           cat changed_files.json
 
       - name: Setup Go
@@ -54,184 +57,74 @@ jobs:
           echo "$MATRIX_JSON"
           echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
 
-      - name: Parse changed connectors
-        id: parse-connectors
-        run: |
-          # Extract connector names and versions from the changed files
-          # This is a simplified example - adjust based on your actual structure
-          CONNECTORS=$(cat changed_files.json | jq -r '.added_files + .modified_files | .[]' | grep -oP 'registry/\K[^/]+' | sort -u | jq -R -s -c 'split("\n")[:-1]')
-          echo "Changed connectors: $CONNECTORS"
-          echo "connectors=$CONNECTORS" >> "$GITHUB_OUTPUT"
-
       - name: Check if connector is published to staging
+        id: check-connector-publish-status
         run: |
           LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
           REQUIRED_LABEL="connector-staging-deploy-success"
           if echo "$LABELS" | jq -e 'contains(["'"$REQUIRED_LABEL"'"])' > /dev/null; then
-            echo "✅ Connector published to staging!"
+            echo "Connector published to staging!"
           else
-            echo "❌ Error: Connector is not yet published to staging."
-            echo "This job will automatically run again once the connector is published to staging."
+            echo "Error: Connector is not yet published to staging. This Job will automatically run again once the connector is published to staging."
             exit 1
           fi
-
-  build-and-test-ddn-workspace:
-    needs: setup-e2e
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Build DDN Workspace with updated connectors
-        timeout-minutes: 20
-        run: |
-          set -e
-          
-          echo "🚀 Building DDN Workspace with updated connectors"
-          echo "Changed connectors: ${{ needs.setup-e2e.outputs.changed_connectors }}"
-          
-          # Check if Dockerfile exists
-          if [ ! -f "ddn-workspace/Dockerfile" ]; then
-            echo "❌ Dockerfile not found at ddn-workspace/Dockerfile"
-            exit 1
-          fi
-          
-    
-          # Disable BuildKit entirely and use regular docker build
-          DOCKER_BUILDKIT=0 docker build \
-            -t ddn-workspace:test \
-            -f ddn-workspace/Dockerfile \
-            --no-cache \
-            ./ddn-workspace
-                
-          echo "✅ DDN Workspace built successfully"
-
-      - name: Test DDN Workspace basic functionality
-        run: |
-          set -e
-          
-          echo "🧪 Testing DDN Workspace basic functionality"
-          
-          # Run container
-          docker run -d \
-            --name ddn-test \
-            -e DDN_WORKSPACE_ACCESS_TOKEN=${{ secrets.HASURA_DDN_PAT }} \
-            ddn-workspace:test \
-            sleep 3600
-          
-          # Wait for container to be ready
-          sleep 5
-          
-          # Test basic commands
-          docker exec ddn-test bash -c 'ddn --version'
-          docker exec ddn-test bash -c 'show_supported_connector_versions.sh'
-          
-          # Stop container
-          docker stop ddn-test
-          docker rm ddn-test
-          
-          echo "✅ Basic functionality tests passed"
-
-
-      - name: Save DDN Workspace image
-        run: |
-          # Save the image for use in e2e tests
-          docker save ddn-workspace:test | gzip > ddn-workspace.tar.gz
-          
-      - name: Upload DDN Workspace image
-        uses: actions/upload-artifact@v4
-        with:
-          name: ddn-workspace-image
-          path: ddn-workspace.tar.gz
-          retention-days: 1
 
   e2e-tests:
-    needs: [setup-e2e, build-and-test-ddn-workspace]
+    needs: setup-e2e
     runs-on: ubuntu-latest
     environment: staging
     strategy:
       fail-fast: false
       matrix:
         task: ${{ fromJSON(needs.setup-e2e.outputs.matrix) }}
+    env:
+      CLI_TAG: latest-staging
+      SECRETS_JSON: ${{ toJson(secrets) }}
     steps:
+      - name: test
+        run: |
+          echo "Running e2e tests for ${{ toJSON(matrix.task) }}"
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch_depth: 1
+      - name: Set matching env vars
+        run: |
+          echo "$SECRETS_JSON" | jq -r 'to_entries[] | select(.key | endswith("_CONFIG_OPTIONS_ENV")) | "\(.key)=\(.value)"' | while IFS= read -r line; do
+            echo "$line" >> "$GITHUB_ENV"
+            export "$line"
+          done
+      - name: Set custom connector env vars
+        run: |
+         # Extract BigQuery key JSON from secrets if it exists
+          if echo "$SECRETS_JSON" | jq -e 'has("BIGQUERY_KEY_JSON")' > /dev/null; then
+            # Extract the key and save it to an environment variable
+            BIGQUERY_KEY_JSON=$(echo "$SECRETS_JSON" | jq -r '.BIGQUERY_KEY_JSON')
+            echo "BIGQUERY_KEY_JSON<<EOF" >> $GITHUB_ENV
+            echo "$BIGQUERY_KEY_JSON" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
 
-      - name: Download DDN Workspace image
-        uses: actions/download-artifact@v4
+            echo "Successfully set BIGQUERY_KEY_JSON environment variable"
+          else
+            echo "Warning: BIGQUERY_KEY_JSON not found in secrets"
+          fi
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
         with:
-          name: ddn-workspace-image
-
-      - name: Load DDN Workspace image
-        run: |
-          docker load < ddn-workspace.tar.gz
-          docker images | grep ddn-workspace
-
-      - name: Prepare test configuration
-        run: |
-          set -e
-          
-          # Create test job file
-          JOB_JSON='${{ toJSON(matrix.task) }}'
-          echo "Test configuration: $JOB_JSON"
-          mkdir -p test-config
-          echo "$JOB_JSON" | jq -c '[.]' > test-config/test-job.json
-
-      - name: Run E2E tests in DDN Workspace
-        timeout-minutes: 30
+          bun-version: 1.2.4
+      - name: Run e2e tests
+        working-directory: ./
         env:
           HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT }}
-          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
           CLI_TAG: latest-staging
         run: |
-          set -e
-          
-          echo "🧪 Running E2E tests for: ${{ toJSON(matrix.task) }}"
-          
-          # Prepare environment variables
-          ENV_VARS="-e HASURA_DDN_PAT=$HASURA_DDN_PAT"
-          ENV_VARS="$ENV_VARS -e DDN_WORKSPACE_ACCESS_TOKEN=$DDN_WORKSPACE_ACCESS_TOKEN"
-          ENV_VARS="$ENV_VARS -e CLI_TAG=$CLI_TAG"
-          ENV_VARS="$ENV_VARS -e TEST_JOB_FILE=/workspace/test-config/test-job.json"
-          ENV_VARS="$ENV_VARS -e NDC_HUB_GIT_REPO_FILE_PATH=/workspace"
-          
-          # Add BigQuery credentials if available
-          if [ -n "${{ secrets.BIGQUERY_KEY_JSON }}" ]; then
-            echo "${{ secrets.BIGQUERY_KEY_JSON }}" > test-config/bigquery-key.json
-            ENV_VARS="$ENV_VARS -e BIGQUERY_KEY_JSON_FILE=/workspace/test-config/bigquery-key.json"
-          fi
-          
-          # Run tests with volume mounts
-          docker run --rm \
-            -v $(pwd)/registry-automation/e2e-testing:/workspace/e2e-testing \
-            -v $(pwd)/registry:/workspace/registry:ro \
-            -v $(pwd)/test-config:/workspace/test-config:ro \
-            $ENV_VARS \
-            ddn-workspace:test \
-            bash -c '
-              set -e
-              
-              # Install bun if needed
-              if ! command -v bun &> /dev/null; then
-                echo "📦 Installing bun..."
-                curl -fsSL https://bun.sh/install | bash
-                export PATH="$HOME/.bun/bin:$PATH"
-              fi
-              
-              # Run tests
-              cd /workspace/e2e-testing
-              bun install
-              bun run start-ndc
-            '
-
-      - name: Cleanup
-        if: always()
-        run: |
-          echo "🧹 Cleaning up"
-          rm -rf test-config/
-          docker image rm ddn-workspace:test || true
+          export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
+          cd registry-automation/e2e-testing
+          JOB_JSON='${{ toJSON(matrix.task) }}'
+          echo "$JOB_JSON"
+          echo "$JOB_JSON" | jq -c '[.]' > test-job.json
+          cat test-job.json
+          bun install
+          export TEST_JOB_FILE=test-job.json
+          bun run start-ndc
