@@ -75,12 +75,53 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Build DDN Workspace
+      - name: Generate connector version overrides
+        id: connector-overrides
+        run: |
+          set -e
+          
+          echo "🔍 Generating connector version overrides for changed connectors"
+          
+          # Parse the test matrix to get connector details
+          MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
+          echo "Test matrix: $MATRIX"
+          
+          # Initialize build args
+          BUILD_ARGS=""
+          
+          # Process each connector in the matrix
+          echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
+            CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+            CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+            NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
+            
+            echo "Processing connector: $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
+            
+            # Convert connector name to uppercase and replace hyphens with underscores
+            ARG_NAME=$(echo "$CONNECTOR_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+            BUILD_ARG="--build-arg ${ARG_NAME}_VERSION=$CONNECTOR_VERSION"
+            
+            BUILD_ARGS="$BUILD_ARGS $BUILD_ARG"
+            echo "Added build arg: $BUILD_ARG"
+          done
+          
+          # Write build args to file to persist across loop
+          echo "$BUILD_ARGS" > build_args.txt
+          
+          # Read back and set output
+          FINAL_BUILD_ARGS=$(cat build_args.txt)
+          echo "build_args=$FINAL_BUILD_ARGS" >> "$GITHUB_OUTPUT"
+          echo "Generated build args: $FINAL_BUILD_ARGS"
+
+      - name: Build DDN Workspace with updated connector versions
         timeout-minutes: 20
         run: |
           set -e
           
-          echo "🚀 Building DDN Workspace"
+          echo "🚀 Building DDN Workspace with updated connector versions"
+          
+          # Get the build args from previous step
+          BUILD_ARGS="${{ steps.connector-overrides.outputs.build_args }}"
           
           # Check if Dockerfile exists
           if [ ! -f "ddn-workspace/Dockerfile" ]; then
@@ -88,14 +129,61 @@ jobs:
             exit 1
           fi
           
-          # Build DDN workspace image
-          DOCKER_BUILDKIT=0 docker build \
-            -t ddn-workspace:test \
-            -f ddn-workspace/Dockerfile \
-            --no-cache \
-            ./ddn-workspace
+          echo "Build arguments: $BUILD_ARGS"
+          
+          # Build DDN workspace image with version overrides
+          if [ -n "$BUILD_ARGS" ]; then
+            echo "Building with custom connector versions..."
+            DOCKER_BUILDKIT=0 docker build \
+              -t ddn-workspace:test \
+              -f ddn-workspace/Dockerfile \
+              $BUILD_ARGS \
+              --no-cache \
+              ./ddn-workspace
+          else
+            echo "Building with default connector versions..."
+            DOCKER_BUILDKIT=0 docker build \
+              -t ddn-workspace:test \
+              -f ddn-workspace/Dockerfile \
+              --no-cache \
+              ./ddn-workspace
+          fi
                 
           echo "✅ DDN Workspace built successfully"
+
+      - name: Verify connector versions in workspace
+        run: |
+          set -e
+          
+          echo "🔍 Verifying connector versions in DDN workspace"
+          
+          # Start workspace temporarily to check versions
+          docker run -d \
+            --name ddn-version-check \
+            --privileged \
+            --entrypoint="" \
+            ddn-workspace:test \
+            bash -c "
+              # Start Docker daemon
+              dockerd --host=unix:///var/run/docker.sock &
+              while ! docker info >/dev/null 2>&1; do sleep 1; done
+              sleep 3600
+            "
+          
+          sleep 10
+          
+          # Check which connector versions are available
+          docker exec ddn-version-check bash -c '
+            export PATH="$HOME/.local/bin:$PATH"
+            echo "📋 Available connector versions:"
+            show_supported_connector_versions.sh
+          '
+          
+          # Stop the verification container
+          docker stop ddn-version-check
+          docker rm ddn-version-check
+          
+          echo "✅ Connector version verification completed"
 
       - name: Test DDN Workspace basic functionality
         run: |
@@ -323,13 +411,12 @@ jobs:
             cd /tmp/test-project
             
             echo '1️⃣ Initializing supergraph...'
-            ddn supergraph init .
+            ddn supergraph init --dir . --no-ddn-file
             
             echo '2️⃣ Initializing connector: $CONNECTOR_NAME'
             ddn connector init $CONNECTOR_NAME \\
               --hub-connector $HUB_ID:$CONNECTOR_VERSION \\
-              --configure-port $PORT
-
+              --port $PORT
             
             echo '3️⃣ Running connector introspection...'
             ddn connector introspect $CONNECTOR_NAME

@@ -2,10 +2,10 @@
 ARG POSTGRES_VERSION=v2.1.1
 
 ARG ORACLE_VERSION=v1.1.1
-ARG ORACLE_CLI_VERSION=v1.1.1-oracle
+ARG ORACLE_CLI_VERSION=v1.1.1
 
 ARG TRINO_VERSION=v1.0.4
-ARG TRINO_CLI_VERSION=v1.0.4-trino
+ARG TRINO_CLI_VERSION=v1.0.4
 
 ARG MONGODB_VERSION=v1.8.3
 
@@ -31,10 +31,10 @@ ARG MYSQL_PROMPTQL_CLI_VERSION=v1.2.7
 FROM --platform=amd64 ghcr.io/hasura/ndc-postgres:${POSTGRES_VERSION} AS postgres
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-oracle:${ORACLE_VERSION} AS oracle-connector
-FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${ORACLE_CLI_VERSION} AS oracle-cli
+FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${ORACLE_CLI_VERSION}-oracle AS oracle-cli
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-trino:${TRINO_VERSION} AS trino-connector
-FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${TRINO_CLI_VERSION} AS trino-cli
+FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${TRINO_CLI_VERSION}-trino AS trino-cli
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-mongodb:${MONGODB_VERSION} AS mongodb
 
