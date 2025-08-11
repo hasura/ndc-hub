@@ -422,7 +422,7 @@ jobs:
             
             echo '2️⃣ Initializing connector: \$VALID_CONNECTOR_NAME'
             ddn connector init \$VALID_CONNECTOR_NAME \\
-              --hub-connector $HUB_ID:v1.2.11 \\
+              --hub-connector $HUB_ID:$CONNECTOR_VERSION \\
               --configure-port $PORT
             
             echo '3️⃣ Running connector introspection...'
