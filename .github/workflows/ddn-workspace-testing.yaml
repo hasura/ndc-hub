@@ -129,17 +129,21 @@ jobs:
             exit 1
           fi
           
-          echo "Build arguments: $BUILD_ARGS"
+          echo "Build arguments received: '$BUILD_ARGS'"
           
           # Build DDN workspace image with version overrides
           if [ -n "$BUILD_ARGS" ]; then
             echo "Building with custom connector versions..."
-            DOCKER_BUILDKIT=0 docker build \
+            echo "Full docker build command will be:"
+            echo "DOCKER_BUILDKIT=0 docker build -t ddn-workspace:test -f ddn-workspace/Dockerfile $BUILD_ARGS --no-cache ./ddn-workspace"
+            
+            # Execute the build command
+            eval "DOCKER_BUILDKIT=0 docker build \
               -t ddn-workspace:test \
               -f ddn-workspace/Dockerfile \
               $BUILD_ARGS \
               --no-cache \
-              ./ddn-workspace
+              ./ddn-workspace"
           else
             echo "Building with default connector versions..."
             DOCKER_BUILDKIT=0 docker build \
@@ -150,7 +154,6 @@ jobs:
           fi
                 
           echo "✅ DDN Workspace built successfully"
-
       - name: Verify connector versions in workspace
         run: |
           set -e
