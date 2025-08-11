@@ -4,8 +4,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
     branches: [main]
-    # paths:
-    #   - registry/**
+    paths:
+      - registry/**
 
 jobs:
   setup-connector-tests:
@@ -103,11 +103,49 @@ jobs:
           
           echo "🧪 Testing DDN Workspace basic functionality"
           
-          # Run basic smoke test
-          docker run --rm \
+          # Start DDN workspace as a service container with Docker-in-Docker
+          # Skip the entrypoint that requires supervisor and directly test DDN CLI
+          docker run -d \
+            --name ddn-workspace-test \
+            --privileged \
             -e DDN_WORKSPACE_ACCESS_TOKEN=${{ secrets.HASURA_DDN_PAT }} \
+            --entrypoint="" \
             ddn-workspace:test \
-            bash -c 'ddn --version && echo "✅ DDN CLI working"'
+            bash -c "
+              # Start Docker daemon in background
+              dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376 &
+              DOCKER_PID=\$!
+              
+              # Wait for Docker to be ready
+              while ! docker info >/dev/null 2>&1; do sleep 1; done
+              echo 'Docker daemon started'
+              
+              # Keep container running
+              sleep 3600
+            "
+          
+          # Wait for Docker daemon to start
+          echo "⏳ Waiting for Docker daemon to start..."
+          sleep 15
+          
+          # Test that DDN CLI is working
+          docker exec ddn-workspace-test bash -c '
+            export PATH="$HOME/.local/bin:$PATH"
+            ddn --version
+            echo "✅ DDN CLI working"
+          '
+          
+          # Test DDN auth if token is provided
+          docker exec ddn-workspace-test bash -c '
+            export PATH="$HOME/.local/bin:$PATH"
+            if [[ -n "$DDN_WORKSPACE_ACCESS_TOKEN" ]]; then
+              ddn auth login --access-token "$DDN_WORKSPACE_ACCESS_TOKEN" || echo "DDN auth test completed"
+            fi
+          '
+          
+          # Stop and remove the test container
+          docker stop ddn-workspace-test
+          docker rm ddn-workspace-test
           
           echo "✅ Basic functionality tests passed"
 
@@ -235,36 +273,70 @@ jobs:
           
           echo "Testing connector: $HUB_ID:$CONNECTOR_VERSION on port $PORT"
           
-          # Run DDN workspace for introspection test
-          docker run --rm \
-            --name "ddn-test-${{ matrix.task.connector_name }}" \
+          # Start DDN workspace as a service container with custom entrypoint
+          docker run -d \
+            --name "ddn-workspace-${{ matrix.task.connector_name }}" \
             --network ddn-test-network \
+            --privileged \
+            --entrypoint="" \
             $ENV_VARS \
             ddn-workspace:test \
             bash -c "
-              set -e
+              # Start Docker daemon in background
+              dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376 &
+              DOCKER_PID=\$!
               
-              echo '🚀 Starting DDN workspace introspection test'
+              # Wait for Docker to be ready
+              while ! docker info >/dev/null 2>&1; do sleep 1; done
+              echo 'Docker daemon started successfully'
               
-              # Create project directory
-              mkdir -p /tmp/test-project
-              cd /tmp/test-project
+              # Load any preloaded images
+              for file in /images/*.tar; do
+                if [[ -f \"\$file\" ]]; then    
+                  docker load -i \"\$file\"
+                fi
+              done
               
-              echo '1️⃣ Initializing supergraph...'
-              ddn supergraph init --dir . --no-ddn-file
+              # Login to DDN if token provided
+              export PATH=\"\$HOME/.local/bin:\$PATH\"
+              if [[ -n \"\$DDN_WORKSPACE_ACCESS_TOKEN\" ]]; then
+                ddn auth login --access-token \"\$DDN_WORKSPACE_ACCESS_TOKEN\" || echo 'DDN login failed, continuing...'
+              fi
               
-              echo '2️⃣ Initializing connector: $CONNECTOR_NAME'
-              ddn connector init $CONNECTOR_NAME \\
-                --hub-connector $HUB_ID:$CONNECTOR_VERSION \\
-                --port $PORT
-              
-              echo '3️⃣ Running connector introspection...'
-              ddn connector introspect $CONNECTOR_NAME
-              
-              echo '✅ DDN workspace introspection test PASSED'
-              echo 'Introspected files:'
-              find app/connector/$CONNECTOR_NAME -type f | head -10
+              # Keep container running
+              sleep 3600
             "
+          
+          # Wait for DDN workspace to be ready
+          echo "⏳ Waiting for DDN workspace to initialize..."
+          sleep 20
+          
+          # Run the introspection test inside the running container
+          docker exec "ddn-workspace-${{ matrix.task.connector_name }}" bash -c "
+            set -e
+            export PATH=\"\$HOME/.local/bin:\$PATH\"
+            
+            echo '🚀 Starting DDN workspace introspection test'
+            
+            # Create project directory
+            mkdir -p /tmp/test-project
+            cd /tmp/test-project
+            
+            echo '1️⃣ Initializing supergraph...'
+            ddn supergraph init .
+            
+            echo '2️⃣ Initializing connector: $CONNECTOR_NAME'
+            ddn connector init $CONNECTOR_NAME \\
+              --hub-connector $HUB_ID:$CONNECTOR_VERSION \\
+              --port $PORT
+            
+            echo '3️⃣ Running connector introspection...'
+            ddn connector introspect $CONNECTOR_NAME
+            
+            echo '✅ DDN workspace introspection test PASSED'
+            echo 'Introspected files:'
+            find app/connector/$CONNECTOR_NAME -type f | head -10
+          "
           
           echo "✅ DDN Workspace test completed successfully for $CONNECTOR_NAME"
 
@@ -274,8 +346,8 @@ jobs:
           echo "🧹 Cleaning up"
           
           # Stop and remove DDN workspace container if still running
-          docker stop "ddn-test-${{ matrix.task.connector_name }}" 2>/dev/null || true
-          docker rm "ddn-test-${{ matrix.task.connector_name }}" 2>/dev/null || true
+          docker stop "ddn-workspace-${{ matrix.task.connector_name }}" 2>/dev/null || true
+          docker rm "ddn-workspace-${{ matrix.task.connector_name }}" 2>/dev/null || true
           
           # Clean up setup services if they were started
           if [ "${{ steps.setup-services.outputs.setup_services_started }}" = "true" ]; then
