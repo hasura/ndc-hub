@@ -140,8 +140,8 @@ jobs:
           BUILD_ARGS="${{ steps.connector-overrides.outputs.build_args }}"
           
           # Check if Dockerfile exists
-          if [ ! -f "ddn-workspace/Dockerfile.test" ]; then
-            echo "❌ Dockerfile not found at ddn-workspace/Dockerfile.test"
+          if [ ! -f "ddn-workspace/Dockerfile" ]; then
+            echo "❌ Dockerfile not found at ddn-workspace/Dockerfile"
             exit 1
           fi
           
@@ -156,7 +156,7 @@ jobs:
             # Use the @ syntax to read build args from file
             DOCKER_BUILDKIT=0 docker build \
               -t ddn-workspace:test \
-              -f ddn-workspace/Dockerfile.test \
+              -f ddn-workspace/Dockerfile \
               --build-arg @build_args.txt \
               --no-cache \
               ./ddn-workspace
@@ -168,7 +168,7 @@ jobs:
             # Execute the build command with verbose output
             eval "DOCKER_BUILDKIT=0 docker build \
               -t ddn-workspace:test \
-              -f ddn-workspace/Dockerfile.test \
+              -f ddn-workspace/Dockerfile \
               $BUILD_ARGS \
               --no-cache \
               ./ddn-workspace"
@@ -176,7 +176,7 @@ jobs:
             echo "Building with default connector versions..."
             DOCKER_BUILDKIT=0 docker build \
               -t ddn-workspace:test \
-              -f ddn-workspace/Dockerfile.test \
+              -f ddn-workspace/Dockerfile \
               --no-cache \
               ./ddn-workspace
           fi
