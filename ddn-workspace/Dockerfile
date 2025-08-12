@@ -1,3 +1,4 @@
+
 ######### Arg definitions  #########
 ARG POSTGRES_VERSION=v2.1.1
 
@@ -303,6 +304,10 @@ ENV XDG_DATA_HOME=${HOME}/.local/share
 ENV XDG_STATE_HOME=${HOME}/.local/state
 ENV XDG_CACHE_HOME=${HOME}/.cache
 
+
+# Ensure mise shims (java, node, etc.) are on PATH at runtime
+ENV PATH="${XDG_DATA_HOME}/mise/shims:${PATH}"
+
 ENV SHELL=/bin/bash
 
 RUN apt-get update \
@@ -319,7 +324,7 @@ RUN apt-get update \
     && mkdir -p $XDG_DATA_HOME  \
     && mkdir -p $XDG_STATE_HOME \
     && mkdir -p $XDG_CACHE_HOME \
-    && chsh -s /bin/bash 
+    && chsh -s /bin/bash
 
 COPY --from=workspace-builder ${HOME} ${HOME}
 COPY --from=workspace-builder /nix/store /nix/store
