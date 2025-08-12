@@ -86,8 +86,10 @@ jobs:
           MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
           echo "Test matrix: $MATRIX"
           
-          # Initialize build args file
+          # Create build args JSON and file
+          echo "{" > build_args.json
           echo "" > build_args.txt
+          first=true
           
           # Process each connector in the matrix
           echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
@@ -99,19 +101,33 @@ jobs:
             
             # Convert connector name to uppercase and replace hyphens with underscores
             ARG_NAME=$(echo "$CONNECTOR_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-            BUILD_ARG="--build-arg ${ARG_NAME}_VERSION=$CONNECTOR_VERSION"
             
-            echo "Added build arg: $BUILD_ARG"
+            # Add to build args file
+            echo "${ARG_NAME}_VERSION=$CONNECTOR_VERSION" >> build_args.txt
+            echo "--build-arg ${ARG_NAME}_VERSION=$CONNECTOR_VERSION" >> build_args_flags.txt
             
-            # Append to build args file
-            echo "$BUILD_ARG" >> build_args.txt
+            # Add CLI version arg if needed
+            case "$CONNECTOR_NAME" in
+              "oracle"|"trino"|"postgres-promptql"|"snowflake-jdbc"|"mysql-promptql")
+                echo "${ARG_NAME}_CLI_VERSION=$CONNECTOR_VERSION" >> build_args.txt
+                echo "--build-arg ${ARG_NAME}_CLI_VERSION=$CONNECTOR_VERSION" >> build_args_flags.txt
+                ;;
+            esac
           done
           
-          # Read all build args from file and combine into single line
-          FINAL_BUILD_ARGS=$(cat build_args.txt | tr '\n' ' ' | sed 's/^ *//' | sed 's/ *$//')
+          # Create final build args string
+          if [ -f build_args_flags.txt ]; then
+            FINAL_BUILD_ARGS=$(cat build_args_flags.txt | tr '\n' ' ' | sed 's/^ *//' | sed 's/ *$//')
+          else
+            FINAL_BUILD_ARGS=""
+          fi
           
           echo "build_args=$FINAL_BUILD_ARGS" >> "$GITHUB_OUTPUT"
           echo "Final generated build args: $FINAL_BUILD_ARGS"
+          
+          # Show the build args file for debugging
+          echo "📄 Build args file contents:"
+          cat build_args.txt || echo "No build args file created"
 
       - name: Build DDN Workspace with updated connector versions
         timeout-minutes: 20
@@ -124,36 +140,51 @@ jobs:
           BUILD_ARGS="${{ steps.connector-overrides.outputs.build_args }}"
           
           # Check if Dockerfile exists
-          if [ ! -f "ddn-workspace/Dockerfile" ]; then
-            echo "❌ Dockerfile not found at ddn-workspace/Dockerfile"
+          if [ ! -f "ddn-workspace/Dockerfile.test" ]; then
+            echo "❌ Dockerfile not found at ddn-workspace/Dockerfile.test"
             exit 1
           fi
           
           echo "Build arguments received: '$BUILD_ARGS'"
           
           # Build DDN workspace image with version overrides
-          if [ -n "$BUILD_ARGS" ]; then
-            echo "Building with custom connector versions..."
+          if [ -f "build_args.txt" ] && [ -s "build_args.txt" ]; then
+            echo "Building with custom connector versions using build args file..."
+            echo "📄 Build args file contents:"
+            cat build_args.txt
+            
+            # Use the @ syntax to read build args from file
+            DOCKER_BUILDKIT=0 docker build \
+              -t ddn-workspace:test \
+              -f ddn-workspace/Dockerfile.test \
+              --build-arg @build_args.txt \
+              --no-cache \
+              --progress=plain \
+              ./ddn-workspace
+          elif [ -n "$BUILD_ARGS" ]; then
+            echo "Building with custom connector versions using command line args..."
             echo "Full docker build command will be:"
             echo "DOCKER_BUILDKIT=0 docker build -t ddn-workspace:test -f ddn-workspace/Dockerfile $BUILD_ARGS --no-cache ./ddn-workspace"
             
-            # Execute the build command
+            # Execute the build command with verbose output
             eval "DOCKER_BUILDKIT=0 docker build \
               -t ddn-workspace:test \
-              -f ddn-workspace/Dockerfile \
+              -f ddn-workspace/Dockerfile.test \
               $BUILD_ARGS \
               --no-cache \
+              --progress=plain \
               ./ddn-workspace"
           else
             echo "Building with default connector versions..."
             DOCKER_BUILDKIT=0 docker build \
               -t ddn-workspace:test \
-              -f ddn-workspace/Dockerfile \
+              -f ddn-workspace/Dockerfile.test \
               --no-cache \
               ./ddn-workspace
           fi
                 
           echo "✅ DDN Workspace built successfully"
+
       - name: Verify connector versions in workspace
         run: |
           set -e
@@ -414,16 +445,16 @@ jobs:
             cd /tmp/test-project
             
             echo '1️⃣ Initializing supergraph...'
-            ddn supergraph init .
-
+            ddn supergraph init --dir . --no-ddn-file
+            
             # Convert connector name to valid DDN format (replace hyphens with underscores)
             VALID_CONNECTOR_NAME=\$(echo '$CONNECTOR_NAME' | tr '-' '_')
             echo \"Using valid connector name: \$VALID_CONNECTOR_NAME\"
             
-            echo '2️⃣ Initializing connector: \$VALID_CONNECTOR_NAME'
+            echo '2️⃣ Initializing connector: '\$VALID_CONNECTOR_NAME
             ddn connector init \$VALID_CONNECTOR_NAME \\
               --hub-connector $HUB_ID:$CONNECTOR_VERSION \\
-              --configure-port $PORT
+              --port $PORT
             
             echo '3️⃣ Running connector introspection...'
             ddn connector introspect \$VALID_CONNECTOR_NAME
