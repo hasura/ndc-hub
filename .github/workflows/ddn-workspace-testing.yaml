@@ -159,7 +159,6 @@ jobs:
               -f ddn-workspace/Dockerfile.test \
               --build-arg @build_args.txt \
               --no-cache \
-              --progress=plain \
               ./ddn-workspace
           elif [ -n "$BUILD_ARGS" ]; then
             echo "Building with custom connector versions using command line args..."
@@ -172,7 +171,6 @@ jobs:
               -f ddn-workspace/Dockerfile.test \
               $BUILD_ARGS \
               --no-cache \
-              --progress=plain \
               ./ddn-workspace"
           else
             echo "Building with default connector versions..."
