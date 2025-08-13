@@ -1,4 +1,4 @@
-mutation test {
+query test {
   sequenceGenerator(input: { limit: 5 }) {
     error
     accessedArtifactIds
