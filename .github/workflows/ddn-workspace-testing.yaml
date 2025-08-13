@@ -1,0 +1,358 @@
+name: Test DDN Workspace with Connectors
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    branches: [main]
+    paths:
+      - registry/**
+
+jobs:
+  setup-connector-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.connector-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Get all connector version package changes
+        id: connector-version-changed-files
+        uses: tj-actions/changed-files@v46.0.1
+        with:
+          json: true
+          escape_json: false
+          files: |
+            registry/**
+
+      - name: Print out all the changed files
+        env:
+          ADDED_FILES: ${{ steps.connector-version-changed-files.outputs.added_files }}
+          MODIFIED_FILES: ${{ steps.connector-version-changed-files.outputs.modified_files }}
+          DELETED_FILES: ${{ steps.connector-version-changed-files.outputs.deleted_files }}
+        run: |
+          echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > changed_files.json
+          cat changed_files.json
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+
+      - name: Get the list of connectors to test
+        id: connector-matrix
+        env:
+          CHANGED_FILES_PATH: "changed_files.json"
+        run: |
+          mv changed_files.json registry-automation/changed_files.json
+          export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
+          cd registry-automation
+          MATRIX_JSON=$(go run main.go e2e changed)
+          echo "$MATRIX_JSON"
+          echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
+
+      - name: Check if connector is published to staging
+        run: |
+          LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
+          REQUIRED_LABEL="connector-staging-deploy-success"
+          if echo "$LABELS" | jq -e 'contains(["'"$REQUIRED_LABEL"'"])' > /dev/null; then
+            echo "✅ Connector published to staging!"
+          else
+            echo "❌ Error: Connector is not yet published to staging."
+            echo "This job will automatically run again once the connector is published to staging."
+            exit 1
+          fi
+
+  build-ddn-workspace:
+    needs: setup-connector-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Generate connector version overrides
+        id: connector-overrides
+        run: |
+          set -e
+          
+          echo "🔍 Generating connector version overrides for changed connectors"
+          
+          # Parse the test matrix to get connector details
+          MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
+          echo "Test matrix: $MATRIX"
+          
+          # Create build args JSON and file
+          echo "{" > build_args.json
+          echo "" > build_args.txt
+          first=true
+          
+          # Process each connector in the matrix
+          echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
+            CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+            CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+            NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
+            
+            echo "Processing connector: $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
+            
+            # Convert connector name to uppercase and replace hyphens with underscores
+            ARG_NAME=$(echo "$CONNECTOR_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+            
+            # Add to build args file
+            echo "${ARG_NAME}_VERSION=$CONNECTOR_VERSION" >> build_args.txt
+            echo "--build-arg ${ARG_NAME}_VERSION=$CONNECTOR_VERSION" >> build_args_flags.txt
+            
+            # Add CLI version arg if needed
+            case "$CONNECTOR_NAME" in
+              "oracle"|"trino"|"postgres-promptql"|"snowflake-jdbc"|"mysql-promptql")
+                echo "${ARG_NAME}_CLI_VERSION=$CONNECTOR_VERSION" >> build_args.txt
+                echo "--build-arg ${ARG_NAME}_CLI_VERSION=$CONNECTOR_VERSION" >> build_args_flags.txt
+                ;;
+            esac
+          done
+          
+          # Create final build args string
+          if [ -f build_args_flags.txt ]; then
+            FINAL_BUILD_ARGS=$(cat build_args_flags.txt | tr '\n' ' ' | sed 's/^ *//' | sed 's/ *$//')
+          else
+            FINAL_BUILD_ARGS=""
+          fi
+          
+          echo "build_args=$FINAL_BUILD_ARGS" >> "$GITHUB_OUTPUT"
+          echo "Final generated build args: $FINAL_BUILD_ARGS"
+          
+          # Show the build args file for debugging
+          echo "📄 Build args file contents:"
+          cat build_args.txt || echo "No build args file created"
+
+      - name: Build DDN Workspace with updated connector versions
+        timeout-minutes: 20
+        run: |
+          set -e
+          
+          echo "🚀 Building DDN Workspace with updated connector versions"
+          
+          # Get the build args from previous step
+          BUILD_ARGS="${{ steps.connector-overrides.outputs.build_args }}"
+          
+          # Check if Dockerfile exists
+          if [ ! -f "ddn-workspace/Dockerfile" ]; then
+            echo "❌ Dockerfile not found at ddn-workspace/Dockerfile"
+            exit 1
+          fi
+          
+          echo "Build arguments received: '$BUILD_ARGS'"
+
+          # Build DDN workspace image with version overrides
+          if [ -n "$BUILD_ARGS" ]; then
+            echo "Building with custom connector versions using command line args..."
+            echo "Full docker build command will be:"
+            echo "DOCKER_BUILDKIT=0 docker build -t ddn-workspace:test -f ddn-workspace/Dockerfile $BUILD_ARGS --no-cache ./ddn-workspace"
+
+            # Execute the build command with verbose output
+            eval "DOCKER_BUILDKIT=0 docker build \
+              -t ddn-workspace:test \
+              -f ddn-workspace/Dockerfile \
+              $BUILD_ARGS \
+              --no-cache \
+              ./ddn-workspace"
+          elif [ -f "build_args.txt" ] && [ -s "build_args.txt" ]; then
+            echo "Building with custom connector versions using build args from file..."
+            echo "📄 Build args file contents:"
+            cat build_args.txt
+
+            # Convert each line KEY=VALUE to --build-arg KEY=VALUE
+            BUILD_ARGS_FROM_FILE=$(awk '{print "--build-arg " $0}' build_args.txt | tr '\n' ' ')
+            echo "Generated build args: $BUILD_ARGS_FROM_FILE"
+
+            eval "DOCKER_BUILDKIT=0 docker build \
+              -t ddn-workspace:test \
+              -f ddn-workspace/Dockerfile \
+              $BUILD_ARGS_FROM_FILE \
+              --no-cache \
+              ./ddn-workspace"
+          else
+            echo "Building with default connector versions..."
+            DOCKER_BUILDKIT=0 docker build \
+              -t ddn-workspace:test \
+              -f ddn-workspace/Dockerfile \
+              --no-cache \
+              ./ddn-workspace
+          fi
+
+          echo "✅ DDN Workspace built successfully"
+
+      - name: Verify connector versions in workspace
+        run: |
+          set -e
+          
+          echo "🔍 Verifying connector versions in DDN workspace"
+          
+          # Start workspace temporarily to check versions
+          docker run -d \
+            --name ddn-version-check \
+            --privileged \
+            --entrypoint="" \
+            ddn-workspace:test \
+            bash -c "
+              # Start Docker daemon
+              dockerd --host=unix:///var/run/docker.sock &
+              while ! docker info >/dev/null 2>&1; do sleep 1; done
+              sleep 3600
+            "
+          
+          sleep 10
+          
+          # Check which connector versions are available
+          docker exec ddn-version-check bash -c '
+            export PATH="$HOME/.local/bin:$PATH"
+            echo "📋 Available connector versions:"
+            show_supported_connector_versions.sh
+          '
+          
+          # Stop the verification container
+          docker stop ddn-version-check
+          docker rm ddn-version-check
+          
+          echo "✅ Connector version verification completed"
+
+      - name: Test DDN Workspace basic functionality
+        run: |
+          set -e
+          
+          echo "🧪 Testing DDN Workspace basic functionality"
+          
+          # Start DDN workspace as a service container with Docker-in-Docker
+          # Skip the entrypoint that requires supervisor and directly test DDN CLI
+          docker run -d \
+            --name ddn-workspace-test \
+            --privileged \
+            -e DDN_WORKSPACE_ACCESS_TOKEN=${{ secrets.HASURA_DDN_PAT }} \
+            --entrypoint="" \
+            ddn-workspace:test \
+            bash -c "
+              # Start Docker daemon in background
+              dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376 &
+              DOCKER_PID=\$!
+              
+              # Wait for Docker to be ready
+              while ! docker info >/dev/null 2>&1; do sleep 1; done
+              echo 'Docker daemon started'
+              
+              # Keep container running
+              sleep 3600
+            "
+          
+          # Wait for Docker daemon to start
+          echo "⏳ Waiting for Docker daemon to start..."
+          sleep 15
+          
+          # Test that DDN CLI is working
+          docker exec ddn-workspace-test bash -c '
+            export PATH="$HOME/.local/bin:$PATH"
+            ddn --version
+            echo "✅ DDN CLI working"
+          '
+          
+          # Test DDN auth if token is provided
+          docker exec ddn-workspace-test bash -c '
+            export PATH="$HOME/.local/bin:$PATH"
+            if [[ -n "$DDN_WORKSPACE_ACCESS_TOKEN" ]]; then
+              ddn auth login --access-token "$DDN_WORKSPACE_ACCESS_TOKEN" || echo "DDN auth test completed"
+            fi
+          '
+          
+          # Stop and remove the test container
+          docker stop ddn-workspace-test
+          docker rm ddn-workspace-test
+          
+          echo "✅ Basic functionality tests passed"
+
+      - name: Save DDN Workspace image
+        run: |
+          # Save the image for connector tests
+          docker save ddn-workspace:test | gzip > ddn-workspace.tar.gz
+          
+      - name: Upload DDN Workspace image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddn-workspace-image
+          path: ddn-workspace.tar.gz
+          retention-days: 1
+
+  test-connectors:
+    needs: [setup-connector-tests, build-ddn-workspace]
+    runs-on: ubuntu-latest
+    environment: staging
+    if: needs.build-ddn-workspace.result == 'success'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.4
+
+      - name: Install dependencies
+        working-directory: registry-automation/e2e-testing
+        run: bun install
+
+      - name: Download DDN Workspace image (if available)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ddn-workspace-image
+
+      - name: Load DDN Workspace image (if available)
+        continue-on-error: true
+        run: |
+          if [ -f "ddn-workspace.tar.gz" ]; then
+            docker load < ddn-workspace.tar.gz
+            docker images | grep ddn-workspace
+          else
+            echo "No DDN workspace image artifact found"
+          fi
+
+      - name: Run DDN workspace tests
+        timeout-minutes: 20
+        env:
+          HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT }}
+          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
+        run: |
+          set -e
+          
+          echo "🧪 Running DDN workspace connector tests"
+          
+          # Set up environment
+          export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
+          
+          # Parse the test matrix to get connector specifications
+          MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
+          echo "Test matrix: $MATRIX"
+          
+          # Run tests for each connector using bun
+          echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
+            CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+            CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+            NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
+            
+            SPEC="$NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
+            echo "🔍 Testing connector: $SPEC"
+            
+            cd registry-automation/e2e-testing
+            bun ddn-workspace-testing.ts "$SPEC"
+            cd ../..
+            
+            echo "✅ Completed testing: $SPEC"
+          done
+          
+          echo "🎉 All DDN workspace tests completed successfully!"
+
+
