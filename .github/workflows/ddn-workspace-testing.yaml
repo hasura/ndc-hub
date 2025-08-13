@@ -288,210 +288,71 @@ jobs:
     needs: [setup-connector-tests, build-ddn-workspace]
     runs-on: ubuntu-latest
     environment: staging
-    strategy:
-      fail-fast: false
-      matrix:
-        task: ${{ fromJSON(needs.setup-connector-tests.outputs.matrix) }}
+    if: needs.build-ddn-workspace.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Download DDN Workspace image
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.4
+
+      - name: Install dependencies
+        working-directory: registry-automation/e2e-testing
+        run: bun install
+
+      - name: Download DDN Workspace image (if available)
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: ddn-workspace-image
 
-      - name: Load DDN Workspace image
+      - name: Load DDN Workspace image (if available)
+        continue-on-error: true
         run: |
-          docker load < ddn-workspace.tar.gz
-          docker images | grep ddn-workspace
-
-      - name: Start setup services if needed
-        id: setup-services
-        run: |
-          set -e
-          
-          # Read the test configuration to check for setup_compose_file_path
-          TEST_CONFIG_PATH='${{ matrix.task.test_config_file_path }}'
-          
-          if [ ! -f "$TEST_CONFIG_PATH" ]; then
-            echo "❌ Test config file not found: $TEST_CONFIG_PATH"
-            exit 1
-          fi
-          
-          SETUP_COMPOSE_PATH=$(jq -r '.setup_compose_file_path // empty' "$TEST_CONFIG_PATH")
-          
-          if [ -n "$SETUP_COMPOSE_PATH" ]; then
-            echo "🐳 Starting setup services with compose file: $SETUP_COMPOSE_PATH"
-            
-            # Create shared network for communication between setup services and DDN workspace
-            docker network create ddn-test-network || true
-            
-            # Get the directory containing the test config to resolve relative paths
-            TEST_CONFIG_DIR=$(dirname "$TEST_CONFIG_PATH")
-            FULL_COMPOSE_PATH="$TEST_CONFIG_DIR/$SETUP_COMPOSE_PATH"
-            
-            if [ ! -f "$FULL_COMPOSE_PATH" ]; then
-              echo "❌ Setup compose file not found: $FULL_COMPOSE_PATH"
-              exit 1
-            fi
-            
-            # Start services with the shared network
-            docker compose \
-              -f "$FULL_COMPOSE_PATH" \
-              --project-name "setup-${{ matrix.task.connector_name }}" \
-              up -d --build --wait
-            
-            # Connect setup services to the shared network
-            COMPOSE_SERVICES=$(docker compose -f "$FULL_COMPOSE_PATH" --project-name "setup-${{ matrix.task.connector_name }}" ps --services)
-            for service in $COMPOSE_SERVICES; do
-              CONTAINER_NAME="setup-${{ matrix.task.connector_name }}-${service}-1"
-              echo "Connecting $CONTAINER_NAME to ddn-test-network"
-              docker network connect ddn-test-network "$CONTAINER_NAME" || true
-            done
-            
-            # Wait for services to be fully ready
-            sleep 10
-            
-            echo "setup_services_started=true" >> "$GITHUB_OUTPUT"
-            echo "compose_file_path=$FULL_COMPOSE_PATH" >> "$GITHUB_OUTPUT"
-            echo "✅ Setup services started successfully"
+          if [ -f "ddn-workspace.tar.gz" ]; then
+            docker load < ddn-workspace.tar.gz
+            docker images | grep ddn-workspace
           else
-            echo "ℹ️  No setup services required for this connector"
-            docker network create ddn-test-network || true
-            echo "setup_services_started=false" >> "$GITHUB_OUTPUT"
+            echo "No DDN workspace image artifact found"
           fi
 
-      - name: Test DDN Workspace with Connector
-        timeout-minutes: 15
+      - name: Run DDN workspace tests
+        timeout-minutes: 20
         env:
           HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT }}
           DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
         run: |
           set -e
           
-          echo "🔍 Testing DDN Workspace with connector: ${{ matrix.task.connector_name }}"
+          echo "🧪 Running DDN workspace connector tests"
           
-          # Parse connector details from the task
-          CONNECTOR_NAME='${{ matrix.task.connector_name }}'
-          CONNECTOR_VERSION='${{ matrix.task.connector_version }}'
-          TEST_CONFIG_PATH='${{ matrix.task.test_config_file_path }}'
+          # Set up environment
+          export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
           
-          # Read connector configuration
-          HUB_ID=$(jq -r '.hub_id' "$TEST_CONFIG_PATH")
-          PORT=$(jq -r '.port // 8083' "$TEST_CONFIG_PATH")
+          # Parse the test matrix to get connector specifications
+          MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
+          echo "Test matrix: $MATRIX"
           
-          # Build environment variables string for the connector
-          ENV_VARS="-e HASURA_DDN_PAT=$HASURA_DDN_PAT -e DDN_WORKSPACE_ACCESS_TOKEN=$DDN_WORKSPACE_ACCESS_TOKEN"
-          
-          # Add connector-specific environment variables from test config
-          CONNECTOR_ENVS=$(jq -r '.envs // [] | .[]' "$TEST_CONFIG_PATH")
-          while IFS= read -r env_var; do
-            if [ -n "$env_var" ]; then
-              ENV_VARS="$ENV_VARS -e $env_var"
-            fi
-          done <<< "$CONNECTOR_ENVS"
-          
-          echo "Testing connector: $HUB_ID:$CONNECTOR_VERSION on port $PORT"
-          
-          # Start DDN workspace as a service container with custom entrypoint
-          docker run -d \
-            --name "ddn-workspace-${{ matrix.task.connector_name }}" \
-            --network ddn-test-network \
-            --privileged \
-            --entrypoint="" \
-            $ENV_VARS \
-            ddn-workspace:test \
-            bash -c "
-              # Start Docker daemon in background
-              dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376 &
-              DOCKER_PID=\$!
-              
-              # Wait for Docker to be ready
-              while ! docker info >/dev/null 2>&1; do sleep 1; done
-              echo 'Docker daemon started successfully'
-              
-              # Load any preloaded images
-              for file in /images/*.tar; do
-                if [[ -f \"\$file\" ]]; then    
-                  docker load -i \"\$file\"
-                fi
-              done
-              
-              # Login to DDN if token provided
-              export PATH=\"\$HOME/.local/bin:\$PATH\"
-              if [[ -n \"\$DDN_WORKSPACE_ACCESS_TOKEN\" ]]; then
-                ddn auth login --access-token \"\$DDN_WORKSPACE_ACCESS_TOKEN\" || echo 'DDN login failed, continuing...'
-              fi
-              
-              # Keep container running
-              sleep 3600
-            "
-          
-          # Wait for DDN workspace to be ready
-          echo "⏳ Waiting for DDN workspace to initialize..."
-          sleep 20
-          
-          # Run the introspection test inside the running container
-          docker exec "ddn-workspace-${{ matrix.task.connector_name }}" bash -c "
-            set -e
-            export PATH=\"\$HOME/.local/bin:\$PATH\"
+          # Run tests for each connector using bun
+          echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
+            CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+            CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+            NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
             
-            echo '🚀 Starting DDN workspace introspection test'
+            SPEC="$NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
+            echo "🔍 Testing connector: $SPEC"
             
-            # Create project directory
-            mkdir -p /tmp/test-project
-            cd /tmp/test-project
+            cd registry-automation/e2e-testing
+            bun ddn-workspace-testing.ts "$SPEC"
+            cd ../..
             
-            echo '1️⃣ Initializing supergraph...'
-            ddn supergraph init .
-            
-            # Convert connector name to valid DDN format (replace hyphens with underscores)
-            VALID_CONNECTOR_NAME=\$(echo '$CONNECTOR_NAME' | tr '-' '_')
-            echo \"Using valid connector name: \$VALID_CONNECTOR_NAME\"
-            
-            echo '2️⃣ Initializing connector: '\$VALID_CONNECTOR_NAME
-            ddn connector init \$VALID_CONNECTOR_NAME \\
-              --hub-connector $HUB_ID:$CONNECTOR_VERSION \\
-              --configure-port $PORT
-            
-            echo '3️⃣ Running connector introspection...'
-            ddn connector introspect \$VALID_CONNECTOR_NAME
-            
-            echo '✅ DDN workspace introspection test PASSED'
-            echo 'Introspected files:'
-            find app/connector/\$VALID_CONNECTOR_NAME -type f | head -10
-          "
+            echo "✅ Completed testing: $SPEC"
+          done
           
-          echo "✅ DDN Workspace test completed successfully for $CONNECTOR_NAME"
+          echo "🎉 All DDN workspace tests completed successfully!"
 
-      - name: Cleanup
-        if: always()
-        run: |
-          echo "🧹 Cleaning up"
-          
-          # Stop and remove DDN workspace container if still running
-          docker stop "ddn-workspace-${{ matrix.task.connector_name }}" 2>/dev/null || true
-          docker rm "ddn-workspace-${{ matrix.task.connector_name }}" 2>/dev/null || true
-          
-          # Clean up setup services if they were started
-          if [ "${{ steps.setup-services.outputs.setup_services_started }}" = "true" ]; then
-            COMPOSE_FILE_PATH="${{ steps.setup-services.outputs.compose_file_path }}"
-            if [ -n "$COMPOSE_FILE_PATH" ]; then
-              echo "🐳 Stopping setup services..."
-              docker compose \
-                -f "$COMPOSE_FILE_PATH" \
-                --project-name "setup-${{ matrix.task.connector_name }}" \
-                down -v || true
-            fi
-          fi
-          
-          # Remove shared network
-          docker network rm ddn-test-network 2>/dev/null || true
-          
-          # Remove DDN workspace image
-          docker image rm ddn-workspace:test 2>/dev/null || true
-          
-          echo "✅ Cleanup completed"
+
