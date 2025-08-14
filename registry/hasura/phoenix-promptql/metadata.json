@@ -1,0 +1,43 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to an Apache Phoenix database and expose it to Hasura v3 Project",
+    "title": "Apache Phoenix PromptQL Connector",
+    "logo": "logo.png",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v1.0.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "packages": [
+    {
+      "version": "1.0.0",
+      "uri": "https://github.com/hasura/ndc-jdbc/releases/download/phoenix%2Fv1.0.0/package.tar.gz",
+      "checksum": {
+        "type": "sha256",
+        "value": "89c8cf00bbec192d8a579afaf188bf7bb72f5917b765b14094dc37a5f17f0a93"
+      },
+      "source": {
+        "hash": "951088c0a84de2e1d90553d6b5c3e6282f488d03"
+      }
+    }
+  ],
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-jdbc",
+    "version": [
+      {
+        "tag": "phoenix/v1.0.0",
+        "hash": "951088c0a84de2e1d90553d6b5c3e6282f488d03",
+        "is_verified": true
+      }
+    ]
+  }
+}
