@@ -1,0 +1,14 @@
+{
+  "version": "v1.0.18",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.18/mysql-connector-v1.0.18.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "810e47b82770865b9973e7331f7ee5b6bde8479410fd0e572defb7137f72fda1"
+  },
+  "source": {
+    "hash": "72c433ba23e37a2df019a99e14ade14e88da30ef"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
