@@ -1,0 +1,37 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Integrates PromptQL Programs (Automations) as commands",
+    "title": "PromptQL Programs Connector",
+    "tags": [],
+    "latest_version": "v0.3.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": false,
+    "repository": "https://github.com/hasura/ndc-promptql-programs/",
+    "version": [
+      {
+        "tag": "v0.1.0",
+        "hash": "9eaaac7ddc72db21a2a97f7f3de0657d930385ea",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.2.0",
+        "hash": "af74e335fbb14405446ab5f49c9ac93e30aacee5",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.3.0",
+        "hash": "bd6f74fb7ab1712d4860aa18a8ed221d7f7c14f4",
+        "is_verified": true
+      }
+    ]
+  }
+}

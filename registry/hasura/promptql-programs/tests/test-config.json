@@ -1,0 +1,7 @@
+{
+  "hub_id": "hasura/promptql-programs",
+  "port": 8083,
+  "envs": [],
+  "snapshots_dir": "snapshots",
+  "setup_compose_file_path": "compose.yaml"
+}

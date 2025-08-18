@@ -1,0 +1,33 @@
+services:
+  ubuntu-service:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM ubuntu:latest
+        RUN apt-get update \
+          && apt-get install curl -y 
+        RUN curl -fL  https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/bin/yq && \
+          chmod +x /usr/bin/yq
+        COPY sequence_generator.json sequence_generator.json
+        COPY argPreset.yaml argPreset.yaml
+    command:
+      [
+        "sh",
+        "-c",
+        'ls -la /app; mkdir -p /app/connector/promptql_programs/programs; cp ./sequence_generator.json /app/connector/promptql_programs/programs/sequence_generator.json; ls -la /app/connector/promptql_programs/programs/; yq -i ''.definition.argumentPresets = load("argPreset.yaml")'' app/metadata/promptql_programs.hml; chmod 666 /app/metadata/promptql_programs.hml; chmod 666 /app/connector/promptql_programs/programs/sequence_generator.json; sleep 60',
+      ]
+    volumes:
+      - ${SUBGRAPH_DIR}:/app
+    restart: "no"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "test -f /app/connector/promptql_programs/programs/sequence_generator.json && echo 'File exists'",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
