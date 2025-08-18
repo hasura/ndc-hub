@@ -4,6 +4,5 @@
   "envs": [
     "JDBC_URL=jdbc:postgresql://35.236.11.122:5432/v3-docs-sample-app?user=read_only_user&password=readonlyuser"
   ],
-  "snapshots_dir": "snapshots",
-  "add_to_ddn_workspace": true
+  "snapshots_dir": "snapshots"
 }
