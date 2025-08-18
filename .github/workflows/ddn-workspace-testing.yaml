@@ -86,12 +86,10 @@ jobs:
           MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
           echo "Test matrix: $MATRIX"
           
-          # Create build args JSON and file
-          echo "{" > build_args.json
-          echo "" > build_args.txt
-          first=true
+          # Create connector versions JSON file
+          echo "{}" > connector-versions.json
           
-          # Process each connector in the matrix
+          # Process each connector in the matrix and update versions
           echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
             CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
             CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
@@ -99,35 +97,13 @@ jobs:
             
             echo "Processing connector: $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
             
-            # Convert connector name to uppercase and replace hyphens with underscores
-            ARG_NAME=$(echo "$CONNECTOR_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-            
-            # Add to build args file
-            echo "${ARG_NAME}_VERSION=$CONNECTOR_VERSION" >> build_args.txt
-            echo "--build-arg ${ARG_NAME}_VERSION=$CONNECTOR_VERSION" >> build_args_flags.txt
-            
-            # Add CLI version arg if needed
-            case "$CONNECTOR_NAME" in
-              "oracle"|"trino"|"postgres-promptql"|"snowflake-jdbc"|"mysql-promptql")
-                echo "${ARG_NAME}_CLI_VERSION=$CONNECTOR_VERSION" >> build_args.txt
-                echo "--build-arg ${ARG_NAME}_CLI_VERSION=$CONNECTOR_VERSION" >> build_args_flags.txt
-                ;;
-            esac
+            # Update the connector version in JSON file
+            jq --arg key "$CONNECTOR_NAME" --arg val "$CONNECTOR_VERSION" '.[$key] = $val' connector-versions.json > connector-versions.tmp
+            mv connector-versions.tmp connector-versions.json
           done
           
-          # Create final build args string
-          if [ -f build_args_flags.txt ]; then
-            FINAL_BUILD_ARGS=$(cat build_args_flags.txt | tr '\n' ' ' | sed 's/^ *//' | sed 's/ *$//')
-          else
-            FINAL_BUILD_ARGS=""
-          fi
-          
-          echo "build_args=$FINAL_BUILD_ARGS" >> "$GITHUB_OUTPUT"
-          echo "Final generated build args: $FINAL_BUILD_ARGS"
-          
-          # Show the build args file for debugging
-          echo "📄 Build args file contents:"
-          cat build_args.txt || echo "No build args file created"
+          echo "📄 Generated connector versions file:"
+          cat connector-versions.json
 
       - name: Build DDN Workspace with updated connector versions
         timeout-minutes: 20
@@ -136,45 +112,16 @@ jobs:
           
           echo "🚀 Building DDN Workspace with updated connector versions"
           
-          # Get the build args from previous step
-          BUILD_ARGS="${{ steps.connector-overrides.outputs.build_args }}"
-          
-          # Check if Dockerfile exists
-          if [ ! -f "ddn-workspace/Dockerfile" ]; then
-            echo "❌ Dockerfile not found at ddn-workspace/Dockerfile"
-            exit 1
-          fi
-          
-          echo "Build arguments received: '$BUILD_ARGS'"
-
-          # Build DDN workspace image with version overrides
-          if [ -n "$BUILD_ARGS" ]; then
-            echo "Building with custom connector versions using command line args..."
-            echo "Full docker build command will be:"
-            echo "DOCKER_BUILDKIT=0 docker build -t ddn-workspace:test -f ddn-workspace/Dockerfile $BUILD_ARGS --no-cache ./ddn-workspace"
-
-            # Execute the build command with verbose output
-            eval "DOCKER_BUILDKIT=0 docker build \
-              -t ddn-workspace:test \
-              -f ddn-workspace/Dockerfile \
-              $BUILD_ARGS \
-              --no-cache \
-              ./ddn-workspace"
-          elif [ -f "build_args.txt" ] && [ -s "build_args.txt" ]; then
-            echo "Building with custom connector versions using build args from file..."
-            echo "📄 Build args file contents:"
-            cat build_args.txt
-
-            # Convert each line KEY=VALUE to --build-arg KEY=VALUE
-            BUILD_ARGS_FROM_FILE=$(awk '{print "--build-arg " $0}' build_args.txt | tr '\n' ' ')
-            echo "Generated build args: $BUILD_ARGS_FROM_FILE"
-
-            eval "DOCKER_BUILDKIT=0 docker build \
-              -t ddn-workspace:test \
-              -f ddn-workspace/Dockerfile \
-              $BUILD_ARGS_FROM_FILE \
-              --no-cache \
-              ./ddn-workspace"
+          # Check if connector versions file exists and has content
+          if [ -f "connector-versions.json" ] && [ "$(jq 'keys | length' connector-versions.json)" -gt 0 ]; then
+            echo "📄 Using connector versions file:"
+            cat connector-versions.json
+            
+            # Use the build script to build with custom versions
+            cd ddn-workspace
+            chmod +x scripts/build-with-versions.sh
+            ./scripts/build-with-versions.sh ../connector-versions.json ddn-workspace:test
+            cd ..
           else
             echo "Building with default connector versions..."
             DOCKER_BUILDKIT=0 docker build \

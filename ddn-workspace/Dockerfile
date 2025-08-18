@@ -3,10 +3,8 @@
 ARG POSTGRES_VERSION=v2.1.1
 
 ARG ORACLE_VERSION=v1.1.1
-ARG ORACLE_CLI_VERSION=v1.1.1
 
 ARG TRINO_VERSION=v1.0.4
-ARG TRINO_CLI_VERSION=v1.0.4
 
 ARG MONGODB_VERSION=v1.8.3
 
@@ -19,44 +17,14 @@ ARG OPENAPI_VERSION=v1.7.1
 ARG ELASTICSEARCH_VERSION=v1.9.5
 
 ARG POSTGRES_PROMPTQL_VERSION=v1.2.7
-ARG POSTGRES_PROMPTQL_CLI_VERSION=v1.2.7
 
 ARG SNOWFLAKE_JDBC_VERSION=v1.2.12
-ARG SNOWFLAKE_JDBC_CLI_VERSION=v1.2.12
 
 ARG MYSQL_PROMPTQL_VERSION=v1.2.7
-ARG MYSQL_PROMPTQL_CLI_VERSION=v1.2.7
-####################################
 
-######### Builders Begin #########
-FROM --platform=amd64 ghcr.io/hasura/ndc-postgres:${POSTGRES_VERSION} AS postgres
+ARG CONNECTORS_TO_INCLUDE=""
 
-FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-oracle:${ORACLE_VERSION} AS oracle-connector
-FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${ORACLE_CLI_VERSION}-oracle AS oracle-cli
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-trino:${TRINO_VERSION} AS trino-connector
-FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${TRINO_CLI_VERSION}-trino AS trino-cli
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-mongodb:${MONGODB_VERSION} AS mongodb
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-graphql:${GRAPHQL_VERSION} AS graphql
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-bigquery:${BIGQUERY_VERSION} AS bigquery
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-open-api-lambda:${OPENAPI_VERSION} AS openapi-plugin
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-elasticsearch:${ELASTICSEARCH_VERSION} AS elasticsearch
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-postgres-jdbc:${POSTGRES_PROMPTQL_VERSION} AS postgres-promptql-connector
-FROM --platform=amd64 ghcr.io/hasura/ndc-postgres-jdbc-cli:${POSTGRES_PROMPTQL_CLI_VERSION} AS postgres-promptql-cli
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-snowflake-jdbc:${SNOWFLAKE_JDBC_VERSION} AS snowflake-connector
-FROM --platform=amd64 ghcr.io/hasura/ndc-snowflake-jdbc-cli:${SNOWFLAKE_JDBC_CLI_VERSION} AS snowflake-cli
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc:${MYSQL_PROMPTQL_VERSION} AS mysql-promptql-connector
-FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc-cli:${MYSQL_PROMPTQL_CLI_VERSION} AS mysql-promptql-cli
-######### Builders End   ##########
-
+######### Base DDN Workspace Image #########
 FROM --platform=amd64 ubuntu:24.04 AS workspace-builder
 
 # Use CODE_SERVER_VERSION from https://github.com/coder/code-server/releases
@@ -117,6 +85,18 @@ RUN npm update -g npm
 RUN curl -fsSL https://graphql-engine-cdn.hasura.io/ddn/cli/internal/staging/main/latest/cli-ddn-linux-amd64 -o ${BIN_PATH}/ddn \
     && chmod +x ${BIN_PATH}/ddn
 
+# Copy connector installation script
+COPY scripts/install-connectors.sh ${BIN_PATH}/
+RUN chmod +x ${BIN_PATH}/install-connectors.sh
+
+######### Install Selected Connectors #########
+ARG CONNECTORS_TO_INCLUDE
+RUN if [ -n "$CONNECTORS_TO_INCLUDE" ]; then \
+      echo "🔧 Installing connectors: $CONNECTORS_TO_INCLUDE"; \
+      ${BIN_PATH}/install-connectors.sh "$CONNECTORS_TO_INCLUDE"; \
+    else \
+      echo "⚠️  No connectors specified, building base workspace only"; \
+    fi
 
 ######### Nodejs Lambda - NoOP #########
 
