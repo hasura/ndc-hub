@@ -115,19 +115,6 @@ RUN npm update -g npm
 RUN curl -fsSL https://graphql-engine-cdn.hasura.io/ddn/cli/internal/staging/main/latest/cli-ddn-linux-amd64 -o ${BIN_PATH}/ddn \
     && chmod +x ${BIN_PATH}/ddn
 
-# Copy connector installation script
-COPY scripts/install-connectors.sh ${BIN_PATH}/
-RUN chmod +x ${BIN_PATH}/install-connectors.sh
-
-######### Install Selected Connectors #########
-ARG CONNECTORS_TO_INCLUDE
-RUN if [ -n "$CONNECTORS_TO_INCLUDE" ]; then \
-      echo "🔧 Installing connectors: $CONNECTORS_TO_INCLUDE"; \
-      ${BIN_PATH}/install-connectors.sh "$CONNECTORS_TO_INCLUDE"; \
-    else \
-      echo "⚠️  No connectors specified, building base workspace only"; \
-    fi
-
 ######### Nodejs Lambda - NoOP #########
 
 ######### Oracle Begin #########
