@@ -24,6 +24,36 @@ ARG MYSQL_PROMPTQL_VERSION=v1.2.7
 
 ARG CONNECTORS_TO_INCLUDE=""
 
+######### Builders Begin #########
+FROM --platform=amd64 ghcr.io/hasura/ndc-postgres:${POSTGRES_VERSION} AS postgres
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-oracle:${ORACLE_VERSION} AS oracle-connector
+FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${ORACLE_VERSION}-oracle AS oracle-cli
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-trino:${TRINO_VERSION} AS trino-connector
+FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${TRINO_VERSION}-trino AS trino-cli
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-mongodb:${MONGODB_VERSION} AS mongodb
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-graphql:${GRAPHQL_VERSION} AS graphql
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-bigquery:${BIGQUERY_VERSION} AS bigquery
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-open-api-lambda:${OPENAPI_VERSION} AS openapi-plugin
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-elasticsearch:${ELASTICSEARCH_VERSION} AS elasticsearch
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-postgres-jdbc:${POSTGRES_PROMPTQL_VERSION} AS postgres-promptql-connector
+FROM --platform=amd64 ghcr.io/hasura/ndc-postgres-jdbc-cli:${POSTGRES_PROMPTQL_VERSION} AS postgres-promptql-cli
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-snowflake-jdbc:${SNOWFLAKE_JDBC_VERSION} AS snowflake-connector
+FROM --platform=amd64 ghcr.io/hasura/ndc-snowflake-jdbc-cli:${SNOWFLAKE_JDBC_VERSION} AS snowflake-cli
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc:${MYSQL_PROMPTQL_VERSION} AS mysql-promptql-connector
+FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc-cli:${MYSQL_PROMPTQL_VERSION} AS mysql-promptql-cli
+######### Builders End   ##########
+
+
 ######### Base DDN Workspace Image #########
 FROM --platform=amd64 ubuntu:24.04 AS workspace-builder
 
