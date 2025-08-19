@@ -11,6 +11,7 @@ export interface ConnectorVersionOverride {
   version: string;
 }
 
+
 interface ConnectorTestConfig {
   connector_name: string;
   connector_version: string;
@@ -19,6 +20,8 @@ interface ConnectorTestConfig {
   port?: number;
   setup_compose_path?: string;
   envs?: string[];
+  ddn_workspace_enabled?: boolean;
+  ddn_workspace_envs?: string[];
 }
 
 interface ConnectorSpec {
@@ -46,7 +49,7 @@ function parseConnectorSpec(spec: string): ConnectorSpec | null {
 const execAsync = promisify(spawn);
 
 async function findConnectorsToTest(pattern: string = "*", versionPattern?: string): Promise<ConnectorTestConfig[]> {
-  const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH || process.cwd();
+  const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH || join(process.cwd(), '../..');
   const registryPath = join(repoRoot, 'registry');
   
   console.log(`🔍 Searching for connectors in: ${registryPath}`);
@@ -90,20 +93,17 @@ async function findConnectorsToTest(pattern: string = "*", versionPattern?: stri
                   continue;
                 }
                 
-                // Read metadata to check if add-to-ddn-workspace is true
-                const metadataExists = await readFile(metadataPath, 'utf8').then(() => true).catch(() => false);
-                
-                if (metadataExists) {
-                  const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
-                  if (!metadata['add-to-ddn-workspace']) {
-                    console.log(`⏭️  Skipping ${connectorName}:${version} (add-to-ddn-workspace not enabled)`);
-                    continue;
-                  }
-                }
-                
                 // Read test config
                 const testConfig = JSON.parse(await readFile(testConfigPath, 'utf8'));
-                
+
+                // Check if DDN workspace testing is enabled
+                const ddnWorkspaceConfig = testConfig.ddn_workspace;
+                if (!ddnWorkspaceConfig || !ddnWorkspaceConfig.enabled) {
+                  console.log(`⏭️  Skipping ${connectorName}:${version} (ddn_workspace not enabled)`);
+                  continue;
+                } else {
+                  console.log("DDN workspace config:", ddnWorkspaceConfig);
+                }
                 connectors.push({
                   connector_name: connectorName,
                   connector_version: version,
@@ -111,7 +111,9 @@ async function findConnectorsToTest(pattern: string = "*", versionPattern?: stri
                   hub_id: testConfig.hub_id || `${publisher}/${connectorName}`,
                   port: testConfig.port || 8083,
                   setup_compose_path: testConfig.setup_compose_path,
-                  envs: testConfig.envs || []
+                  envs: testConfig.envs || [],
+                  ddn_workspace_enabled: ddnWorkspaceConfig.enabled,
+                  ddn_workspace_envs: ddnWorkspaceConfig.envs || []
                 });
                 
                 console.log(`✅ Found connector: ${connectorName}:${version}`);
@@ -259,7 +261,18 @@ async function testConnector(connector: ConnectorTestConfig): Promise<void> {
     }
     
     // Add connector-specific environment variables
-    for (const env of connector.envs || []) {
+    // Use DDN workspace envs if available, otherwise fall back to regular envs
+    const envsToUse = connector.ddn_workspace_enabled && connector.ddn_workspace_envs
+      ? connector.ddn_workspace_envs
+      : connector.envs || [];
+
+    if (connector.ddn_workspace_enabled && connector.ddn_workspace_envs) {
+      console.log(`📝 Using DDN workspace environment variables for ${connector.connector_name}`);
+    } else {
+      console.log(`📝 Using regular environment variables for ${connector.connector_name}`);
+    }
+
+    for (const env of envsToUse) {
       envVars.push('-e', env);
     }
     
@@ -354,7 +367,7 @@ async function findSpecificConnector(connectorSpec: string): Promise<ConnectorTe
     throw new Error(`Invalid connector specification: ${connectorSpec}. Expected format: publisher/name:version`);
   }
   
-  const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH || process.cwd();
+  const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH || join(process.cwd(), '../..');
   const connectorPath = join(repoRoot, 'registry', spec.publisher, spec.name);
   const testConfigPath = join(connectorPath, 'tests', 'test-config.json');
   const versionPath = join(connectorPath, spec.version);
@@ -370,19 +383,15 @@ async function findSpecificConnector(connectorSpec: string): Promise<ConnectorTe
       throw new Error(`test-config.json not found for ${connectorSpec} at ${testConfigPath}`);
     }
     
-    // Read metadata to check if add-to-ddn-workspace is true
-    const metadataExists = await readFile(metadataPath, 'utf8').then(() => true).catch(() => false);
-    
-    if (metadataExists) {
-      const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
-      if (!metadata['add-to-ddn-workspace']) {
-        throw new Error(`${connectorSpec} does not have add-to-ddn-workspace enabled`);
-      }
-    }
-    
     // Read test config
     const testConfig = JSON.parse(await readFile(testConfigPath, 'utf8'));
-    
+
+    // Check if DDN workspace testing is enabled
+    const ddnWorkspaceConfig = testConfig.ddn_workspace;
+    if (!ddnWorkspaceConfig || !ddnWorkspaceConfig.enabled) {
+      throw new Error(`${connectorSpec} does not have ddn_workspace enabled`);
+    }
+
     const connector: ConnectorTestConfig = {
       connector_name: spec.name,
       connector_version: spec.version,
@@ -390,7 +399,9 @@ async function findSpecificConnector(connectorSpec: string): Promise<ConnectorTe
       hub_id: testConfig.hub_id || spec.hubId,
       port: testConfig.port || 8083,
       setup_compose_path: testConfig.setup_compose_path,
-      envs: testConfig.envs || []
+      envs: testConfig.envs || [],
+      ddn_workspace_enabled: ddnWorkspaceConfig.enabled,
+      ddn_workspace_envs: ddnWorkspaceConfig.envs || []
     };
     
     console.log(`✅ Found connector: ${spec.name}:${spec.version}`);
@@ -423,7 +434,7 @@ export async function runDDNWorkspaceTestSuite(pattern: string = "*", customVers
   console.log(`📋 Found ${connectors.length} connectors to test`);
   
   // Build DDN workspace
-  // await buildDDNWorkspace(customVersions);
+  await buildDDNWorkspace(customVersions);
   
   // Test each connector
   for (const connector of connectors) {
