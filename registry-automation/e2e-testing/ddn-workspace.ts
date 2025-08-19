@@ -432,10 +432,6 @@ export async function runDDNWorkspaceTestSuite(pattern: string = "*", customVers
   }
   
   console.log(`📋 Found ${connectors.length} connectors to test`);
-  
-  // Build DDN workspace
-  await buildDDNWorkspace(customVersions);
-  
   // Test each connector
   for (const connector of connectors) {
     try {
