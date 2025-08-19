@@ -4,8 +4,10 @@
     "description": "The Python Lambda Connector allows you to expose Python functions as NDC functions/procedures for use in your Hasura DDN subgraphs.",
     "title": "Python Lambda Connector",
     "logo": "logo.svg",
-    "tags": ["lambda"],
-    "latest_version": "v0.2.0"
+    "tags": [
+      "lambda"
+    ],
+    "latest_version": "v0.2.4"
   },
   "author": {
     "support_email": "support@hasura.io",
