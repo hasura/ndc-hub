@@ -47,7 +47,7 @@ jobs:
           CHANGED_FILES_PATH: "changed_files.json"
         run: |
           # Temporarily hardcode specific connectors for testing
-          MATRIX_JSON='[{"connector_name":"postgres-promptql","connector_version":"v1.2.1100","namespace":"hasura"},{"connector_name":"elasticsearch","connector_version":"v1.9.5","namespace":"hasura"}]'
+          MATRIX_JSON='[{"connector_name":"elasticsearch","connector_version":"v1.9.5","namespace":"hasura"}]'
           echo "$MATRIX_JSON"
           echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
 
