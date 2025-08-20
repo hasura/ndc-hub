@@ -202,7 +202,10 @@ async function testConnector(connector: ConnectorTestConfig): Promise<void> {
     await runDockerCommand(['network', 'create', networkName]).catch(() => {
       // Network might already exist, ignore error
     });
-    
+
+    // Track compose network name for DDN workspace to join
+    let composeNetworkName: string | null = null;
+
     // Start setup services if needed
     if (connector.setup_compose_file_path) {
       console.log(`🐳 Starting setup services: ${connector.setup_compose_file_path}`);
@@ -216,66 +219,69 @@ async function testConnector(connector: ConnectorTestConfig): Promise<void> {
         '--project-name', `setup-${connector.connector_name}`,
         'up', '-d', '--build', '--wait'
       ]);
-      
-      // Connect setup services to network
-      const composeServices = await new Promise<string[]>((resolve, reject) => {
-        const childProcess = spawn('docker', [
-          'compose',
-          '-f', composePath,
-          '--project-name', `setup-${connector.connector_name}`,
-          'ps', '--services'
-        ], { stdio: 'pipe' });
-        
-        let output = '';
-        childProcess.stdout.on('data', (data) => {
-          output += data.toString();
-        });
-        
-        childProcess.on('close', (code) => {
-          if (code === 0) {
-            resolve(output.trim().split('\n').filter(s => s.length > 0));
+
+      // Verify all services are healthy
+      console.log('🏥 Verifying all services are healthy...');
+      const maxRetries = 30; // 30 seconds max wait
+      let retries = 0;
+
+      while (retries < maxRetries) {
+        try {
+          const healthResult = await new Promise<string>((resolve, reject) => {
+            const childProcess = spawn('docker', [
+              'compose',
+              '-f', composePath,
+              '--project-name', `setup-${connector.connector_name}`,
+              'ps', '--format', 'json'
+            ], { stdio: 'pipe' });
+
+            let output = '';
+            childProcess.stdout.on('data', (data) => {
+              output += data.toString();
+            });
+
+            childProcess.on('close', (code) => {
+              if (code === 0) {
+                resolve(output);
+              } else {
+                reject(new Error(`Docker command failed with exit code ${code}`));
+              }
+            });
+          });
+
+          const containers = healthResult.trim().split('\n')
+            .filter((line: string) => line.length > 0)
+            .map((line: string) => JSON.parse(line));
+
+          const allHealthy = containers.every((container: any) =>
+            container.Health === 'healthy' || container.Health === '' // No health check defined
+          );
+
+          if (allHealthy) {
+            console.log('✅ All services are healthy');
+            break;
           } else {
-            reject(new Error(`Failed to get compose services`));
+            const unhealthyServices = containers
+              .filter((c: any) => c.Health && c.Health !== 'healthy')
+              .map((c: any) => `${c.Service}(${c.Health})`)
+              .join(', ');
+            console.log(`⏳ Waiting for services to be healthy: ${unhealthyServices}`);
           }
-        });
-      });
-      
-      // Get actual container names from the compose project
-      const containerNames = await new Promise<string[]>((resolve, reject) => {
-        const childProcess = spawn('docker', [
-          'compose',
-          '-f', composePath,
-          '--project-name', `setup-${connector.connector_name}`,
-          'ps', '--format', 'json'
-        ], { stdio: 'pipe' });
+        } catch (error) {
+          console.log(`⏳ Waiting for services to be ready... (${retries + 1}/${maxRetries})`);
+        }
 
-        let output = '';
-        childProcess.stdout.on('data', (data) => {
-          output += data.toString();
-        });
-
-        childProcess.on('close', (code) => {
-          if (code === 0) {
-            try {
-              const containers = output.trim().split('\n')
-                .filter(line => line.length > 0)
-                .map(line => JSON.parse(line))
-                .map(container => container.Name);
-              resolve(containers);
-            } catch (error) {
-              reject(new Error(`Failed to parse container names: ${error}`));
-            }
-          } else {
-            reject(new Error(`Failed to get container names`));
-          }
-        });
-      });
-
-      for (const containerName of containerNames) {
-        await runDockerCommand(['network', 'connect', networkName, containerName]).catch(() => {
-          // Ignore connection errors - container might already be connected
-        });
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+        retries++;
       }
+
+      if (retries >= maxRetries) {
+        console.log('⚠️ Warning: Some services may not be fully healthy, continuing anyway...');
+      }
+
+      // Store compose network name for DDN workspace container to join
+      composeNetworkName = `setup-${connector.connector_name}_default`;
+      console.log(`📡 Will connect DDN workspace to compose network: ${composeNetworkName}`);
     }
     
     // Build environment variables
@@ -290,26 +296,76 @@ async function testConnector(connector: ConnectorTestConfig): Promise<void> {
     }
     
     // Add connector-specific environment variables
-    // Use DDN workspace envs if available, otherwise fall back to regular envs
-    const envsToUse = connector.ddn_workspace_enabled && connector.ddn_workspace_envs
-      ? connector.ddn_workspace_envs
-      : connector.envs || [];
+    // Priority: DDN workspace envs > GitHub secrets > regular envs > empty
+    let envsToUse: string[] = [];
+    let envSource = '';
 
-    if (connector.ddn_workspace_enabled && connector.ddn_workspace_envs) {
-      console.log(`📝 Using DDN workspace environment variables for ${connector.connector_name}`);
+    if (connector.ddn_workspace_enabled && connector.ddn_workspace_envs && connector.ddn_workspace_envs.length > 0) {
+      // Use explicitly configured DDN workspace environment variables
+      envsToUse = connector.ddn_workspace_envs;
+      envSource = 'DDN workspace configuration';
+    } else if (connector.ddn_workspace_enabled) {
+      // Try to read from GitHub secrets if DDN workspace is enabled but no envs configured
+      const secretKey = `${connector.connector_name.toUpperCase().replace(/-/g, '_')}_CONFIG_OPTIONS_ENV`;
+      const secretValue = process.env[secretKey];
+
+      if (secretValue) {
+        try {
+          const secretEnvs = JSON.parse(secretValue);
+          if (Array.isArray(secretEnvs)) {
+            envsToUse = secretEnvs;
+            envSource = `GitHub secret (${secretKey})`;
+          } else {
+            console.log(`⚠️ Warning: ${secretKey} is not a valid JSON array, falling back to regular envs`);
+            envsToUse = connector.envs || [];
+            envSource = 'regular configuration (secret invalid)';
+          }
+        } catch (error) {
+          console.log(`⚠️ Warning: Failed to parse ${secretKey} as JSON, falling back to regular envs`);
+          envsToUse = connector.envs || [];
+          envSource = 'regular configuration (secret parse error)';
+        }
+      } else {
+        // No secret found, use regular envs or empty
+        envsToUse = connector.envs || [];
+        envSource = envsToUse.length > 0 ? 'regular configuration' : 'empty (no configuration found)';
+      }
     } else {
-      console.log(`📝 Using regular environment variables for ${connector.connector_name}`);
+      // DDN workspace not enabled, use regular envs
+      envsToUse = connector.envs || [];
+      envSource = 'regular configuration (DDN workspace disabled)';
+    }
+
+    console.log(`📝 Using environment variables from: ${envSource} for ${connector.connector_name}`);
+    if (envsToUse.length > 0) {
+      console.log(`📋 Environment variables: ${envsToUse.map(env => env.split('=')[0]).join(', ')}`);
+    } else {
+      console.log(`📋 No environment variables configured`);
     }
 
     for (const env of envsToUse) {
-      envVars.push('-e', env);
+      // Expand environment variables in the format $VAR_NAME
+      const expandedEnv = env.replace(/\$([A-Z_][A-Z0-9_]*)/g, (match, varName) => {
+        const value = process.env[varName];
+        if (value === undefined) {
+          console.log(`⚠️ Warning: Environment variable ${varName} not found, keeping ${match}`);
+          return match;
+        }
+        console.log(`🔄 Expanding ${match} to ${value}`);
+        return value;
+      });
+      envVars.push('-e', expandedEnv);
     }
     
     // Start DDN workspace container
+    // Use compose network if available, otherwise use DDN test network
+    const targetNetwork = composeNetworkName || networkName;
+    console.log(`🔗 Connecting DDN workspace to network: ${targetNetwork}`);
+
     await runDockerCommand([
       'run', '-d',
       '--name', containerName,
-      '--network', networkName,
+      '--network', targetNetwork,
       '--privileged',
       '--entrypoint', '',
       ...envVars,

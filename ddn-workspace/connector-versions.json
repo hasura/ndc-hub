@@ -7,7 +7,7 @@
   "bigquery": "v2.0.1",
   "openapi": "v1.7.1",
   "elasticsearch": "v1.9.5",
-  "postgres-promptql": "v1.2.1100",
+  "postgres-promptql": "v1.2.12",
   "snowflake-jdbc": "v1.2.12",
   "mysql-promptql": "v1.2.7"
 }

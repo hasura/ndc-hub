@@ -4,5 +4,11 @@
   "envs": [
     "MONGODB_DATABASE_URI=mongodb+srv://user:3CBOCCeint33uBJW@hasura-ddn.fjmew.mongodb.net/public"
   ],
+  "ddn_workspace": {
+    "enabled": true,
+    "envs": [
+      "MONGODB_DATABASE_URI=mongodb+srv://user:3CBOCCeint33uBJW@hasura-ddn.fjmew.mongodb.net/public"
+    ]
+  },
   "snapshots_dir": "snapshots"
 }

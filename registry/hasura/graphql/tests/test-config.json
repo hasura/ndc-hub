@@ -4,5 +4,11 @@
   "envs": [
     "GRAPHQL_ENDPOINT=https://countries.trevorblades.com"
   ],
+  "ddn_workspace": {
+    "enabled": true,
+    "envs": [
+      "GRAPHQL_ENDPOINT=https://countries.trevorblades.com"
+    ]
+  },
   "snapshots_dir": "snapshots"
 }
