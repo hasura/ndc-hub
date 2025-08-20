@@ -1,6 +1,6 @@
 
 ######### Arg definitions  #########
-ARG POSTGRES_VERSION=v2.1.1
+ARG POSTGRES_VERSION=v3.1.0
 
 ARG ORACLE_VERSION=v1.1.1
 
@@ -132,14 +132,13 @@ COPY --from=trino-cli  /app ${LIB_PATH}/hasura/trino/${TRINO_VERSION}/${CONNECTO
 ######### Postgres Begin #########
 ARG POSTGRES_VERSION
 COPY --from=postgres  /bin/ndc-postgres ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-postgres
-# Required as the postgres binary is hardcoded to look for ld-linux-x86-64.so.2 with nix (interpreter /nix/store/3dyw...)
-# Use `ldd ndc-postgres` to check the dynamic dependencies
-RUN mkdir -p /nix/store/pacbfvpzqz2mksby36awvbcn051zcji3-glibc-2.40-36/lib \
-    && ln -s /lib64/ld-linux-x86-64.so.2 /nix/store/pacbfvpzqz2mksby36awvbcn051zcji3-glibc-2.40-36/lib/ld-linux-x86-64.so.2 \
-    && chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-postgres  \
-    && ddn plugin install ndc-postgres --version ${POSTGRES_VERSION} \
+RUN chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-postgres  \
     && mkdir -p ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && ln -s $HOME/.ddn-staging/plugins/store/ndc-postgres/$POSTGRES_VERSION/hasura-ndc-postgres ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-postgres
+    && curl -L "https://github.com/hasura/ndc-postgres/releases/download/${POSTGRES_VERSION}/ndc-postgres-cli-x86_64-unknown-linux-gnu" \
+       -o ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-postgres \
+    && chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-postgres \
+    && mkdir -p /nix/store/lmn7lwydprqibdkghw7wgcn21yhllz13-glibc-2.40-66/lib \
+    && ln -sf /lib64/ld-linux-x86-64.so.2 /nix/store/lmn7lwydprqibdkghw7wgcn21yhllz13-glibc-2.40-66/lib/ld-linux-x86-64.so.2
 ######### Postgres End   #########
 
 ######### MongoDB Begin #########
