@@ -10,9 +10,8 @@ async function main() {
 Usage: bun ddn-workspace-testing.ts [PATTERN] [CUSTOM_VERSIONS]
 
 Examples:
-  bun ddn-workspace-testing.ts                           # Run all connectors with add-to-ddn-workspace=true
-  bun ddn-workspace-testing.ts "postgres*"               # Run postgres connectors only
-  bun ddn-workspace-testing.ts "*" '[{"name":"postgres","version":"v2.3.0"}]'  # Override postgres version
+  bun ddn-workspace-testing.ts                         
+  bun ddn-workspace-testing.ts "hasura/elasticsearch:v1.9.5"  # Run specific connector version
 
 Arguments:
   PATTERN         Glob pattern to match connector directories (default: "*")

@@ -18,7 +18,7 @@ interface ConnectorTestConfig {
   test_config_file_path: string;
   hub_id: string;
   port?: number;
-  setup_compose_path?: string;
+  setup_compose_file_path?: string;
   envs?: string[];
   ddn_workspace_enabled?: boolean;
   ddn_workspace_envs?: string[];
@@ -49,7 +49,7 @@ function parseConnectorSpec(spec: string): ConnectorSpec | null {
 const execAsync = promisify(spawn);
 
 async function findConnectorsToTest(pattern: string = "*", versionPattern?: string): Promise<ConnectorTestConfig[]> {
-  const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH || join(process.cwd(), '../..');
+  const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH || process.cwd();
   const registryPath = join(repoRoot, 'registry');
   
   console.log(`🔍 Searching for connectors in: ${registryPath}`);
@@ -110,7 +110,7 @@ async function findConnectorsToTest(pattern: string = "*", versionPattern?: stri
                   test_config_file_path: testConfigPath,
                   hub_id: testConfig.hub_id || `${publisher}/${connectorName}`,
                   port: testConfig.port || 8083,
-                  setup_compose_path: testConfig.setup_compose_path,
+                  setup_compose_file_path: testConfig.setup_compose_file_path,
                   envs: testConfig.envs || [],
                   ddn_workspace_enabled: ddnWorkspaceConfig.enabled,
                   ddn_workspace_envs: ddnWorkspaceConfig.envs || []
@@ -204,12 +204,11 @@ async function testConnector(connector: ConnectorTestConfig): Promise<void> {
     });
     
     // Start setup services if needed
-    if (connector.setup_compose_path) {
-      console.log(`🐳 Starting setup services: ${connector.setup_compose_path}`);
-      
-      const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH || process.cwd();
-      const testConfigDir = join(repoRoot, connector.test_config_file_path, '..');
-      const composePath = join(testConfigDir, connector.setup_compose_path);
+    if (connector.setup_compose_file_path) {
+      console.log(`🐳 Starting setup services: ${connector.setup_compose_file_path}`);
+
+      const testConfigDir = join(connector.test_config_file_path, '..');
+      const composePath = join(testConfigDir, connector.setup_compose_file_path);
       
       await runDockerCommand([
         'compose',
@@ -241,10 +240,40 @@ async function testConnector(connector: ConnectorTestConfig): Promise<void> {
         });
       });
       
-      for (const service of composeServices) {
-        const serviceContainerName = `setup-${connector.connector_name}-${service}-1`;
-        await runDockerCommand(['network', 'connect', networkName, serviceContainerName]).catch(() => {
-          // Ignore connection errors
+      // Get actual container names from the compose project
+      const containerNames = await new Promise<string[]>((resolve, reject) => {
+        const childProcess = spawn('docker', [
+          'compose',
+          '-f', composePath,
+          '--project-name', `setup-${connector.connector_name}`,
+          'ps', '--format', 'json'
+        ], { stdio: 'pipe' });
+
+        let output = '';
+        childProcess.stdout.on('data', (data) => {
+          output += data.toString();
+        });
+
+        childProcess.on('close', (code) => {
+          if (code === 0) {
+            try {
+              const containers = output.trim().split('\n')
+                .filter(line => line.length > 0)
+                .map(line => JSON.parse(line))
+                .map(container => container.Name);
+              resolve(containers);
+            } catch (error) {
+              reject(new Error(`Failed to parse container names: ${error}`));
+            }
+          } else {
+            reject(new Error(`Failed to get container names`));
+          }
+        });
+      });
+
+      for (const containerName of containerNames) {
+        await runDockerCommand(['network', 'connect', networkName, containerName]).catch(() => {
+          // Ignore connection errors - container might already be connected
         });
       }
     }
@@ -346,10 +375,9 @@ async function testConnector(connector: ConnectorTestConfig): Promise<void> {
     await runDockerCommand(['stop', containerName]).catch(() => {});
     await runDockerCommand(['rm', containerName]).catch(() => {});
     
-    if (connector.setup_compose_path) {
-      const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH || process.cwd();
-      const testConfigDir = join(repoRoot, connector.test_config_file_path, '..');
-      const composePath = join(testConfigDir, connector.setup_compose_path);
+    if (connector.setup_compose_file_path) {
+      const testConfigDir = join(connector.test_config_file_path, '..');
+      const composePath = join(testConfigDir, connector.setup_compose_file_path);
       
       await runDockerCommand([
         'compose',
@@ -398,7 +426,7 @@ async function findSpecificConnector(connectorSpec: string): Promise<ConnectorTe
       test_config_file_path: testConfigPath,
       hub_id: testConfig.hub_id || spec.hubId,
       port: testConfig.port || 8083,
-      setup_compose_path: testConfig.setup_compose_path,
+      setup_compose_file_path: testConfig.setup_compose_file_path,
       envs: testConfig.envs || [],
       ddn_workspace_enabled: ddnWorkspaceConfig.enabled,
       ddn_workspace_envs: ddnWorkspaceConfig.envs || []
