@@ -138,7 +138,9 @@ jobs:
           fi
 
           echo "Final test matrix: $MATRIX_JSON"
-          echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
+          # Ensure JSON is compact (single line) for GitHub Actions output
+          COMPACT_MATRIX_JSON=$(echo "$MATRIX_JSON" | jq -c .)
+          echo "matrix=$COMPACT_MATRIX_JSON" >> "$GITHUB_OUTPUT"
 
       - name: Check if connector is published to staging
         run: |
