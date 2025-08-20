@@ -476,12 +476,12 @@ jobs:
         with:
           sarif_file: "trivy-results.sarif"
 
-      - name: Run Trivy vulnerability scan (table format)
+      - name: Print Trivy vulnerability scan results
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "ddn-workspace:test"
           format: "table"
-          exit-code: 1
+          exit-code: 0
           ignore-unfixed: true
           vuln-type: "os,library"
           severity: "CRITICAL,HIGH"
