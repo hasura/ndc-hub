@@ -223,16 +223,34 @@ jobs:
             cat connector-versions.json
             
             # Use the build script to build with custom versions
+            # Determine DDN environment
+            if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              DDN_ENV="production"
+            else
+              DDN_ENV="staging"
+            fi
+
             cd ddn-workspace
             chmod +x scripts/build-with-versions.sh
-            ./scripts/build-with-versions.sh ../connector-versions.json ddn-workspace:test
+            ./scripts/build-with-versions.sh ../connector-versions.json ddn-workspace:test $DDN_ENV
             cd ..
           else
             echo "Building with default connector versions..."
+
+            # Use staging environment for PR builds and production for main branch
+            if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              echo "📦 Building for production environment"
+              DDN_ENV_ARG="--build-arg DDN_ENVIRONMENT=production"
+            else
+              echo "🧪 Building for staging environment"
+              DDN_ENV_ARG="--build-arg DDN_ENVIRONMENT=staging"
+            fi
+
             DOCKER_BUILDKIT=0 docker build \
               -t ddn-workspace:test \
               -f ddn-workspace/Dockerfile \
               --no-cache \
+              $DDN_ENV_ARG \
               ./ddn-workspace
           fi
 
@@ -324,11 +342,13 @@ jobs:
           
           echo "✅ Basic functionality tests passed"
 
+
+
       - name: Save DDN Workspace image
         run: |
           # Save the image for connector tests
           docker save ddn-workspace:test | gzip > ddn-workspace.tar.gz
-          
+
       - name: Upload DDN Workspace image
         uses: actions/upload-artifact@v4
         with:
@@ -442,5 +462,67 @@ jobs:
           fi
 
           echo "🎉 All DDN workspace tests completed successfully!"
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "ddn-workspace:test"
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+
+      - name: Run Trivy vulnerability scan (table format)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "ddn-workspace:test"
+          format: "table"
+          exit-code: 1
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+
+  push-ddn-workspace-image:
+    needs: [build-ddn-workspace, test-connectors]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test-connectors.result == 'success'
+    environment: staging
+    steps:
+      - name: Download DDN Workspace image
+        uses: actions/download-artifact@v4
+        with:
+          name: ddn-workspace-image
+
+      - name: Load DDN Workspace image
+        run: |
+          docker load < ddn-workspace.tar.gz
+          docker tag ddn-workspace:test ddn-workspace:latest
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and Push DDN Workspace image
+        run: |
+          # Generate timestamp-based tag
+          TAG="main-$(date +%Y%m%d-%H%M%S)"
+
+          # Tag the image
+          docker tag ddn-workspace:latest ghcr.io/${{ github.repository_owner }}/ddn-workspace:$TAG
+          docker tag ddn-workspace:latest ghcr.io/${{ github.repository_owner }}/ddn-workspace:latest
+
+          # Push both tags
+          docker push ghcr.io/${{ github.repository_owner }}/ddn-workspace:$TAG
+          docker push ghcr.io/${{ github.repository_owner }}/ddn-workspace:latest
+
+          echo "✅ Successfully pushed DDN workspace image with tags: $TAG, latest"
+          echo "📦 Image available at: ghcr.io/${{ github.repository_owner }}/ddn-workspace:latest"
 
 

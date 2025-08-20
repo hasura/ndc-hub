@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # Build script that reads connector versions from JSON and passes them as build args
-# Usage: ./build-with-versions.sh [connector-versions.json] [image-tag]
+# Usage: ./build-with-versions.sh [connector-versions.json] [image-tag] [ddn-environment]
 
 set -euo pipefail
 
 VERSIONS_FILE="${1:-connector-versions.json}"
 IMAGE_TAG="${2:-ddn-workspace:latest}"
+DDN_ENVIRONMENT="${3:-staging}"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -52,10 +53,11 @@ while IFS='=' read -r connector_name version; do
 done < <(jq -r 'to_entries[] | "\(.key)=\(.value)"' "$VERSIONS_FILE")
 
 log "Building Docker image: $IMAGE_TAG"
+log "DDN Environment: $DDN_ENVIRONMENT"
 log "Build args: $BUILD_ARGS"
 
-# Execute docker build with the generated build args
-eval "docker build $BUILD_ARGS -t $IMAGE_TAG ."
+# Execute docker build with the generated build args and DDN environment
+eval "docker build $BUILD_ARGS --build-arg DDN_ENVIRONMENT=$DDN_ENVIRONMENT -t $IMAGE_TAG ."
 
 if [[ $? -eq 0 ]]; then
     log "Successfully built image: $IMAGE_TAG"
