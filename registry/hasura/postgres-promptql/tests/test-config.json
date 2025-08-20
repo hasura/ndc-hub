@@ -7,7 +7,7 @@
   "ddn_workspace": {
     "enabled": true,
     "envs": [
-      "JDBC_URL=jdbc:postgresql://postgres:5432/postgres?user=postgres&password=postgres"
+      "JDBC_URL=jdbc:postgresql://35.236.11.122:5432/v3-docs-sample-app?user=read_only_user&password=readonlyuser"
     ]
   },
   "snapshots_dir": "snapshots"

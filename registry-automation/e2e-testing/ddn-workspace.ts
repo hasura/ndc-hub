@@ -417,7 +417,8 @@ async function findSpecificConnector(connectorSpec: string): Promise<ConnectorTe
     // Check if DDN workspace testing is enabled
     const ddnWorkspaceConfig = testConfig.ddn_workspace;
     if (!ddnWorkspaceConfig || !ddnWorkspaceConfig.enabled) {
-      throw new Error(`${connectorSpec} does not have ddn_workspace enabled`);
+      console.log(`⚠️  Warning: ${connectorSpec} does not have ddn_workspace enabled - skipping`);
+      return [];
     }
 
     const connector: ConnectorTestConfig = {
@@ -441,29 +442,78 @@ async function findSpecificConnector(connectorSpec: string): Promise<ConnectorTe
   }
 }
 
-export async function runDDNWorkspaceTestSuite(pattern: string = "*", customVersions?: ConnectorVersionOverride[], versionPattern?: string): Promise<void> {
-  console.log('🚀 Starting DDN Workspace Test Suite');
-  
-  let connectors: ConnectorTestConfig[];
-  
-  // Check if pattern looks like a specific connector spec (contains : and /)
-  if (pattern.includes(':') && pattern.includes('/')) {
-    connectors = await findSpecificConnector(pattern);
-  } else {
-    // Find connectors using pattern matching
-    connectors = await findConnectorsToTest(pattern, versionPattern);
+async function findConnectorsFromVersionsFile(): Promise<ConnectorTestConfig[]> {
+  console.log('📋 Loading connectors from connector-versions.json');
+
+  const repoRoot = process.env.NDC_HUB_GIT_REPO_FILE_PATH || join(process.cwd(), '../..');
+  const versionsFilePath = join(repoRoot, 'ddn-workspace', 'connector-versions.json');
+
+  try {
+    const versionsContent = await readFile(versionsFilePath, 'utf8');
+    const versions = JSON.parse(versionsContent);
+
+    const connectors: ConnectorTestConfig[] = [];
+
+    for (const [connectorName, version] of Object.entries(versions)) {
+      const connectorSpec = `hasura/${connectorName}:${version}`;
+      console.log(`🔍 Processing connector from versions file: ${connectorSpec}`);
+
+      try {
+        const connectorConfigs = await findSpecificConnector(connectorSpec);
+        connectors.push(...connectorConfigs);
+      } catch (error) {
+        console.log(`⚠️  Warning: Failed to load ${connectorSpec}: ${error}`);
+      }
+    }
+
+    return connectors;
+  } catch (error) {
+    throw new Error(`Failed to load connector-versions.json: ${error}`);
   }
-  
+}
+
+async function findSpecificConnectors(connectorSpecs: string[]): Promise<ConnectorTestConfig[]> {
+  console.log(`🔍 Loading specific connectors: ${connectorSpecs.join(', ')}`);
+
+  const connectors: ConnectorTestConfig[] = [];
+
+  for (const spec of connectorSpecs) {
+    try {
+      const connectorConfigs = await findSpecificConnector(spec.trim());
+      connectors.push(...connectorConfigs);
+    } catch (error) {
+      console.log(`⚠️  Warning: Failed to load ${spec}: ${error}`);
+    }
+  }
+
+  return connectors;
+}
+
+export async function runDDNWorkspaceTestSuite(input?: string, customVersions?: ConnectorVersionOverride[]): Promise<void> {
+  console.log('🚀 Starting DDN Workspace Test Suite');
+
+  let connectors: ConnectorTestConfig[];
+
+  if (!input || input === "*") {
+    // Mode 1: Test all connectors from connector-versions.json
+    connectors = await findConnectorsFromVersionsFile();
+  } else {
+    // Mode 2: Test specific connector(s)
+    const connectorSpecs = input.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    connectors = await findSpecificConnectors(connectorSpecs);
+  }
+
   if (connectors.length === 0) {
-    console.log('⚠️  No connectors found matching the pattern');
+    console.log('⚠️  No connectors found to test');
     return;
   }
-  
+
   console.log(`📋 Found ${connectors.length} connectors to test`);
   // Test each connector
   for (const connector of connectors) {
     try {
       await testConnector(connector);
+      console.log(`✅ Connector test completed successfully: ${connector.connector_name}`);
     } catch (error) {
       console.error(`❌ Test failed for ${connector.connector_name}:${connector.connector_version}`, error);
       throw error;

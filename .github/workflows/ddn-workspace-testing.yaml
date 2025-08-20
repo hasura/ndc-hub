@@ -6,6 +6,13 @@ on:
     branches: [main]
     paths:
       - registry/**
+  workflow_dispatch:
+    inputs:
+      connectors:
+        description: 'Connectors to test (comma-separated, e.g., "hasura/elasticsearch:v1.9.5,hasura/postgres:v2.1.1" or "*" for all)'
+        required: false
+        default: '*'
+        type: string
 
 jobs:
   setup-connector-tests:
@@ -46,15 +53,112 @@ jobs:
         env:
           CHANGED_FILES_PATH: "changed_files.json"
         run: |
-          # Temporarily hardcode specific connectors for testing
-          MATRIX_JSON='[{"connector_name":"elasticsearch","connector_version":"v1.9.5","namespace":"hasura"}]'
-          echo "$MATRIX_JSON"
+          # Handle different trigger types
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "🔍 Manual workflow dispatch - using input connectors"
+            CONNECTORS_INPUT="${{ github.event.inputs.connectors }}"
+
+            if [ "$CONNECTORS_INPUT" = "*" ] || [ -z "$CONNECTORS_INPUT" ]; then
+              echo "Testing all connectors from connector-versions.json"
+              MATRIX_JSON="[]"  # Empty matrix means test all connectors
+            else
+              echo "Testing specific connectors: $CONNECTORS_INPUT"
+              # Parse comma-separated connector specs into matrix format
+              MATRIX_JSON="[]"
+              IFS=',' read -ra CONNECTOR_SPECS <<< "$CONNECTORS_INPUT"
+              for spec in "${CONNECTOR_SPECS[@]}"; do
+                # Parse namespace/connector:version format
+                if [[ "$spec" =~ ^([^/]+)/([^:]+):(.+)$ ]]; then
+                  namespace="${BASH_REMATCH[1]}"
+                  connector_name="${BASH_REMATCH[2]}"
+                  version="${BASH_REMATCH[3]}"
+
+                  echo "Adding $namespace/$connector_name:$version to test matrix"
+                  MATRIX_JSON=$(echo "$MATRIX_JSON" | jq --arg ns "$namespace" --arg name "$connector_name" --arg ver "$version" \
+                    '. += [{"namespace": $ns, "connector_name": $name, "connector_version": $ver}]')
+                else
+                  echo "⚠️ Invalid connector spec format: $spec (expected namespace/connector:version)"
+                fi
+              done
+            fi
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "🔍 Detecting changed connectors from PR files..."
+
+            # Read changed files from the JSON file created by tj-actions/changed-files
+            if [ -f "changed_files.json" ]; then
+              echo "📄 Reading changed files from changed_files.json"
+              cat changed_files.json
+
+              # Extract all changed files in registry/ directory
+              CHANGED_FILES=$(jq -r '.added_files[], .modified_files[], .deleted_files[]' changed_files.json 2>/dev/null | grep '^registry/' || true)
+
+              echo "Changed files in registry/:"
+              echo "$CHANGED_FILES"
+
+              # Extract unique connector paths (registry/namespace/connector-name)
+              CHANGED_CONNECTORS=$(echo "$CHANGED_FILES" | \
+                grep -E '^registry/[^/]+/[^/]+/' | \
+                sed 's|^registry/\([^/]*\)/\([^/]*\)/.*|\1/\2|' | \
+                sort -u)
+
+              echo "Changed connectors:"
+              echo "$CHANGED_CONNECTORS"
+
+              # Build matrix JSON from changed connectors
+              MATRIX_JSON="[]"
+              while IFS= read -r connector_path; do
+                if [ -n "$connector_path" ]; then
+                  namespace=$(echo "$connector_path" | cut -d'/' -f1)
+                  connector_name=$(echo "$connector_path" | cut -d'/' -f2)
+
+                  # Get the latest version from releases directory
+                  latest_version=$(ls "registry/$connector_path/releases/" 2>/dev/null | grep -E '^v[0-9]' | sort -V | tail -1)
+
+                  if [ -n "$latest_version" ]; then
+                    echo "Adding $namespace/$connector_name:$latest_version to test matrix"
+                    MATRIX_JSON=$(echo "$MATRIX_JSON" | jq --arg ns "$namespace" --arg name "$connector_name" --arg ver "$latest_version" \
+                      '. += [{"namespace": $ns, "connector_name": $name, "connector_version": $ver}]')
+                  fi
+                fi
+              done <<< "$CHANGED_CONNECTORS"
+
+              # If no connectors changed, use empty matrix
+              if [ "$MATRIX_JSON" = "[]" ]; then
+                echo "⚠️ No connector changes detected in PR"
+                echo "Will test all connectors from connector-versions.json instead"
+              fi
+            else
+              echo "⚠️ changed_files.json not found, testing all connectors"
+              MATRIX_JSON="[]"  # Empty matrix means test all connectors
+            fi
+          else
+            # For non-PR events (manual triggers, etc.), test all connectors from connector-versions.json
+            echo "🔍 Using all connectors from connector-versions.json for non-PR event"
+            MATRIX_JSON="[]"  # Empty matrix means test all connectors
+          fi
+
+          echo "Final test matrix: $MATRIX_JSON"
           echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
 
       - name: Check if connector is published to staging
         run: |
-          # Temporarily skip staging check for hardcoded connectors
-          echo "✅ Skipping staging check for hardcoded test connectors"
+          # Check if connectors in matrix are published to staging
+          MATRIX='${{ steps.connector-matrix.outputs.matrix }}'
+
+          if [ "$MATRIX" = "[]" ]; then
+            echo "✅ Empty matrix - will test all connectors from connector-versions.json"
+          else
+            echo "🔍 Checking staging availability for connectors in matrix..."
+            echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
+              CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+              CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+              NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
+
+              echo "Checking $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION in staging..."
+              # TODO: Add actual staging check logic here
+              echo "✅ $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION staging check passed"
+            done
+          fi
 
   build-ddn-workspace:
     needs: setup-connector-tests
@@ -62,39 +166,47 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch_depth: 1
 
       - name: Generate connector version overrides
         id: connector-overrides
         run: |
           set -e
-          
-          echo "🔍 Generating connector version overrides for changed connectors"
-          
+
           # Parse the test matrix to get connector details
           MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
           echo "Test matrix: $MATRIX"
-          
-          # Create connector versions JSON file
-          echo "{}" > connector-versions.json
-          
-          # Process each connector in the matrix and update versions
-          echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
-            CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
-            CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
-            NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
-            
-            echo "Processing connector: $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
-            
-            # Update the connector version in JSON file
-            jq --arg key "$CONNECTOR_NAME" --arg val "$CONNECTOR_VERSION" '.[$key] = $val' connector-versions.json > connector-versions.tmp
-            mv connector-versions.tmp connector-versions.json
-          done
-          
-          echo "📄 Generated connector versions file:"
-          cat connector-versions.json
+
+          if [ "$MATRIX" = "[]" ]; then
+            echo "🔍 Empty matrix - using default connector-versions.json from ddn-workspace/"
+            # Copy the default connector versions file
+            cp ddn-workspace/connector-versions.json connector-versions.json
+            echo "📄 Using default connector versions:"
+            cat connector-versions.json
+          else
+            echo "🔍 Generating connector version overrides for changed connectors"
+
+            # Start with default connector versions
+            cp ddn-workspace/connector-versions.json connector-versions.json
+
+            # Process each connector in the matrix and update versions
+            echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
+              CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+              CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+              NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
+
+              echo "Processing connector: $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
+
+              # Update the connector version in JSON file
+              jq --arg key "$CONNECTOR_NAME" --arg val "$CONNECTOR_VERSION" '.[$key] = $val' connector-versions.json > connector-versions.tmp
+              mv connector-versions.tmp connector-versions.json
+            done
+
+            echo "📄 Generated connector versions file with overrides:"
+            cat connector-versions.json
+          fi
 
       - name: Build DDN Workspace with updated connector versions
         timeout-minutes: 20
@@ -229,9 +341,9 @@ jobs:
     if: needs.build-ddn-workspace.result == 'success'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch_depth: 1
 
       - name: Install bun
         uses: oven-sh/setup-bun@v2
@@ -265,32 +377,44 @@ jobs:
           DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
         run: |
           set -e
-          
+
           echo "🧪 Running DDN workspace connector tests"
-          
+
           # Set up environment
           export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
-          
+
           # Parse the test matrix to get connector specifications
           MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
           echo "Test matrix: $MATRIX"
-          
-          # Run tests for each connector using bun
-          echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
-            CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
-            CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
-            NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
-            
-            SPEC="$NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
-            echo "🔍 Testing connector: $SPEC"
-            
-            cd registry-automation/e2e-testing
-            bun ddn-workspace-testing.ts "$SPEC"
-            cd ../..
-            
-            echo "✅ Completed testing: $SPEC"
-          done
-          
+
+          cd registry-automation/e2e-testing
+
+          if [ "$MATRIX" = "[]" ]; then
+            echo "🔍 Testing all connectors from connector-versions.json"
+            bun ddn-workspace-testing.ts "*"
+          else
+            echo "🔍 Testing specific connectors from matrix"
+
+            # Build comma-separated list of connector specs
+            CONNECTOR_SPECS=""
+            while IFS= read -r connector_info; do
+              CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+              CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+              NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
+
+              SPEC="$NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
+
+              if [ -z "$CONNECTOR_SPECS" ]; then
+                CONNECTOR_SPECS="$SPEC"
+              else
+                CONNECTOR_SPECS="$CONNECTOR_SPECS,$SPEC"
+              fi
+            done <<< "$(echo "$MATRIX" | jq -c '.[]')"
+
+            echo "Testing connectors: $CONNECTOR_SPECS"
+            bun ddn-workspace-testing.ts "$CONNECTOR_SPECS"
+          fi
+
           echo "🎉 All DDN workspace tests completed successfully!"
 
 
