@@ -139,7 +139,7 @@ RUN mkdir -p /nix/store/pacbfvpzqz2mksby36awvbcn051zcji3-glibc-2.40-36/lib \
     && chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-postgres  \
     && ddn plugin install ndc-postgres --version ${POSTGRES_VERSION} \
     && mkdir -p ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && ln -s $HOME/.ddn/plugins/store/ndc-postgres/$POSTGRES_VERSION/hasura-ndc-postgres ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-postgres
+    && ln -s $HOME/.ddn-staging/plugins/store/ndc-postgres/$POSTGRES_VERSION/hasura-ndc-postgres ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-postgres
 ######### Postgres End   #########
 
 ######### MongoDB Begin #########
@@ -155,7 +155,7 @@ RUN mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS
     && chmod +x ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
     && mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
     && ddn plugin install ndc-mongodb --version ${MONGODB_VERSION} \
-    && ln -s $HOME/.ddn/plugins/store/ndc-mongodb/$MONGODB_VERSION/hasura-ndc-mongodb ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb
+    && ln -s $HOME/.ddn-staging/plugins/store/ndc-mongodb/$MONGODB_VERSION/hasura-ndc-mongodb ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb
 ######### MongoDB End   #########
 
 ######### GraphQL Begin #########
@@ -163,7 +163,7 @@ ARG GRAPHQL_VERSION
 COPY --from=graphql /usr/local/bin/ndc-graphql ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-graphql
 RUN ddn plugin install ndc-graphql --version ${GRAPHQL_VERSION} \
     && mkdir -p ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && ln -s $HOME/.ddn/plugins/store/ndc-graphql/$GRAPHQL_VERSION/hasura-ndc-graphql ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-graphql
+    && ln -s $HOME/.ddn-staging/plugins/store/ndc-graphql/$GRAPHQL_VERSION/hasura-ndc-graphql ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-graphql
 ######### GraphQL End   #########
 
 ######### BigQuery Begin #########
@@ -176,7 +176,7 @@ RUN mkdir -p /nix/store/3dyw8dzj9ab4m8hv5dpyx7zii8d0w6fi-glibc-2.39-52/lib \
     && chmod +x ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-bigquery \
     && ddn plugin install ndc-bigquery --version ${BIGQUERY_VERSION} \
     && mkdir -p ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && ln -s $HOME/.ddn/plugins/store/ndc-bigquery/$BIGQUERY_VERSION/hasura-ndc-bigquery ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-bigquery
+    && ln -s $HOME/.ddn-staging/plugins/store/ndc-bigquery/$BIGQUERY_VERSION/hasura-ndc-bigquery ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-bigquery
 ######### BigQuery End   #########
 
 ######### OpenAPI Begin #########
@@ -193,7 +193,7 @@ ARG ELASTICSEARCH_VERSION
 COPY --from=elasticsearch /app/ndc-elasticsearch ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-elasticsearch
 RUN ddn plugin install elasticsearch --version ${ELASTICSEARCH_VERSION} \
     && mkdir -p ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && ln -s $HOME/.ddn/plugins/store/elasticsearch/$ELASTICSEARCH_VERSION/hasura-elasticsearch ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-elasticsearch
+    && ln -s $HOME/.ddn-staging/plugins/store/elasticsearch/$ELASTICSEARCH_VERSION/hasura-elasticsearch ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-elasticsearch
 ######### Elasticsearch End   #########
 
 ######### Postgres PromptQL Begin #########
@@ -321,9 +321,12 @@ RUN apt-get update \
     && mkdir -p $XDG_DATA_HOME  \
     && mkdir -p $XDG_STATE_HOME \
     && mkdir -p $XDG_CACHE_HOME \
-    && chsh -s /bin/bash
+    && chsh -s /bin/bash \
+    && chgrp -R 0 ${HOME} /workspace /sample-projects && chmod -R g=u ${HOME} /workspace /sample-projects
+
 
 COPY --from=workspace-builder ${HOME} ${HOME}
+COPY --from=workspace-builder /sample-projects /sample-projects
 COPY --from=workspace-builder /nix/store /nix/store
 
 ENV CODE_SERVER_PORT=8123

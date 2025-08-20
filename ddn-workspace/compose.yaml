@@ -7,7 +7,7 @@ services:
         - ddn-native-workspace:v0.1.0
     ports:
       - 8124:8123
-    user: "10002"
+    user: "1001"
     volumes:
       - credentials-vol:/home/hasura/.ddn
       - workspace-vol:/workspace
