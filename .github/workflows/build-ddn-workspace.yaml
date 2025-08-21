@@ -264,6 +264,32 @@ jobs:
           echo ""
           echo "🔍 Changed connectors: ${{ needs.detect-connector-changes.outputs.changed_connectors }}"
 
+      - name: Send Slack notification
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#ddn-workspace-releases'
+          text: |
+            🚀 *DDN Workspace Build Complete*
+
+            📦 *New Image Available:*
+            `gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}`
+
+            🔍 *Triggered by:* ${{ needs.detect-connector-changes.outputs.changed_connectors }}
+
+            📋 *Build Info:*
+            • Branch: ${{ github.ref_name }}
+            • Commit: ${{ github.sha }}
+            • Event: ${{ github.event_name }}
+
+            🎯 *Usage:*
+            ```
+            docker pull gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
+            ```
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
       - name: Create release summary
         run: |
           # Parse connector matrix to create a nice list
