@@ -1,6 +1,8 @@
 name: Build and Push DDN Workspace
 
 on:
+  push:
+    branches: ['**']  # Run on every commit to any branch
   workflow_dispatch:
     inputs:
       test_mode:
@@ -8,11 +10,6 @@ on:
         required: false
         default: true
         type: boolean
-  push:
-    branches: [main]
-    paths:
-      - registry/**/releases/**
-      - ddn-workspace/**
 
 jobs:
   detect-connector-changes:
@@ -53,7 +50,7 @@ jobs:
         run: |
           set -e
 
-          # Check if this is a test mode workflow dispatch
+          # Check if this is a test mode (workflow dispatch OR push event for testing)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "changed_connectors=hasura/postgres:v3.1.0,hasura/snowflake-jdbc:v1.2.12" >> "$GITHUB_OUTPUT"
@@ -65,6 +62,21 @@ jobs:
             ]'
             echo "connector_matrix=$(echo "$TEST_MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
             echo "🧪 Test mode - hardcoded connector changes for testing"
+            exit 0
+          fi
+
+          # For push events, always run in test mode for now
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "changed_connectors=test-commit-$(echo ${{ github.sha }} | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+            # Create test matrix for commit-based testing
+            TEST_MATRIX='[
+              {"namespace": "hasura", "connector_name": "postgres", "connector_version": "v3.1.0"},
+              {"namespace": "hasura", "connector_name": "snowflake-jdbc", "connector_version": "v1.2.12"}
+            ]'
+            echo "connector_matrix=$(echo "$TEST_MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
+            echo "🧪 Commit test mode - building DDN workspace for commit ${{ github.sha }}"
             exit 0
           fi
 
