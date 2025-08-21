@@ -1,18 +1,18 @@
 name: Build and Push DDN Workspace
 
 on:
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Test mode - hardcode connector changes and upload as artifact'
+        required: false
+        default: true
+        type: boolean
   push:
     branches: [main]
     paths:
       - registry/**/releases/**
       - ddn-workspace/**
-  workflow_dispatch:
-    inputs:
-      force_build:
-        description: 'Force build even if no changes detected'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   detect-connector-changes:
@@ -53,12 +53,18 @@ jobs:
         run: |
           set -e
 
-          # Check if this is a manual dispatch with force build
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.force_build }}" = "true" ]; then
+          # Check if this is a test mode workflow dispatch
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
-            echo "changed_connectors=force-build" >> "$GITHUB_OUTPUT"
-            echo "connector_matrix=[]" >> "$GITHUB_OUTPUT"
-            echo "🔨 Force build requested"
+            echo "changed_connectors=hasura/postgres:v3.1.0,hasura/snowflake-jdbc:v1.2.12" >> "$GITHUB_OUTPUT"
+
+            # Create hardcoded test matrix
+            TEST_MATRIX='[
+              {"namespace": "hasura", "connector_name": "postgres", "connector_version": "v3.1.0"},
+              {"namespace": "hasura", "connector_name": "snowflake-jdbc", "connector_version": "v1.2.12"}
+            ]'
+            echo "connector_matrix=$(echo "$TEST_MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
+            echo "🧪 Test mode - hardcoded connector changes for testing"
             exit 0
           fi
 
@@ -240,7 +246,7 @@ jobs:
 
             cd ddn-workspace
             chmod +x scripts/build-with-versions.sh
-            ./scripts/build-with-versions.sh connector-versions.json gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }} $DDN_ENV
+            ./scripts/build-with-versions.sh connector-versions.json ddn-native-workspace:${{ steps.meta.outputs.version_tag }} $DDN_ENV
             cd ..
           else
             echo "⚠️ No connector versions file found, building with defaults..."
@@ -248,21 +254,29 @@ jobs:
 
           echo "✅ DDN Workspace image built successfully with all DDN-enabled connectors"
 
-      - name: Push DDN Workspace image
+      - name: Save DDN Workspace image as artifact
         run: |
           set -e
 
-          echo "📦 Pushing DDN Workspace image to Google Cloud Registry"
+          echo "📦 Saving DDN Workspace image as artifact"
 
-          # Push the image
-          docker push gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
+          # Save the image to a tar file
+          docker save ddn-native-workspace:${{ steps.meta.outputs.version_tag }} | gzip > ddn-workspace-${{ steps.meta.outputs.version_tag }}.tar.gz
 
-          echo "✅ DDN Workspace image pushed successfully!"
+          echo "✅ DDN Workspace image saved successfully!"
           echo ""
-          echo "📦 Available image:"
-          echo "  🏷️  gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}"
+          echo "📦 Saved image:"
+          echo "  🏷️  ddn-native-workspace:${{ steps.meta.outputs.version_tag }}"
+          echo "  📁  ddn-workspace-${{ steps.meta.outputs.version_tag }}.tar.gz"
           echo ""
           echo "🔍 Changed connectors: ${{ needs.detect-connector-changes.outputs.changed_connectors }}"
+
+      - name: Upload DDN Workspace image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddn-workspace-image-${{ steps.meta.outputs.version_tag }}
+          path: ddn-workspace-${{ steps.meta.outputs.version_tag }}.tar.gz
+          retention-days: 7
 
       - name: Send Slack notification
         if: success()
@@ -271,22 +285,23 @@ jobs:
           status: success
           channel: '#ddn-workspace-releases'
           text: |
-            🚀 *DDN Workspace Build Complete*
+            🧪 *DDN Workspace Build Test Complete*
 
-            📦 *New Image Available:*
-            `gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}`
+            📦 *Test Image Built:*
+            `ddn-native-workspace:${{ steps.meta.outputs.version_tag }}`
 
-            🔍 *Triggered by:* ${{ needs.detect-connector-changes.outputs.changed_connectors }}
+            🔍 *Test Connectors:* ${{ needs.detect-connector-changes.outputs.changed_connectors }}
 
             📋 *Build Info:*
             • Branch: ${{ github.ref_name }}
             • Commit: ${{ github.sha }}
             • Event: ${{ github.event_name }}
+            • Mode: Test (artifact upload)
 
-            🎯 *Usage:*
-            ```
-            docker pull gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
-            ```
+            📁 *Artifact:* `ddn-workspace-image-${{ steps.meta.outputs.version_tag }}`
+
+            🎯 *Next Steps:*
+            Download the artifact from GitHub Actions to test the image locally.
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -301,10 +316,13 @@ jobs:
           fi
 
           cat >> $GITHUB_STEP_SUMMARY << EOF
-          # 🚀 DDN Workspace Build Complete
+          # 🧪 DDN Workspace Build Test Complete
 
-          ## 📦 Published Image
-          - \`gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}\`
+          ## 📦 Test Image Built
+          - \`ddn-native-workspace:${{ steps.meta.outputs.version_tag }}\`
+
+          ## 📁 Artifact Available
+          - \`ddn-workspace-image-${{ steps.meta.outputs.version_tag }}\`
 
           ## 🔍 Build Information
           - **Event**: ${{ github.event_name }}
@@ -321,9 +339,14 @@ jobs:
           ### Image Contents
           The built image includes the latest versions of ALL connectors that have \`ddn_workspace: {\"enabled\": true}\` in their test configuration.
 
-          ## 🎯 Usage
-          Pull the image:
+          ## 🎯 Test Usage
+          1. Download the artifact from this workflow run
+          2. Load the image locally:
           \`\`\`bash
-          docker pull gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
+          gunzip -c ddn-workspace-${{ steps.meta.outputs.version_tag }}.tar.gz | docker load
+          \`\`\`
+          3. Run the image:
+          \`\`\`bash
+          docker run -it ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
           \`\`\`
           EOF
