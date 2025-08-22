@@ -2,7 +2,10 @@ name: Build and Push DDN Workspace
 
 on:
   push:
-    branches: ['**']  # Run on every commit to any branch
+    branches: ['main']  # Run only when PRs are merged to main
+  pull_request:
+    types: [closed]  # Run when PRs are closed (merged or just closed)
+    branches: ['main']
   workflow_dispatch:
     inputs:
       test_mode:
@@ -14,6 +17,11 @@ on:
 jobs:
   detect-connector-changes:
     runs-on: ubuntu-latest
+    # Only run if it's a push to main, a merged PR, or manual workflow dispatch
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     outputs:
       should_build: ${{ steps.check-changes.outputs.should_build }}
       changed_connectors: ${{ steps.check-changes.outputs.changed_connectors }}
@@ -22,7 +30,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # Fetch more history for PR events to detect changes
+          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
@@ -30,6 +39,8 @@ jobs:
         with:
           json: true
           escape_json: false
+          # For PR events, compare against the base branch
+          base_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
           files: |
             registry/**
             ddn-workspace/**
@@ -65,18 +76,33 @@ jobs:
             exit 0
           fi
 
-          # For push events, always run in test mode for now
+          # For push events to main (merged PRs), run production build
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
-            echo "changed_connectors=test-commit-$(echo ${{ github.sha }} | cut -c1-7)" >> "$GITHUB_OUTPUT"
+            echo "changed_connectors=merged-pr-$(echo ${{ github.sha }} | cut -c1-7)" >> "$GITHUB_OUTPUT"
 
-            # Create test matrix for commit-based testing
+            # Create matrix for production build after PR merge
             TEST_MATRIX='[
               {"namespace": "hasura", "connector_name": "postgres", "connector_version": "v3.1.0"},
               {"namespace": "hasura", "connector_name": "snowflake-jdbc", "connector_version": "v1.2.12"}
             ]'
             echo "connector_matrix=$(echo "$TEST_MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
-            echo "🧪 Commit test mode - building DDN workspace for commit ${{ github.sha }}"
+            echo "🚀 Production build - building DDN workspace after PR merge to main"
+            exit 0
+          fi
+
+          # For merged PR events, run production build
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "changed_connectors=merged-pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+
+            # Create matrix for production build after PR merge
+            TEST_MATRIX='[
+              {"namespace": "hasura", "connector_name": "postgres", "connector_version": "v3.1.0"},
+              {"namespace": "hasura", "connector_name": "snowflake-jdbc", "connector_version": "v1.2.12"}
+            ]'
+            echo "connector_matrix=$(echo "$TEST_MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
+            echo "🚀 Production build - building DDN workspace after PR #${{ github.event.pull_request.number }} merge"
             exit 0
           fi
 
@@ -278,12 +304,13 @@ jobs:
           status: success
           channel: '#ddn-workspace-releases'
           text: |
-            🧪 *DDN Workspace Build Test Complete*
+            🚀 *DDN Workspace Production Build Complete*
 
-            📦 *Test Image Built:*
-            gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}`
+            📦 *Production Image Built:*
+            gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
 
-            🔍 *Test Connectors:* ${{ needs.detect-connector-changes.outputs.changed_connectors }}
+            🔍 *Trigger:* ${{ needs.detect-connector-changes.outputs.changed_connectors }}
+            📝 *Event:* ${{ github.event_name == 'pull_request' && format('PR #{0} merged', github.event.pull_request.number) || 'Push to main' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -298,16 +325,16 @@ jobs:
           fi
 
           cat >> $GITHUB_STEP_SUMMARY << EOF
-          # 🧪 DDN Workspace Build Test Complete
+          # 🚀 DDN Workspace Production Build Complete
 
-          ## 📦 Test Image Built
+          ## 📦 Production Image Built
           - \`gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}\`
 
-          ## 📁 Artifact Available
-          - \`ddn-workspace-image-${{ steps.meta.outputs.version_tag }}\`
+          ## � Build Trigger
+          - **Event:** ${{ github.event_name == 'pull_request' && format('PR #{0} merged to main', github.event.pull_request.number) || 'Direct push to main' }}
+          - **Trigger:** ${CONNECTOR_LIST:-"No specific connectors detected (DDN workspace changes or manual trigger)"}
 
-          ### Changed Connectors (Trigger)
-          ${CONNECTOR_LIST:-"No specific connectors detected (force build or DDN workspace changes)"}
-
-          ### Image Contents
+          ## 📋 Image Contents
           The built image includes the latest versions of ALL connectors that have \`ddn_workspace: {\"enabled\": true}\` in their test configuration.
+
+          This is a **production build** triggered by changes merged to the main branch.
