@@ -155,14 +155,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # - name: Setup gcloud
-      #   env:
-      #     GCLOUD_EE_AUTH: ${{ secrets.GCLOUD_EE_AUTH }}
-      #   run: |
-      #     echo "$GCLOUD_EE_AUTH" | base64 -d > "$HOME"/gcloud.json
-      #     gcloud auth activate-service-account --key-file=$HOME/gcloud.json
-      #     gcloud auth configure-docker -q
-      #     echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json" >> $GITHUB_ENV
+      - name: Setup gcloud
+        env:
+          GCLOUD_EE_AUTH: ${{ secrets.GCLOUD_EE_AUTH }}
+        run: |
+          echo "$GCLOUD_EE_AUTH" | base64 -d > "$HOME"/gcloud.json
+          gcloud auth activate-service-account --key-file=$HOME/gcloud.json
+          gcloud auth configure-docker -q
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json" >> $GITHUB_ENV
 
       - name: Reconstruct connector-versions.json with latest DDN-enabled connectors
         run: |
