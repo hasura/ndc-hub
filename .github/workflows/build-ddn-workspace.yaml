@@ -266,29 +266,9 @@ jobs:
 
           echo "✅ DDN Workspace image built successfully with all DDN-enabled connectors"
 
-      - name: Save DDN Workspace image as artifact
+      - name: Push DDN workspace image to GCP
         run: |
-          set -e
-
-          echo "📦 Saving DDN Workspace image as artifact"
-
-          # Save the image to a tar file
-          docker save ddn-native-workspace:${{ steps.meta.outputs.version_tag }} | gzip > ddn-workspace-${{ steps.meta.outputs.version_tag }}.tar.gz
-
-          echo "✅ DDN Workspace image saved successfully!"
-          echo ""
-          echo "📦 Saved image:"
-          echo "  🏷️  ddn-native-workspace:${{ steps.meta.outputs.version_tag }}"
-          echo "  📁  ddn-workspace-${{ steps.meta.outputs.version_tag }}.tar.gz"
-          echo ""
-          echo "🔍 Changed connectors: ${{ needs.detect-connector-changes.outputs.changed_connectors }}"
-
-      - name: Upload DDN Workspace image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ddn-workspace-image-${{ steps.meta.outputs.version_tag }}
-          path: ddn-workspace-${{ steps.meta.outputs.version_tag }}.tar.gz
-          retention-days: 7
+          docker push gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
 
       - name: Send Slack notification
         if: success()
@@ -300,20 +280,9 @@ jobs:
             🧪 *DDN Workspace Build Test Complete*
 
             📦 *Test Image Built:*
-            `ddn-native-workspace:${{ steps.meta.outputs.version_tag }}`
+            gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}`
 
             🔍 *Test Connectors:* ${{ needs.detect-connector-changes.outputs.changed_connectors }}
-
-            📋 *Build Info:*
-            • Branch: ${{ github.ref_name }}
-            • Commit: ${{ github.sha }}
-            • Event: ${{ github.event_name }}
-            • Mode: Test (artifact upload)
-
-            📁 *Artifact:* `ddn-workspace-image-${{ steps.meta.outputs.version_tag }}`
-
-            🎯 *Next Steps:*
-            Download the artifact from GitHub Actions to test the image locally.
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -331,34 +300,13 @@ jobs:
           # 🧪 DDN Workspace Build Test Complete
 
           ## 📦 Test Image Built
-          - \`ddn-native-workspace:${{ steps.meta.outputs.version_tag }}\`
+          - \`gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}\`
 
           ## 📁 Artifact Available
           - \`ddn-workspace-image-${{ steps.meta.outputs.version_tag }}\`
-
-          ## 🔍 Build Information
-          - **Event**: ${{ github.event_name }}
-          - **Branch**: ${{ github.ref_name }}
-          - **Commit**: ${{ github.sha }}
-          - **Triggered by**: ${{ needs.detect-connector-changes.outputs.changed_connectors }}
-
-          ## 📋 Build Scope
-          This image contains **ALL connectors with \`ddn_workspace\` enabled**, not just the changed ones.
 
           ### Changed Connectors (Trigger)
           ${CONNECTOR_LIST:-"No specific connectors detected (force build or DDN workspace changes)"}
 
           ### Image Contents
           The built image includes the latest versions of ALL connectors that have \`ddn_workspace: {\"enabled\": true}\` in their test configuration.
-
-          ## 🎯 Test Usage
-          1. Download the artifact from this workflow run
-          2. Load the image locally:
-          \`\`\`bash
-          gunzip -c ddn-workspace-${{ steps.meta.outputs.version_tag }}.tar.gz | docker load
-          \`\`\`
-          3. Run the image:
-          \`\`\`bash
-          docker run -it ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
-          \`\`\`
-          EOF
