@@ -200,7 +200,7 @@ jobs:
                           echo "    📦 Latest version: $latest_version"
 
                           # Create connector key in format "namespace/connector_name"
-                          connector_key="$namespace/$connector_name"
+                          connector_key="$connector_name"
 
                           # Add to connector-versions.json in key-value format
                           jq --arg key "$connector_key" --arg version "$latest_version" \
@@ -254,12 +254,12 @@ jobs:
 
             # Use the build script to build with custom versions
             # Use production environment for main branch builds
-            DDN_ENV="production"
+            export DDN_ENVIRONMENT="production"
 
             cd ddn-workspace
             chmod +x scripts/build-with-versions.sh
             echo "Building with tag: gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}"
-            ./scripts/build-with-versions.sh connector-versions.json gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }} $DDN_ENV
+            ./scripts/build-with-versions.sh connector-versions.json gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }} $DDN_ENVIRONMENT
             cd ..
           else
             echo "⚠️ No connector versions file found, building with defaults..."
