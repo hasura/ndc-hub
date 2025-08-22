@@ -150,6 +150,7 @@ COPY --from=trino-cli  /app ${LIB_PATH}/hasura/trino/${TRINO_VERSION}/${CONNECTO
 
 ######### Postgres Begin #########
 ARG POSTGRES_VERSION
+ARG DDN_ENVIRONMENT
 COPY --from=postgres  /bin/ndc-postgres ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-postgres
 RUN chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-postgres  \
     && mkdir -p ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
@@ -162,6 +163,7 @@ RUN chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFAC
 
 ######### MongoDB Begin #########
 ARG MONGODB_VERSION
+ARG DDN_ENVIRONMENT
 COPY --from=mongodb  /nix/store/ /tmp/mongodb-connector/
 # Required as the mongo binary is hardcoded to look for ld-linux-x86-64.so.2 with nix (interpreter /nix/store/6q2m...)
 
@@ -173,6 +175,7 @@ RUN mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS
     && chmod +x ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
     && mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
     && ddn plugin install ndc-mongodb --version ${MONGODB_VERSION} \
+    && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
     && ln -s $HOME/$DDN_DIR/plugins/store/ndc-mongodb/$MONGODB_VERSION/hasura-ndc-mongodb ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb
 ######### MongoDB End   #########
 
@@ -182,11 +185,13 @@ ARG DDN_ENVIRONMENT
 COPY --from=graphql /usr/local/bin/ndc-graphql ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-graphql
 RUN ddn plugin install ndc-graphql --version ${GRAPHQL_VERSION} \
     && mkdir -p ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+    && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
     && ln -s $HOME/$DDN_DIR/plugins/store/ndc-graphql/$GRAPHQL_VERSION/hasura-ndc-graphql ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-graphql
 ######### GraphQL End   #########
 
 ######### BigQuery Begin #########
 ARG BIGQUERY_VERSION
+ARG DDN_ENVIRONMENT
 COPY --from=bigquery  /bin/ndc-bigquery ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-bigquery
 # Required as the bigquery binary is hardcoded to look for ld-linux-x86-64.so.2 with nix (interpreter /nix/store/3dyw...)
 # Use -f to force it as Postgres also has the exact symlink
@@ -195,6 +200,7 @@ RUN mkdir -p /nix/store/3dyw8dzj9ab4m8hv5dpyx7zii8d0w6fi-glibc-2.39-52/lib \
     && chmod +x ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-bigquery \
     && ddn plugin install ndc-bigquery --version ${BIGQUERY_VERSION} \
     && mkdir -p ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+    && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
     && ln -s $HOME/$DDN_DIR/plugins/store/ndc-bigquery/$BIGQUERY_VERSION/hasura-ndc-bigquery ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-bigquery
 ######### BigQuery End   #########
 
@@ -209,9 +215,11 @@ RUN cd ${LIB_PATH}/hasura/openapi/${OPENAPI_VERSION}/${CONNECTOR_PLUGIN_ARTIFACT
 
 ######### Elasticsearch Begin #########
 ARG ELASTICSEARCH_VERSION
+ARG DDN_ENVIRONMENT
 COPY --from=elasticsearch /app/ndc-elasticsearch ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-elasticsearch
 RUN ddn plugin install elasticsearch --version ${ELASTICSEARCH_VERSION} \
     && mkdir -p ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+    && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
     && ln -s $HOME/$DDN_DIR/plugins/store/elasticsearch/$ELASTICSEARCH_VERSION/hasura-elasticsearch ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-elasticsearch
 ######### Elasticsearch End   #########
 
