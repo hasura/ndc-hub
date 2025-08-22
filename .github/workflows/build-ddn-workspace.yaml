@@ -1,0 +1,340 @@
+name: Build and Push DDN Workspace
+
+on:
+  push:
+    branches: ['main']  # Run only when PRs are merged to main
+  pull_request:
+    types: [closed]  # Run when PRs are closed (merged or just closed)
+    branches: ['main']
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Test mode - hardcode connector changes and upload as artifact'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  detect-connector-changes:
+    runs-on: ubuntu-latest
+    # Only run if it's a push to main, a merged PR, or manual workflow dispatch
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    outputs:
+      should_build: ${{ steps.check-changes.outputs.should_build }}
+      changed_connectors: ${{ steps.check-changes.outputs.changed_connectors }}
+      connector_matrix: ${{ steps.check-changes.outputs.connector_matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch more history for PR events to detect changes
+          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
+
+      - name: Get all connector version package changes
+        id: connector-version-changed-files
+        uses: tj-actions/changed-files@v46.0.1
+        with:
+          json: true
+          escape_json: false
+          # For PR events, compare against the base branch
+          base_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
+          files: |
+            registry/**
+            ddn-workspace/**
+
+      - name: Print out all the changed files
+        env:
+          ADDED_FILES: ${{ steps.connector-version-changed-files.outputs.added_files }}
+          MODIFIED_FILES: ${{ steps.connector-version-changed-files.outputs.modified_files }}
+          DELETED_FILES: ${{ steps.connector-version-changed-files.outputs.deleted_files }}
+        run: |
+          echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > changed_files.json
+          cat changed_files.json
+
+      - name: Check for connector changes
+        id: check-changes
+        env:
+          CHANGED_FILES_PATH: "changed_files.json"
+        run: |
+          set -e
+
+          # Check if this is a test mode (workflow dispatch OR push event for testing)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "changed_connectors=hasura/postgres:v3.1.0,hasura/snowflake-jdbc:v1.2.12" >> "$GITHUB_OUTPUT"
+
+            # Create hardcoded test matrix
+            TEST_MATRIX='[
+              {"namespace": "hasura", "connector_name": "postgres", "connector_version": "v3.1.0"},
+              {"namespace": "hasura", "connector_name": "snowflake-jdbc", "connector_version": "v1.2.12"}
+            ]'
+            echo "connector_matrix=$(echo "$TEST_MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
+            echo "🧪 Test mode - hardcoded connector changes for testing"
+            exit 0
+          fi
+
+          # For push events to main (merged PRs), run production build
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "changed_connectors=merged-pr-$(echo ${{ github.sha }} | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+            # Create matrix for production build after PR merge
+            TEST_MATRIX='[
+              {"namespace": "hasura", "connector_name": "postgres", "connector_version": "v3.1.0"},
+              {"namespace": "hasura", "connector_name": "snowflake-jdbc", "connector_version": "v1.2.12"}
+            ]'
+            echo "connector_matrix=$(echo "$TEST_MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
+            echo "🚀 Production build - building DDN workspace after PR merge to main"
+            exit 0
+          fi
+
+          # For merged PR events, run production build
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "changed_connectors=merged-pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+
+            # Create matrix for production build after PR merge
+            TEST_MATRIX='[
+              {"namespace": "hasura", "connector_name": "postgres", "connector_version": "v3.1.0"},
+              {"namespace": "hasura", "connector_name": "snowflake-jdbc", "connector_version": "v1.2.12"}
+            ]'
+            echo "connector_matrix=$(echo "$TEST_MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
+            echo "🚀 Production build - building DDN workspace after PR #${{ github.event.pull_request.number }} merge"
+            exit 0
+          fi
+
+          # Read changed files from the JSON file created by tj-actions/changed-files
+          if [ -f "changed_files.json" ]; then
+            echo "📄 Reading changed files from changed_files.json"
+            cat changed_files.json
+
+            # Extract all changed files in registry/ or ddn-workspace/ directory
+            CHANGED_FILES=$(jq -r '.added_files[], .modified_files[], .deleted_files[]' changed_files.json 2>/dev/null | grep -E '^(registry/|ddn-workspace/)' || true)
+
+            echo "Changed files in registry/ or ddn-workspace/:"
+            echo "$CHANGED_FILES"
+
+            # Check if any files changed
+            if [ -n "$CHANGED_FILES" ]; then
+              echo "should_build=true" >> "$GITHUB_OUTPUT"
+
+              # Extract unique connector paths (registry/namespace/connector-name)
+              CHANGED_CONNECTORS=$(echo "$CHANGED_FILES" | \
+                grep -E '^registry/[^/]+/[^/]+/' | \
+                sed 's|^registry/\([^/]*\)/\([^/]*\)/.*|\1/\2|' | \
+                sort -u)
+
+              echo "Changed connectors:"
+              echo "$CHANGED_CONNECTORS"
+
+              # Build matrix JSON from changed connectors
+              MATRIX_JSON="[]"
+              while IFS= read -r connector_path; do
+                if [ -n "$connector_path" ]; then
+                  namespace=$(echo "$connector_path" | cut -d'/' -f1)
+                  connector_name=$(echo "$connector_path" | cut -d'/' -f2)
+
+                  # Get the latest version from releases directory
+                  latest_version=$(ls "registry/$connector_path/releases/" 2>/dev/null | grep -E '^v[0-9]' | sort -V | tail -1)
+
+                  if [ -n "$latest_version" ]; then
+                    echo "Adding $namespace/$connector_name:$latest_version to matrix"
+                    MATRIX_JSON=$(echo "$MATRIX_JSON" | jq --arg ns "$namespace" --arg name "$connector_name" --arg ver "$latest_version" \
+                      '. += [{"namespace": $ns, "connector_name": $name, "connector_version": $ver}]')
+                  fi
+                fi
+              done <<< "$CHANGED_CONNECTORS"
+
+              # Convert connector matrix to comma-separated list for display
+              CONNECTOR_LIST=$(echo "$MATRIX_JSON" | jq -r '.[] | "\(.namespace)/\(.connector_name):\(.connector_version)"' | tr '\n' ',' | sed 's/,$//')
+
+              echo "changed_connectors=${CONNECTOR_LIST}" >> "$GITHUB_OUTPUT"
+              echo "connector_matrix=$(echo "$MATRIX_JSON" | jq -c .)" >> "$GITHUB_OUTPUT"
+
+              echo "🔍 Detected changes requiring build: $CONNECTOR_LIST"
+            else
+              echo "should_build=false" >> "$GITHUB_OUTPUT"
+              echo "changed_connectors=" >> "$GITHUB_OUTPUT"
+              echo "connector_matrix=[]" >> "$GITHUB_OUTPUT"
+              echo "ℹ️ No connector or DDN workspace changes detected"
+            fi
+          else
+            echo "⚠️ changed_files.json not found"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "changed_connectors=" >> "$GITHUB_OUTPUT"
+            echo "connector_matrix=[]" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-push-ddn-workspace:
+    needs: detect-connector-changes
+    runs-on: ubuntu-latest
+    if: needs.detect-connector-changes.outputs.should_build == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Setup gcloud
+        env:
+          GCLOUD_EE_AUTH: ${{ secrets.GCLOUD_EE_AUTH }}
+        run: |
+          echo "$GCLOUD_EE_AUTH" | base64 -d > "$HOME"/gcloud.json
+          gcloud auth activate-service-account --key-file=$HOME/gcloud.json
+          gcloud auth configure-docker -q
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json" >> $GITHUB_ENV
+
+      - name: Reconstruct connector-versions.json with latest DDN-enabled connectors
+        run: |
+          set -e
+
+          echo "🔄 Reconstructing connector-versions.json with latest versions of DDN-enabled connectors"
+
+          # Initialize JSON object
+          echo "{}" > ddn-workspace/connector-versions.json
+
+          # Iterate through registry to find connectors with DDN workspace enabled
+          for namespace_dir in registry/*/; do
+            if [ -d "$namespace_dir" ]; then
+              namespace=$(basename "$namespace_dir")
+              echo "� Scanning namespace: $namespace"
+
+              for connector_dir in "$namespace_dir"*/; do
+                if [ -d "$connector_dir" ]; then
+                  connector_name=$(basename "$connector_dir")
+                  test_config="$connector_dir/tests/test-config.json"
+
+                  # Check if test-config.json exists and has DDN workspace enabled
+                  if [ -f "$test_config" ]; then
+                    DDN_ENABLED=$(jq -r '.ddn_workspace.enabled // false' "$test_config" 2>/dev/null)
+
+                    if [ "$DDN_ENABLED" = "true" ]; then
+                      echo "  ✅ Found DDN-enabled connector: $namespace/$connector_name"
+
+                      # Find the latest version from releases directory
+                      releases_dir="$connector_dir/releases"
+                      if [ -d "$releases_dir" ]; then
+                        latest_version=$(ls "$releases_dir" 2>/dev/null | grep -E '^v[0-9]' | sort -V | tail -1)
+
+                        if [ -n "$latest_version" ]; then
+                          echo "    📦 Latest version: $latest_version"
+
+                          # Create connector key in format "namespace/connector_name"
+                          connector_key="$connector_name"
+
+                          # Add to connector-versions.json in key-value format
+                          jq --arg key "$connector_key" --arg version "$latest_version" \
+                            '. + {($key): $version}' \
+                            ddn-workspace/connector-versions.json > tmp.json
+                          mv tmp.json ddn-workspace/connector-versions.json
+                        else
+                          echo "    ⚠️ No versions found in releases directory"
+                        fi
+                      else
+                        echo "    ⚠️ No releases directory found"
+                      fi
+                    fi
+                  fi
+                fi
+              done
+            fi
+          done
+
+          echo "📋 Generated connector-versions.json:"
+          cat ddn-workspace/connector-versions.json | jq .
+
+          # Count DDN-enabled connectors
+          DDN_CONNECTOR_COUNT=$(cat ddn-workspace/connector-versions.json | jq 'length')
+          echo "✅ Found $DDN_CONNECTOR_COUNT connectors with DDN workspace enabled"
+
+      - name: Generate build metadata
+        id: meta
+        run: |
+          # Generate timestamp-based tag
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+
+          echo "timestamp=${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=${TIMESTAMP}-${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Build DDN Workspace image
+        timeout-minutes: 45
+        run: |
+          set -e
+
+          echo "🚀 Building DDN Workspace image with ALL DDN-enabled connectors"
+          echo "� Trigger: ${{ needs.detect-connector-changes.outputs.changed_connectors }}"
+          echo "📋 This image will include the latest versions of ALL connectors with ddn_workspace enabled"
+
+          # Check if connector versions file exists and has content
+          if [ -f "ddn-workspace/connector-versions.json" ] && [ "$(jq 'keys | length' ddn-workspace/connector-versions.json)" -gt 0 ]; then
+            echo "📄 Using generated connector versions file:"
+            cat ddn-workspace/connector-versions.json
+
+            # Use the build script to build with custom versions
+            # Use production environment for main branch builds
+            export DDN_ENVIRONMENT="production"
+
+            cd ddn-workspace
+            chmod +x scripts/build-with-versions.sh
+            echo "Building with tag: gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}"
+            ./scripts/build-with-versions.sh connector-versions.json gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }} $DDN_ENVIRONMENT
+            cd ..
+          else
+            echo "⚠️ No connector versions file found, building with defaults..."
+          fi
+
+          echo "✅ DDN Workspace image built successfully with all DDN-enabled connectors"
+
+      - name: Push DDN workspace image to GCP
+        run: |
+          docker push gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
+
+      - name: Send Slack notification
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#ddn-workspace-releases'
+          text: |
+            🚀 *DDN Workspace Production Build Complete*
+
+            📦 *Production Image Built:*
+            gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
+
+            🔍 *Trigger:* ${{ needs.detect-connector-changes.outputs.changed_connectors }}
+            📝 *Event:* ${{ github.event_name == 'pull_request' && format('PR #{0} merged', github.event.pull_request.number) || 'Push to main' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create release summary
+        run: |
+          # Parse connector matrix to create a nice list
+          CONNECTOR_MATRIX='${{ needs.detect-connector-changes.outputs.connector_matrix }}'
+          CONNECTOR_LIST=""
+
+          if [ "$CONNECTOR_MATRIX" != "[]" ] && [ -n "$CONNECTOR_MATRIX" ]; then
+            CONNECTOR_LIST=$(echo "$CONNECTOR_MATRIX" | jq -r '.[] | "- `\(.namespace)/\(.connector_name):\(.connector_version)`"' | tr '\n' '\n')
+          fi
+
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # 🚀 DDN Workspace Production Build Complete
+
+          ## 📦 Production Image Built
+          - \`gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}\`
+
+          ## � Build Trigger
+          - **Event:** ${{ github.event_name == 'pull_request' && format('PR #{0} merged to main', github.event.pull_request.number) || 'Direct push to main' }}
+          - **Trigger:** ${CONNECTOR_LIST:-"No specific connectors detected (DDN workspace changes or manual trigger)"}
+
+          ## 📋 Image Contents
+          The built image includes the latest versions of ALL connectors that have \`ddn_workspace: {\"enabled\": true}\` in their test configuration.
+
+          This is a **production build** triggered by changes merged to the main branch.

@@ -7,6 +7,16 @@
       "NDC_OAS_FILE_OVERWRITE=false",
       "NDC_OAS_LAMBDA_PRETTY_LOGS=true"
     ],
+    "ddn_workspace": {
+      "enabled": true,
+      "setup_compose_file_path": "compose.yaml",
+      "envs": [
+        "NDC_OAS_BASE_URL=http://app:3000",
+        "NDC_OAS_DOCUMENT_URI=http://app:3000/openapi.json",
+        "NDC_OAS_FILE_OVERWRITE=false",
+        "NDC_OAS_LAMBDA_PRETTY_LOGS=true"
+      ]
+    },
     "snapshots_dir": "snapshots",
     "setup_compose_file_path": "compose.yaml"
   }

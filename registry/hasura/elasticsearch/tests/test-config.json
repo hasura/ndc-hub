@@ -1,5 +1,13 @@
 {
   "hub_id": "hasura/elasticsearch",
+  "ddn_workspace": {
+    "enabled": true,
+    "envs": [
+      "ELASTICSEARCH_URL=http://elasticsearch:9200/",
+      "ELASTICSEARCH_USERNAME=elastic",
+      "ELASTICSEARCH_PASSWORD=elastic"
+    ]
+  },
   "envs": [
     "ELASTICSEARCH_URL=http://local.hasura.dev:9200/",
     "ELASTICSEARCH_USERNAME=elastic",

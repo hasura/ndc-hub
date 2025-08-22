@@ -1,0 +1,23 @@
+services:
+  ddn-native-workspace:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - ddn-native-workspace:v0.1.0
+    ports:
+      - 8124:8123
+    user: "1001"
+    volumes:
+      - credentials-vol:/home/hasura/.ddn
+      - workspace-vol:/workspace
+    environment:
+      # - PASSWORD=ddn
+      # - CODE_SERVER_NO_AUTH=true
+      - CODE_SERVER_PORT=8123
+      # Argon2id hash of `ddn`(For every $ in hash, add another $ adjacent to it to escape docker compose interpolation)
+      - HASHED_PASSWORD=$$argon2id$$v=19$$m=16,t=2,p=1$$WHhpVnZSbXBsMW5YZ2pGYw$$wi3ncAYaow9DMGga77AYUw
+      - DDN_WORKSPACE_ACCESS_TOKEN=${DDN_WORKSPACE_ACCESS_TOKEN}
+volumes:
+  workspace-vol:
+  credentials-vol:

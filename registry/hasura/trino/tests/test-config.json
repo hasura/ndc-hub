@@ -5,6 +5,14 @@
     "JDBC_URL=jdbc:trino://local.hasura.dev:8090?user=trino",
     "JDBC_SCHEMAS=chinook_mysql.chinook"
   ],
+  "ddn_workspace": {
+    "enabled": true,
+    "setup_compose_file_path": "compose.yaml",
+    "envs": [
+      "JDBC_URL=jdbc:trino://trino:8080?user=trino",
+      "JDBC_SCHEMAS=chinook_mysql.chinook"
+    ]
+  },
   "snapshots_dir": "snapshots",
   "setup_compose_file_path": "compose.yaml"
 }

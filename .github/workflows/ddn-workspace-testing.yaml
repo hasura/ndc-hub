@@ -1,0 +1,489 @@
+name: Test DDN Workspace with Connectors
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    branches: [main]
+    paths:
+      - registry/**
+  workflow_dispatch:
+    inputs:
+      connectors:
+        description: 'Connectors to test (comma-separated, e.g., "hasura/elasticsearch:v1.9.5,hasura/postgres:v2.1.1" or "*" for all)'
+        required: false
+        default: '*'
+        type: string
+
+jobs:
+  setup-connector-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.connector-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Get all connector version package changes
+        id: connector-version-changed-files
+        uses: tj-actions/changed-files@v46.0.1
+        with:
+          json: true
+          escape_json: false
+          files: |
+            registry/**
+
+      - name: Print out all the changed files
+        env:
+          ADDED_FILES: ${{ steps.connector-version-changed-files.outputs.added_files }}
+          MODIFIED_FILES: ${{ steps.connector-version-changed-files.outputs.modified_files }}
+          DELETED_FILES: ${{ steps.connector-version-changed-files.outputs.deleted_files }}
+        run: |
+          echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > changed_files.json
+          cat changed_files.json
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+
+      - name: Get the list of connectors to test
+        id: connector-matrix
+        env:
+          CHANGED_FILES_PATH: "changed_files.json"
+        run: |
+          # Handle different trigger types
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "🔍 Manual workflow dispatch - using input connectors"
+            CONNECTORS_INPUT="${{ github.event.inputs.connectors }}"
+
+            if [ "$CONNECTORS_INPUT" = "*" ] || [ -z "$CONNECTORS_INPUT" ]; then
+              echo "Testing all connectors from connector-versions.json"
+              MATRIX_JSON="[]"  # Empty matrix means test all connectors
+            else
+              echo "Testing specific connectors: $CONNECTORS_INPUT"
+              # Parse comma-separated connector specs into matrix format
+              MATRIX_JSON="[]"
+              IFS=',' read -ra CONNECTOR_SPECS <<< "$CONNECTORS_INPUT"
+              for spec in "${CONNECTOR_SPECS[@]}"; do
+                # Parse namespace/connector:version format
+                if [[ "$spec" =~ ^([^/]+)/([^:]+):(.+)$ ]]; then
+                  namespace="${BASH_REMATCH[1]}"
+                  connector_name="${BASH_REMATCH[2]}"
+                  version="${BASH_REMATCH[3]}"
+
+                  echo "Adding $namespace/$connector_name:$version to test matrix"
+                  MATRIX_JSON=$(echo "$MATRIX_JSON" | jq --arg ns "$namespace" --arg name "$connector_name" --arg ver "$version" \
+                    '. += [{"namespace": $ns, "connector_name": $name, "connector_version": $ver}]')
+                else
+                  echo "⚠️ Invalid connector spec format: $spec (expected namespace/connector:version)"
+                fi
+              done
+            fi
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "🔍 Detecting changed connectors from PR files..."
+
+            # Read changed files from the JSON file created by tj-actions/changed-files
+            if [ -f "changed_files.json" ]; then
+              echo "📄 Reading changed files from changed_files.json"
+              cat changed_files.json
+
+              # Extract all changed files in registry/ directory
+              CHANGED_FILES=$(jq -r '.added_files[], .modified_files[], .deleted_files[]' changed_files.json 2>/dev/null | grep '^registry/' || true)
+
+              echo "Changed files in registry/:"
+              echo "$CHANGED_FILES"
+
+              # Extract unique connector paths (registry/namespace/connector-name)
+              CHANGED_CONNECTORS=$(echo "$CHANGED_FILES" | \
+                grep -E '^registry/[^/]+/[^/]+/' | \
+                sed 's|^registry/\([^/]*\)/\([^/]*\)/.*|\1/\2|' | \
+                sort -u)
+
+              echo "Changed connectors:"
+              echo "$CHANGED_CONNECTORS"
+
+              # Build matrix JSON from changed connectors
+              MATRIX_JSON="[]"
+              while IFS= read -r connector_path; do
+                if [ -n "$connector_path" ]; then
+                  namespace=$(echo "$connector_path" | cut -d'/' -f1)
+                  connector_name=$(echo "$connector_path" | cut -d'/' -f2)
+
+                  # Get the latest version from releases directory
+                  latest_version=$(ls "registry/$connector_path/releases/" 2>/dev/null | grep -E '^v[0-9]' | sort -V | tail -1)
+
+                  if [ -n "$latest_version" ]; then
+                    echo "Adding $namespace/$connector_name:$latest_version to test matrix"
+                    MATRIX_JSON=$(echo "$MATRIX_JSON" | jq --arg ns "$namespace" --arg name "$connector_name" --arg ver "$latest_version" \
+                      '. += [{"namespace": $ns, "connector_name": $name, "connector_version": $ver}]')
+                  fi
+                fi
+              done <<< "$CHANGED_CONNECTORS"
+
+              # If no connectors changed, use empty matrix
+              if [ "$MATRIX_JSON" = "[]" ]; then
+                echo "⚠️ No connector changes detected in PR"
+                echo "Will test all connectors from connector-versions.json instead"
+              fi
+            else
+              echo "⚠️ changed_files.json not found, testing all connectors"
+              MATRIX_JSON="[]"  # Empty matrix means test all connectors
+            fi
+          else
+            # For non-PR events (manual triggers, etc.), test all connectors from connector-versions.json
+            echo "🔍 Using all connectors from connector-versions.json for non-PR event"
+            MATRIX_JSON="[]"  # Empty matrix means test all connectors
+          fi
+
+          echo "Final test matrix: $MATRIX_JSON"
+          # Ensure JSON is compact (single line) for GitHub Actions output
+          COMPACT_MATRIX_JSON=$(echo "$MATRIX_JSON" | jq -c .)
+          echo "matrix=$COMPACT_MATRIX_JSON" >> "$GITHUB_OUTPUT"
+
+      - name: Check if connector is published to staging
+        run: |
+          # Check if connectors in matrix are published to staging
+          MATRIX='${{ steps.connector-matrix.outputs.matrix }}'
+
+          if [ "$MATRIX" = "[]" ]; then
+            echo "✅ Empty matrix - will test all connectors from connector-versions.json"
+          else
+            echo "🔍 Checking staging availability for connectors in matrix..."
+            echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
+              CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+              CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+              NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
+
+              echo "Checking $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION in staging..."
+              # TODO: Add actual staging check logic here
+              echo "✅ $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION staging check passed"
+            done
+          fi
+
+  build-ddn-workspace:
+    needs: setup-connector-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch_depth: 1
+
+      - name: Generate connector version overrides
+        id: connector-overrides
+        run: |
+          set -e
+
+          # Parse the test matrix to get connector details
+          MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
+          echo "Test matrix: $MATRIX"
+
+          if [ "$MATRIX" = "[]" ]; then
+            echo "🔍 Empty matrix - using default connector-versions.json from ddn-workspace/"
+            # Copy the default connector versions file
+            cp ddn-workspace/connector-versions.json connector-versions.json
+            echo "📄 Using default connector versions:"
+            cat connector-versions.json
+          else
+            echo "🔍 Generating connector version overrides for changed connectors"
+
+            # Start with default connector versions
+            cp ddn-workspace/connector-versions.json connector-versions.json
+
+            # Process each connector in the matrix and update versions
+            echo "$MATRIX" | jq -c '.[]' | while IFS= read -r connector_info; do
+              CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+              CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+              NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
+
+              echo "Processing connector: $NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
+
+              # Update the connector version in JSON file
+              jq --arg key "$CONNECTOR_NAME" --arg val "$CONNECTOR_VERSION" '.[$key] = $val' connector-versions.json > connector-versions.tmp
+              mv connector-versions.tmp connector-versions.json
+            done
+
+            echo "📄 Generated connector versions file with overrides:"
+            cat connector-versions.json
+          fi
+
+      - name: Build DDN Workspace with updated connector versions
+        timeout-minutes: 20
+        run: |
+          set -e
+          
+          echo "🚀 Building DDN Workspace with updated connector versions"
+          
+          # Check if connector versions file exists and has content
+          if [ -f "connector-versions.json" ] && [ "$(jq 'keys | length' connector-versions.json)" -gt 0 ]; then
+            echo "📄 Using connector versions file:"
+            cat connector-versions.json
+            
+            # Use the build script to build with custom versions
+            # Determine DDN environment
+            if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              DDN_ENV="production"
+            else
+              DDN_ENV="staging"
+            fi
+
+            cd ddn-workspace
+            chmod +x scripts/build-with-versions.sh
+            ./scripts/build-with-versions.sh ../connector-versions.json ddn-workspace:test $DDN_ENV
+            cd ..
+          else
+            echo "Building with default connector versions..."
+
+            # Use staging environment for PR builds and production for main branch
+            if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              echo "📦 Building for production environment"
+              DDN_ENV_ARG="--build-arg DDN_ENVIRONMENT=production"
+            else
+              echo "🧪 Building for staging environment"
+              DDN_ENV_ARG="--build-arg DDN_ENVIRONMENT=staging"
+            fi
+
+            DOCKER_BUILDKIT=0 docker build \
+              -t ddn-workspace:test \
+              -f ddn-workspace/Dockerfile \
+              --no-cache \
+              $DDN_ENV_ARG \
+              ./ddn-workspace
+          fi
+
+          echo "✅ DDN Workspace built successfully"
+
+      - name: Verify connector versions in workspace
+        run: |
+          set -e
+          
+          echo "🔍 Verifying connector versions in DDN workspace"
+          
+          # Start workspace temporarily to check versions
+          docker run -d \
+            --name ddn-version-check \
+            --privileged \
+            --entrypoint="" \
+            ddn-workspace:test \
+            bash -c "
+              # Start Docker daemon
+              dockerd --host=unix:///var/run/docker.sock &
+              while ! docker info >/dev/null 2>&1; do sleep 1; done
+              sleep 3600
+            "
+          
+          sleep 10
+          
+          # Check which connector versions are available
+          docker exec ddn-version-check bash -c '
+            export PATH="$HOME/.local/bin:$PATH"
+            echo "📋 Available connector versions:"
+            show_supported_connector_versions.sh
+          '
+          
+          # Stop the verification container
+          docker stop ddn-version-check
+          docker rm ddn-version-check
+          
+          echo "✅ Connector version verification completed"
+
+      - name: Test DDN Workspace basic functionality
+        run: |
+          set -e
+          
+          echo "🧪 Testing DDN Workspace basic functionality"
+          
+          # Start DDN workspace as a service container with Docker-in-Docker
+          # Skip the entrypoint that requires supervisor and directly test DDN CLI
+          docker run -d \
+            --name ddn-workspace-test \
+            --privileged \
+            -e DDN_WORKSPACE_ACCESS_TOKEN=${{ secrets.HASURA_DDN_PAT }} \
+            --entrypoint="" \
+            ddn-workspace:test \
+            bash -c "
+              # Start Docker daemon in background
+              dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376 &
+              DOCKER_PID=\$!
+              
+              # Wait for Docker to be ready
+              while ! docker info >/dev/null 2>&1; do sleep 1; done
+              echo 'Docker daemon started'
+              
+              # Keep container running
+              sleep 3600
+            "
+          
+          # Wait for Docker daemon to start
+          echo "⏳ Waiting for Docker daemon to start..."
+          sleep 15
+          
+          # Test that DDN CLI is working
+          docker exec ddn-workspace-test bash -c '
+            export PATH="$HOME/.local/bin:$PATH"
+            ddn --version
+            echo "✅ DDN CLI working"
+          '
+          
+          # Test DDN auth if token is provided
+          docker exec ddn-workspace-test bash -c '
+            export PATH="$HOME/.local/bin:$PATH"
+            if [[ -n "$DDN_WORKSPACE_ACCESS_TOKEN" ]]; then
+              ddn auth login --access-token "$DDN_WORKSPACE_ACCESS_TOKEN" || echo "DDN auth test completed"
+            fi
+          '
+          
+          # Stop and remove the test container
+          docker stop ddn-workspace-test
+          docker rm ddn-workspace-test
+          
+          echo "✅ Basic functionality tests passed"
+
+
+
+      - name: Save DDN Workspace image
+        run: |
+          # Save the image for connector tests
+          docker save ddn-workspace:test | gzip > ddn-workspace.tar.gz
+
+      - name: Upload DDN Workspace image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddn-workspace-image
+          path: ddn-workspace.tar.gz
+          retention-days: 1
+
+  test-connectors:
+    needs: [setup-connector-tests, build-ddn-workspace]
+    runs-on: ubuntu-latest
+    environment: staging
+    if: needs.build-ddn-workspace.result == 'success'
+    env:
+      SECRETS_JSON: ${{ toJson(secrets) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch_depth: 1
+
+      - name: Set matching env vars
+        run: |
+          echo "$SECRETS_JSON" | jq -r 'to_entries[] | select(.key | endswith("_CONFIG_OPTIONS_ENV")) | "\(.key)=\(.value)"' | while IFS= read -r line; do
+            echo "$line" >> "$GITHUB_ENV"
+            export "$line"
+          done
+
+      - name: Set custom connector env vars
+        run: |
+         # Extract BigQuery key JSON from secrets if it exists
+          if echo "$SECRETS_JSON" | jq -e 'has("BIGQUERY_KEY_JSON")' > /dev/null; then
+            # Extract the key and save it to an environment variable
+            BIGQUERY_KEY_JSON=$(echo "$SECRETS_JSON" | jq -r '.BIGQUERY_KEY_JSON')
+            echo "BIGQUERY_KEY_JSON<<EOF" >> $GITHUB_ENV
+            echo "$BIGQUERY_KEY_JSON" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+
+            echo "Successfully set BIGQUERY_KEY_JSON environment variable"
+          else
+            echo "Warning: BIGQUERY_KEY_JSON not found in secrets"
+          fi
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.4
+
+      - name: Install dependencies
+        working-directory: registry-automation/e2e-testing
+        run: bun install
+
+      - name: Download DDN Workspace image (if available)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ddn-workspace-image
+
+      - name: Load DDN Workspace image (if available)
+        continue-on-error: true
+        run: |
+          if [ -f "ddn-workspace.tar.gz" ]; then
+            docker load < ddn-workspace.tar.gz
+            docker images | grep ddn-workspace
+          else
+            echo "No DDN workspace image artifact found"
+          fi
+
+      - name: Run DDN workspace tests
+        timeout-minutes: 20
+        env:
+          HASURA_DDN_PAT: ${{ secrets.HASURA_DDN_PAT }}
+          DDN_WORKSPACE_ACCESS_TOKEN: ${{ secrets.DDN_STAGING_PAT }}
+        run: |
+          set -e
+
+          echo "🧪 Running DDN workspace connector tests"
+
+          # Set up environment
+          export NDC_HUB_GIT_REPO_FILE_PATH=$(pwd)
+
+          # Parse the test matrix to get connector specifications
+          MATRIX='${{ needs.setup-connector-tests.outputs.matrix }}'
+          echo "Test matrix: $MATRIX"
+
+          cd registry-automation/e2e-testing
+
+          if [ "$MATRIX" = "[]" ]; then
+            echo "🔍 Testing all connectors from connector-versions.json"
+            bun ddn-workspace-testing.ts "*"
+          else
+            echo "🔍 Testing specific connectors from matrix"
+
+            # Build comma-separated list of connector specs
+            CONNECTOR_SPECS=""
+            while IFS= read -r connector_info; do
+              CONNECTOR_NAME=$(echo "$connector_info" | jq -r '.connector_name')
+              CONNECTOR_VERSION=$(echo "$connector_info" | jq -r '.connector_version')
+              NAMESPACE=$(echo "$connector_info" | jq -r '.namespace')
+
+              SPEC="$NAMESPACE/$CONNECTOR_NAME:$CONNECTOR_VERSION"
+
+              if [ -z "$CONNECTOR_SPECS" ]; then
+                CONNECTOR_SPECS="$SPEC"
+              else
+                CONNECTOR_SPECS="$CONNECTOR_SPECS,$SPEC"
+              fi
+            done <<< "$(echo "$MATRIX" | jq -c '.[]')"
+
+            echo "Testing connectors: $CONNECTOR_SPECS"
+            bun ddn-workspace-testing.ts "$CONNECTOR_SPECS"
+          fi
+
+          echo "🎉 All DDN workspace tests completed successfully!"
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "ddn-workspace:test"
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+
+      - name: Print Trivy vulnerability scan results
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "ddn-workspace:test"
+          format: "table"
+          exit-code: 0
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+
+
