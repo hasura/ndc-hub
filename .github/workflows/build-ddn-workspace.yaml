@@ -258,7 +258,8 @@ jobs:
 
             cd ddn-workspace
             chmod +x scripts/build-with-versions.sh
-            ./scripts/build-with-versions.sh connector-versions.json ddn-native-workspace:${{ steps.meta.outputs.version_tag }} $DDN_ENV
+            echo "Building with tag: gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}"
+            ./scripts/build-with-versions.sh connector-versions.json gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }} $DDN_ENV
             cd ..
           else
             echo "⚠️ No connector versions file found, building with defaults..."
