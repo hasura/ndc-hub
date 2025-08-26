@@ -1,0 +1,14 @@
+{
+  "version": "v1.2.14",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/postgres/1.2.14/postgres-connector-v1.2.14.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "ef77a08e67fc2a20a8acc7a18ebae4923181f24c78d4001e8156065d1aa79083"
+  },
+  "source": {
+    "hash": "bba08df4d9a82c627cb395c493a64d4fae297f3c"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
