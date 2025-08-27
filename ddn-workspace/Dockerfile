@@ -1,14 +1,14 @@
 
 ######### Environment Configuration #########
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.1.0
+ARG DDN_CLI_VERSION=v3.5.1
 
 ######### Arg definitions  #########
 ARG POSTGRES_VERSION=v3.1.0
 
-ARG ORACLE_VERSION=v1.1.1
+ARG ORACLE_VERSION=v1.1.4
 
-ARG TRINO_VERSION=v1.0.4
+ARG TRINO_VERSION=v1.0.5
 
 ARG MONGODB_VERSION=v1.8.3
 
@@ -18,13 +18,13 @@ ARG BIGQUERY_VERSION=v2.0.1
 
 ARG OPENAPI_VERSION=v1.7.1
 
-ARG ELASTICSEARCH_VERSION=v1.9.5
+ARG ELASTICSEARCH_VERSION=v1.9.6
 
-ARG POSTGRES_PROMPTQL_VERSION=v1.2.7
+ARG POSTGRES_PROMPTQL_VERSION=v1.2.14
 
-ARG SNOWFLAKE_JDBC_VERSION=v1.2.12
+ARG SNOWFLAKE_JDBC_VERSION=v1.2.18
 
-ARG MYSQL_PROMPTQL_VERSION=v1.2.7
+ARG MYSQL_PROMPTQL_VERSION=v1.2.13
 
 ARG CONNECTORS_TO_INCLUDE=""
 
@@ -62,12 +62,12 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc-cli:${MYSQL_PROMPTQL_VERSION
 FROM --platform=amd64 ubuntu:24.04 AS workspace-builder
 
 # Use CODE_SERVER_VERSION from https://github.com/coder/code-server/releases
-ARG CODE_SERVER_VERSION=4.101.2
+ARG CODE_SERVER_VERSION=4.103.2
 # Use CLI_VERSION from https://github.com/hasura/v3-cli-go/releases
-ARG CLI_VERSION=v3.1.0
+ARG CLI_VERSION=v3.5.1
 # DDN Environment and CLI version (must be redeclared in each stage)
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.1.0
+ARG DDN_CLI_VERSION=v3.5.1
 
 ENV HOME=/home/hasura
 ENV BIN_PATH=${HOME}/.local/bin
@@ -117,7 +117,7 @@ RUN chmod +x ${BIN_PATH}/install-code-server.sh \
 ######### Install Runtimes #########
 RUN curl https://mise.run | MISE_INSTALL_PATH=${BIN_PATH}/mise sh \
     && echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
-    && mise use -g node@20  \
+    && mise use -g node@24  \
     && mise use -g java@openjdk-21
 
 ENV PATH="${XDG_DATA_HOME}/mise/shims:${PATH}"
