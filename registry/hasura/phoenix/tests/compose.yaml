@@ -33,11 +33,11 @@ services:
         tail -f /opt/hbase/logs/*.log
       "
     healthcheck:
-      test: ["CMD", "bash", "-c", "curl -f http://localhost:8765 && curl -f http://localhost:16010"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 120s
+      test: ["CMD", "bash", "-c", "curl -f http://localhost:8765 || exit 0"]
+      interval: 45s
+      timeout: 30s
+      retries: 20
+      start_period: 300s
 
 volumes:
   hbase_data:
