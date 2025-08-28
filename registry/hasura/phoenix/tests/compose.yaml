@@ -12,9 +12,6 @@ services:
       PHOENIX_OPTS: "-Dphoenix.schema.isNamespaceMappingEnabled=true"
     volumes:
       - hbase_data:/tmp
-      - ./init-phoenix.sql:/opt/init-phoenix.sql
-      - ./sample-data.sql:/opt/sample-data.sql
-      - ./init-script.sh:/opt/init-script.sh
       - ./configure-hbase.sh:/opt/configure-hbase.sh
     command: |
       sh -c "
