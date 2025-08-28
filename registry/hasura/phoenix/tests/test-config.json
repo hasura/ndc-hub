@@ -1,0 +1,8 @@
+{
+  "hub_id": "hasura/phoenix",
+  "port": 8083,
+  "envs": [
+    "JDBC_URL=jdbc:phoenix:3.150.18.50:2181"
+  ],
+  "snapshots_dir": "snapshots"
+}
