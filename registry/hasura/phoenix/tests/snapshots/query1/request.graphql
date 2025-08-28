@@ -1,9 +1,5 @@
 query Query1 {
-  users(where: { id: { _eq: 1 } }) {
-    id
-    name
-    email
-    age
-    isActive
+  album(where: {albumId: {_eq: 1}}) {
+    title
   }
 }

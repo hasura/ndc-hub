@@ -1,12 +1,8 @@
 {
   "data": {
-    "users": [
+    "album": [
       {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john.doe@example.com",
-        "age": 30,
-        "isActive": true
+        "title": "For Those About To Rock We Salute You"
       }
     ]
   }
