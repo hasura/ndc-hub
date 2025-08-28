@@ -1,0 +1,43 @@
+services:
+  phoenix-hbase:
+    image: boostport/hbase-phoenix-all-in-one:2.0-5.0
+    hostname: phoenix-hbase
+    container_name: phoenix-hbase
+    ports:
+      - "8765:8765"    # Phoenix Query Server
+      - "16010:16010"  # HBase Master Web UI
+      - "16020:16020"  # HBase RegionServer Web UI
+      - "2181:2181"    # ZooKeeper
+    environment:
+      PHOENIX_OPTS: "-Dphoenix.schema.isNamespaceMappingEnabled=true"
+    volumes:
+      - hbase_data:/tmp
+      - ./init-phoenix.sql:/opt/init-phoenix.sql
+      - ./sample-data.sql:/opt/sample-data.sql
+      - ./init-script.sh:/opt/init-script.sh
+      - ./configure-hbase.sh:/opt/configure-hbase.sh
+    command: |
+      sh -c "
+        chmod +x /opt/configure-hbase.sh &&
+        /opt/configure-hbase.sh &&
+        echo 'Starting HBase in standalone mode...' &&
+        /opt/hbase/bin/start-hbase.sh &&
+        echo 'Starting Phoenix Query Server...' &&
+        /opt/phoenix-server/bin/queryserver.py &
+        echo 'Waiting for services to be ready...' &&
+        sleep 90 &&
+        echo 'Initializing Phoenix tables...' &&
+        chmod +x /opt/init-script.sh &&
+        /opt/init-script.sh &&
+        echo 'Phoenix setup complete. Services running...' &&
+        tail -f /opt/hbase/logs/*.log
+      "
+    healthcheck:
+      test: ["CMD", "bash", "-c", "curl -f http://localhost:8765 && curl -f http://localhost:16010"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+volumes:
+  hbase_data:

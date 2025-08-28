@@ -1,0 +1,9 @@
+{
+  "hub_id": "hasura/phoenix",
+  "port": 8083,
+  "setup_compose_file_path": "compose.yaml",
+  "envs": [
+    "JDBC_URL=jdbc:phoenix:local.hasura.dev:2181"
+  ],
+  "snapshots_dir": "snapshots"
+}
