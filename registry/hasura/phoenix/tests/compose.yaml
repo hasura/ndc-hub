@@ -24,13 +24,8 @@ services:
         /opt/hbase/bin/start-hbase.sh &&
         echo 'Starting Phoenix Query Server...' &&
         /opt/phoenix-server/bin/queryserver.py &
-        echo 'Waiting for services to be ready...' &&
-        sleep 90 &&
-        echo 'Initializing Phoenix tables...' &&
-        chmod +x /opt/init-script.sh &&
-        /opt/init-script.sh &&
         echo 'Phoenix setup complete. Services running...' &&
-        tail -f /opt/hbase/logs/*.log
+        tail -f /dev/null
       "
     healthcheck:
       test: ["CMD", "bash", "-c", "curl -f http://localhost:8765 || exit 0"]
