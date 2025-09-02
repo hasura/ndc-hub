@@ -18,6 +18,8 @@ ARG BIGQUERY_VERSION=v2.0.1
 
 ARG OPENAPI_VERSION=v1.7.1
 
+ARG HTTP_VERSION=v0.12.2
+
 ARG ELASTICSEARCH_VERSION=v1.9.6
 
 ARG POSTGRES_PROMPTQL_VERSION=v1.2.14
@@ -44,6 +46,8 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-graphql:${GRAPHQL_VERSION} AS graphql
 FROM --platform=amd64 ghcr.io/hasura/ndc-bigquery:${BIGQUERY_VERSION} AS bigquery
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-open-api-lambda:${OPENAPI_VERSION} AS openapi-plugin
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-http:${HTTP_VERSION} AS http-plugin
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-elasticsearch:${ELASTICSEARCH_VERSION} AS elasticsearch
 
@@ -212,6 +216,14 @@ RUN cd ${LIB_PATH}/hasura/openapi/${OPENAPI_VERSION}/${CONNECTOR_PLUGIN_ARTIFACT
     && npm install && npm run install-bin-unsafe \
     && ln -s $(npm config get prefix)/bin/ndc-oas-lambda ${LIB_PATH}/hasura/openapi/${OPENAPI_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/ndc-oas-lambda
 ######### OpenAPI End   #########
+
+######### HTTP Begin #########
+ARG HTTP_VERSION
+COPY --from=http-plugin /ndc-cli ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-cli
+RUN ddn plugin install ndc-http --version ${HTTP_VERSION} \
+    && mkdir -p ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+    && ln -s $HOME/.ddn/plugins/store/ndc-http/$HTTP_VERSION/hasura-ndc-http ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-http
+######### HTTP End   #########
 
 ######### Elasticsearch Begin #########
 ARG ELASTICSEARCH_VERSION
