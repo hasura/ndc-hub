@@ -22,17 +22,25 @@ func Metadata(cm *ndchub.ConnectorMetadata, connPkgs []ndchub.ConnectorPackaging
 }
 
 func validateLatestVersion(latestVersion string, allVersions []string) error {
-	var versions semver.Collection
+	var stableVersions semver.Collection
 	for _, version := range allVersions {
 		v, err := semver.NewVersion(version)
 		if err != nil {
 			return fmt.Errorf("invalid semver format for version: %v", err)
 		}
-		versions = append(versions, v)
+		// Only include stable versions (exclude pre-release versions like beta, alpha, rc, etc.)
+		if v.Prerelease() == "" {
+			stableVersions = append(stableVersions, v)
+		}
 	}
 
-	sort.Sort(versions)
-	actualLatestVersion := versions[len(versions)-1]
+	// If no stable versions exist, return early without error
+	if len(stableVersions) == 0 {
+		return nil
+	}
+
+	sort.Sort(stableVersions)
+	actualLatestVersion := stableVersions[len(stableVersions)-1]
 
 	// Parse the declared version for comparison
 	declaredVersion, err := semver.NewVersion(latestVersion)
