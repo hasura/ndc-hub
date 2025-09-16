@@ -1,0 +1,11 @@
+{
+  "version": "v0.1.0",
+  "uri": "https://github.com/hasura/promptql-GA4/releases/download/v0.1.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "8662cfc31a153529b37981c9d521306dd8bf02a26d0a7550dfe84743ca39c360"
+  },
+  "source": {
+    "hash": "0a59dba5bb0fdd34565f3c43ae21cc40f63fecd3"
+  }
+}

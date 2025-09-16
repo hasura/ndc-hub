@@ -1,0 +1,31 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to Google Analytics and expose it to Hasura DDN Project with PromptQL integration",
+    "title": "PromptQL GA4 Connector",
+    "tags": [
+      "analytics",
+      "google-analytics",
+      "ga4"
+    ],
+    "latest_version": "v0.1.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/promptql-GA4/",
+    "version": [
+      {
+        "tag": "v0.1.0",
+        "hash": "0a59dba5bb0fdd34565f3c43ae21cc40f63fecd3",
+        "is_verified": true
+      }
+    ]
+  }
+}
