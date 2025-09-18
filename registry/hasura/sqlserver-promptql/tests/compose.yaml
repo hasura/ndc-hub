@@ -1,0 +1,29 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-RC0-ubuntu-24.04
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+    ports:
+      - "1434:1433"
+    healthcheck:  # ensure it's ready before init
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "YourStrong!Passw0rd" -Q "SELECT 1" || exit 1
+      interval: 10s
+      retries: 10
+      start_period: 30s
+
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql-tools:latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    volumes:
+      - ./data/chinook.sql:/init.sql:ro
+    entrypoint: >
+      /bin/bash -c "
+        echo 'Running init script...' &&
+        /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P 'YourStrong!Passw0rd' -d master -i /init.sql &&
+        echo 'Init complete.'
+      "
