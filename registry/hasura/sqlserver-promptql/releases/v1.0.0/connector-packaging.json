@@ -1,12 +1,12 @@
 {
   "version": "v1.0.0",
-  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/mysql/1.0.0/mysql-connector-v1.0.0.tar.gz",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/sqlserver/1.0.0/sqlserver-connector-v1.0.0.tar.gz",
   "checksum": {
     "type": "sha256",
-    "value": "69b2e8e38bf163b9fe6dcb59c640da0c38b7f1626b8d048d9875e8e3c922e302"
+    "value": "a53f8a5b0269bc43456ca47d13b389491206e0f84a821edf759ec13615b1ecf3"
   },
   "source": {
-    "hash": "14124a9791b8242c71bca015d5839c86a184731e"
+    "hash": "468bb070568db828e13985e713e7f0d1f741a127"
   },
   "test": {
     "test_config_path": "../../tests/test-config.json"
