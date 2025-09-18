@@ -3,7 +3,7 @@
     "namespace": "hasura",
     "description": "Connect to a SQL Server database and expose it to Hasura v3 Project",
     "title": "SQL Server PromptQL Connector",
-    "logo": "logo.svg",
+    "logo": "logo.png",
     "tags": [
       "database"
     ],
