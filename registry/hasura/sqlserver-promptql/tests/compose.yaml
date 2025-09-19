@@ -1,29 +1,13 @@
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2025-RC0-ubuntu-24.04
-    restart: always
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-chinook
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_PID: "Developer"
-      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: Y
+      SA_PASSWORD: Password123
     ports:
       - "1434:1433"
-    healthcheck:  # ensure it's ready before init
-      test: /opt/mssql-tools18/bin/sqlcmd -S tcp:127.0.0.1,1433 -U sa -P \"YourStrong!Passw0rd\" -N -C -l 2 -Q \"SELECT 1\" || exit 1
-      interval: 10s
-      retries: 10
-      start_period: 30s
-
-  sqlserver-init:
-    image: mcr.microsoft.com/mssql-tools:latest
-    depends_on:
-      sqlserver:
-        condition: service_healthy
     volumes:
-      - ./data/chinook.sql:/init.sql:ro
-    entrypoint: >
-      /bin/bash -c "
-        echo 'Running init script...' &&
-        sqlcmd -S sqlserver -U sa -P 'YourStrong!Passw0rd' -d master -i /init.sql &&
-        echo 'Init complete.'
-      "
+      - ./data/chinook.sql:/usr/config/chinook.sql
+      - ./init/import.sh:/usr/config/import.sh
+    entrypoint: ["/bin/bash", "/usr/config/import.sh"]

@@ -1,0 +1,8 @@
+query Query2 {
+  album(where: { albumId: { _eq: 50 } }) {
+    title
+    tracks {
+      name
+    }
+  }
+}
