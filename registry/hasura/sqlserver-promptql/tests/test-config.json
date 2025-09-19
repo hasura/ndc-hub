@@ -1,5 +1,5 @@
 {
-  "hub_id": "hasura/mysql-promptql",
+  "hub_id": "hasura/sqlserver-promptql",
   "port": 8083,
   "envs": [
     "JDBC_URL=jdbc:sqlserver://local.hasura.dev:1434;databaseName=Chinook;encrypt=false;user=sa;password=YourStrong!Passw0rd"
