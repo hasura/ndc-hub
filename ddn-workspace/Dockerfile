@@ -28,6 +28,8 @@ ARG SNOWFLAKE_JDBC_VERSION=v1.2.18
 
 ARG MYSQL_PROMPTQL_VERSION=v1.2.13
 
+ARG SQLSERVER_PROMPTQL_VERSION=v1.0.0
+
 ARG CONNECTORS_TO_INCLUDE=""
 
 ######### Builders Begin #########
@@ -59,6 +61,9 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-snowflake-jdbc-cli:${SNOWFLAKE_JDBC_VER
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc:${MYSQL_PROMPTQL_VERSION} AS mysql-promptql-connector
 FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc-cli:${MYSQL_PROMPTQL_VERSION} AS mysql-promptql-cli
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-sqlserver-jdbc:${SQLSERVER_PROMPTQL_VERSION} AS sqlserver-promptql-connector
+FROM --platform=amd64 ghcr.io/hasura/ndc-sqlserver-jdbc-cli:${SQLSERVER_PROMPTQL_VERSION} AS sqlserver-promptql-cli
 ######### Builders End   ##########
 
 
@@ -321,6 +326,35 @@ RUN printf '#!/bin/sh\n\
     > ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 ######### MySQL PromptQL End   #########
+
+######### SQLServer PromptQL Begin #########
+ARG SQLSERVER_PROMPTQL_VERSION
+COPY --from=sqlserver-promptql-connector  /app.jar /app.properties* ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/
+RUN printf '#!/bin/sh\n\
+    root_path=%s/hasura/sqlserver-promptql/%s/%s\n\
+    if [ -f "$root_path/app.properties" ]; then\n\
+    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+    else\n\
+    DEFAULT_OPTS=""\n\
+    fi\n\
+    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+    "${LIB_PATH}" "${SQLSERVER_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
+    > ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+RUN chmod +x ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+
+COPY --from=sqlserver-promptql-cli  /app.jar /app.properties* ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/
+RUN printf '#!/bin/sh\n\
+    root_path=%s/hasura/sqlserver-promptql/%s/%s\n\
+    if [ -f "$root_path/app.properties" ]; then\n\
+    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+    else\n\
+    DEFAULT_OPTS=""\n\
+    fi\n\
+    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+    "${LIB_PATH}" "${SQLSERVER_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
+    > ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+RUN chmod +x ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+######### SQLServer PromptQL End   #########
 
 COPY scripts/show_supported_connector_versions.sh ${BIN_PATH}/show_supported_connector_versions.sh
 RUN chmod +x ${BIN_PATH}/show_supported_connector_versions.sh
