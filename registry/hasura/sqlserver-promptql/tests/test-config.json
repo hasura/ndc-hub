@@ -4,7 +4,7 @@
   "envs": [
     "JDBC_URL=jdbc:sqlserver://local.hasura.dev:1434;databaseName=Chinook;encrypt=false;user=sa;password=Password123"
   ],
-    "ddn_workspace": {
+  "ddn_workspace": {
     "enabled": true,
     "setup_compose_file_path": "compose.yaml",
     "envs": [
