@@ -8,7 +8,7 @@
     "enabled": true,
     "setup_compose_file_path": "compose.yaml",
     "envs": [
-      "JDBC_URL=jdbc:sqlserver://local.hasura.dev:1433;databaseName=Chinook;encrypt=false;user=sa;password=Password123"
+      "JDBC_URL=jdbc:sqlserver://sqlserver:1433;databaseName=Chinook;encrypt=false;user=sa;password=Password123"
     ]
   },
   "snapshots_dir": "snapshots",
