@@ -9,7 +9,7 @@ services:
     ports:
       - "1434:1433"
     healthcheck:  # ensure it's ready before init
-      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -Q "SELECT 1" || exit 1
+      test: /opt/mssql-tools18/bin/sqlcmd -S tcp:127.0.0.1,1433 -U sa -P \"YourStrong!Passw0rd\" -N -C -l 2 -Q \"SELECT 1\" || exit 1
       interval: 10s
       retries: 10
       start_period: 30s
