@@ -1,0 +1,14 @@
+{
+  "version": "v1.0.1",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/sqlserver/1.0.1/sqlserver-connector-v1.0.1.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "2153f9576532694e30077b740e9f49cfb7f9142876ab123587cfef2a0a80523b"
+  },
+  "source": {
+    "hash": "3713176421dbfe2c00aa04b025939ebfa105b7ba"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}

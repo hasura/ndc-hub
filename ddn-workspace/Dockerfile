@@ -1,14 +1,14 @@
 
 ######### Environment Configuration #########
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.1.0
+ARG DDN_CLI_VERSION=v3.5.1
 
 ######### Arg definitions  #########
 ARG POSTGRES_VERSION=v3.1.0
 
-ARG ORACLE_VERSION=v1.1.1
+ARG ORACLE_VERSION=v1.1.4
 
-ARG TRINO_VERSION=v1.0.4
+ARG TRINO_VERSION=v1.0.5
 
 ARG MONGODB_VERSION=v1.8.3
 
@@ -18,13 +18,17 @@ ARG BIGQUERY_VERSION=v2.0.1
 
 ARG OPENAPI_VERSION=v1.7.1
 
-ARG ELASTICSEARCH_VERSION=v1.9.5
+ARG HTTP_VERSION=v0.12.2
 
-ARG POSTGRES_PROMPTQL_VERSION=v1.2.7
+ARG ELASTICSEARCH_VERSION=v1.9.6
 
-ARG SNOWFLAKE_JDBC_VERSION=v1.2.12
+ARG POSTGRES_PROMPTQL_VERSION=v1.2.14
 
-ARG MYSQL_PROMPTQL_VERSION=v1.2.7
+ARG SNOWFLAKE_JDBC_VERSION=v1.2.18
+
+ARG MYSQL_PROMPTQL_VERSION=v1.2.13
+
+ARG SQLSERVER_PROMPTQL_VERSION=v1.0.0
 
 ARG CONNECTORS_TO_INCLUDE=""
 
@@ -45,6 +49,8 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-bigquery:${BIGQUERY_VERSION} AS bigquer
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-open-api-lambda:${OPENAPI_VERSION} AS openapi-plugin
 
+FROM --platform=amd64 ghcr.io/hasura/ndc-http:${HTTP_VERSION} AS http-plugin
+
 FROM --platform=amd64 ghcr.io/hasura/ndc-elasticsearch:${ELASTICSEARCH_VERSION} AS elasticsearch
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-postgres-jdbc:${POSTGRES_PROMPTQL_VERSION} AS postgres-promptql-connector
@@ -55,6 +61,9 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-snowflake-jdbc-cli:${SNOWFLAKE_JDBC_VER
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc:${MYSQL_PROMPTQL_VERSION} AS mysql-promptql-connector
 FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc-cli:${MYSQL_PROMPTQL_VERSION} AS mysql-promptql-cli
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-sqlserver-jdbc:${SQLSERVER_PROMPTQL_VERSION} AS sqlserver-promptql-connector
+FROM --platform=amd64 ghcr.io/hasura/ndc-sqlserver-jdbc-cli:${SQLSERVER_PROMPTQL_VERSION} AS sqlserver-promptql-cli
 ######### Builders End   ##########
 
 
@@ -62,12 +71,12 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-mysql-jdbc-cli:${MYSQL_PROMPTQL_VERSION
 FROM --platform=amd64 ubuntu:24.04 AS workspace-builder
 
 # Use CODE_SERVER_VERSION from https://github.com/coder/code-server/releases
-ARG CODE_SERVER_VERSION=4.101.2
+ARG CODE_SERVER_VERSION=4.103.2
 # Use CLI_VERSION from https://github.com/hasura/v3-cli-go/releases
-ARG CLI_VERSION=v3.1.0
+ARG CLI_VERSION=v3.5.1
 # DDN Environment and CLI version (must be redeclared in each stage)
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.1.0
+ARG DDN_CLI_VERSION=v3.5.1
 
 ENV HOME=/home/hasura
 ENV BIN_PATH=${HOME}/.local/bin
@@ -117,7 +126,7 @@ RUN chmod +x ${BIN_PATH}/install-code-server.sh \
 ######### Install Runtimes #########
 RUN curl https://mise.run | MISE_INSTALL_PATH=${BIN_PATH}/mise sh \
     && echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
-    && mise use -g node@20  \
+    && mise use -g node@24  \
     && mise use -g java@openjdk-21
 
 ENV PATH="${XDG_DATA_HOME}/mise/shims:${PATH}"
@@ -212,6 +221,14 @@ RUN cd ${LIB_PATH}/hasura/openapi/${OPENAPI_VERSION}/${CONNECTOR_PLUGIN_ARTIFACT
     && npm install && npm run install-bin-unsafe \
     && ln -s $(npm config get prefix)/bin/ndc-oas-lambda ${LIB_PATH}/hasura/openapi/${OPENAPI_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/ndc-oas-lambda
 ######### OpenAPI End   #########
+
+######### HTTP Begin #########
+ARG HTTP_VERSION
+COPY --from=http-plugin /ndc-cli ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-cli
+RUN ddn plugin install ndc-http --version ${HTTP_VERSION} \
+    && mkdir -p ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+    && ln -s $HOME/.ddn/plugins/store/ndc-http/$HTTP_VERSION/hasura-ndc-http ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-http
+######### HTTP End   #########
 
 ######### Elasticsearch Begin #########
 ARG ELASTICSEARCH_VERSION
@@ -309,6 +326,35 @@ RUN printf '#!/bin/sh\n\
     > ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 ######### MySQL PromptQL End   #########
+
+######### SQLServer PromptQL Begin #########
+ARG SQLSERVER_PROMPTQL_VERSION
+COPY --from=sqlserver-promptql-connector  /app.jar /app.properties* ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/
+RUN printf '#!/bin/sh\n\
+    root_path=%s/hasura/sqlserver-promptql/%s/%s\n\
+    if [ -f "$root_path/app.properties" ]; then\n\
+    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+    else\n\
+    DEFAULT_OPTS=""\n\
+    fi\n\
+    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+    "${LIB_PATH}" "${SQLSERVER_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
+    > ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+RUN chmod +x ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+
+COPY --from=sqlserver-promptql-cli  /app.jar /app.properties* ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/
+RUN printf '#!/bin/sh\n\
+    root_path=%s/hasura/sqlserver-promptql/%s/%s\n\
+    if [ -f "$root_path/app.properties" ]; then\n\
+    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+    else\n\
+    DEFAULT_OPTS=""\n\
+    fi\n\
+    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+    "${LIB_PATH}" "${SQLSERVER_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
+    > ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+RUN chmod +x ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+######### SQLServer PromptQL End   #########
 
 COPY scripts/show_supported_connector_versions.sh ${BIN_PATH}/show_supported_connector_versions.sh
 RUN chmod +x ${BIN_PATH}/show_supported_connector_versions.sh

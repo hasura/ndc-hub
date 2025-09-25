@@ -1,0 +1,13 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-chinook
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: Password123
+    ports:
+      - "1434:1433"
+    volumes:
+      - ./data/chinook.sql:/usr/config/chinook.sql
+      - ./init/import.sh:/usr/config/import.sh
+    entrypoint: ["/bin/bash", "/usr/config/import.sh"]

@@ -1,0 +1,14 @@
+{
+  "version": "v1.2.14",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/mysql/1.2.14/mysql-connector-v1.2.14.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "a58319ab988462a383e162883dcdc64d8e62279af50034a67602c862d6a28f67"
+  },
+  "source": {
+    "hash": "7080ee096d303a9cd2bb430f5d193686b399ae8a"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
