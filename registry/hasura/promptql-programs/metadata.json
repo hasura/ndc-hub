@@ -4,7 +4,7 @@
     "description": "Integrates PromptQL Programs (Automations) as commands",
     "title": "PromptQL Programs Connector",
     "tags": [],
-    "latest_version": "v0.4.0"
+    "latest_version": "v0.5.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -35,6 +35,11 @@
       {
         "tag": "v0.4.0",
         "hash": "b71a38f4f2e67e47d714227b924e38a5b39c1f7e",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.5.0",
+        "hash": "4ede3d9a11bdf8602bd3281e4fa77942d3801a78",
         "is_verified": true
       }
     ]
