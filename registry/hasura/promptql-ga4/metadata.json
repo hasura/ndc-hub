@@ -8,7 +8,7 @@
       "google-analytics",
       "ga4"
     ],
-    "latest_version": "v0.1.0"
+    "latest_version": "v0.1.1"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -24,6 +24,11 @@
       {
         "tag": "v0.1.0",
         "hash": "0a59dba5bb0fdd34565f3c43ae21cc40f63fecd3",
+        "is_verified": true
+      },
+      {
+        "tag": "v0.1.1",
+        "hash": "d7f8e6489003edd3ecff8325125eed5fd3666607",
         "is_verified": true
       }
     ]
