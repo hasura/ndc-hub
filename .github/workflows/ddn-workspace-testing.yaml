@@ -343,7 +343,26 @@ jobs:
           
           echo "✅ Basic functionality tests passed"
 
+      - name: Run Trivy vulnerability scanner (json output)
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          image-ref: "ddn-workspace:test"
+          format: json
+          output: trivy-results.json
+          scanners: vuln
 
+      - name: Upload Trivy scan results to PromptQL Security Agent
+        uses: hasura/security-agent-tools/upload-file@v1
+        with:
+          file_path: trivy-results.json
+          security_agent_api_key: ${{ secrets.SECURITY_AGENT_API_KEY }}
+          tags: |
+            service=ddn-native-workspace
+            source_code_path=ddn-workspace
+            docker_file_path=ddn-workspace/Dockerfile
+            scanner=trivy
+            image_name=ddn-workspace:test
+            product_domain=hasura-ddn-workspace
 
       - name: Save DDN Workspace image
         run: |
@@ -356,6 +375,17 @@ jobs:
           name: ddn-workspace-image
           path: ddn-workspace.tar.gz
           retention-days: 1
+
+      - name: Fail build on High/Critical Vulnerabilities
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          skip-setup-trivy: true # setup was already done by the previous call to this action above
+          image-ref: "ddn-workspace:test"
+          format: table
+          severity: "CRITICAL,HIGH"
+          scanners: vuln
+          ignore-unfixed: true
+          exit-code: 1
 
   test-connectors:
     needs: [setup-connector-tests, build-ddn-workspace]
@@ -463,35 +493,3 @@ jobs:
           fi
 
           echo "🎉 All DDN workspace tests completed successfully!"
-
-      - name: Run Trivy vulnerability scanner (json output)
-        uses: aquasecurity/trivy-action@0.32.0
-        with:
-          image-ref: "ddn-workspace:test"
-          format: json
-          output: trivy-results.json
-          scanners: vuln
-
-      - name: Upload Trivy scan results to PromptQL Security Agent
-        uses: hasura/security-agent-tools/upload-file@v1
-        with:
-          file_path: trivy-results.json
-          security_agent_api_key: ${{ secrets.SECURITY_AGENT_API_KEY }}
-          tags: |
-            service=ddn-native-workspace
-            source_code_path=ddn-workspace
-            docker_file_path=ddn-workspace/Dockerfile
-            scanner=trivy
-            image_name=ddn-workspace:test
-            product_domain=hasura-ddn-workspace
-
-      - name: Fail build on High/Critical Vulnerabilities
-        uses: aquasecurity/trivy-action@0.32.0
-        with:
-          skip-setup-trivy: true # setup was already done by the previous call to this action above
-          image-ref: "ddn-workspace:test"
-          format: table
-          severity: "CRITICAL,HIGH"
-          scanners: vuln
-          ignore-unfixed: true
-          exit-code: 1
