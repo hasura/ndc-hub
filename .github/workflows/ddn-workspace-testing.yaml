@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - registry/**
+      - .github/workflows/ddn-workspace-testing.yaml
   workflow_dispatch:
     inputs:
       connectors:
