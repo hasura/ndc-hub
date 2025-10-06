@@ -410,6 +410,13 @@ jobs:
           path: ddn-workspace.tar.gz
           retention-days: 1
 
+      - name: Upload connector-versions.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: connector-versions
+          path: connector-versions.json
+          retention-days: 1
+
   test-connectors:
     needs: [setup-connector-tests, build-ddn-workspace]
     runs-on: ubuntu-latest
@@ -453,6 +460,25 @@ jobs:
       - name: Install dependencies
         working-directory: registry-automation/e2e-testing
         run: bun install
+
+      - name: Download connector-versions.json
+        uses: actions/download-artifact@v4
+        with:
+          name: connector-versions
+
+      - name: Verify and copy connector-versions.json
+        run: |
+          if [ -f "connector-versions.json" ]; then
+            echo "📄 Downloaded connector-versions.json:"
+            cat connector-versions.json | jq .
+
+            # Copy to ddn-workspace directory where the test script expects it
+            cp connector-versions.json ddn-workspace/connector-versions.json
+            echo "✅ Copied connector-versions.json to ddn-workspace/"
+          else
+            echo "❌ connector-versions.json not found!"
+            exit 1
+          fi
 
       - name: Download DDN Workspace image (if available)
         continue-on-error: true
