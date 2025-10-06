@@ -183,11 +183,64 @@ jobs:
           echo "Test matrix: $MATRIX"
 
           if [ "$MATRIX" = "[]" ]; then
-            echo "🔍 Empty matrix - using default connector-versions.json from ddn-workspace/"
-            # Copy the default connector versions file
-            cp ddn-workspace/connector-versions.json connector-versions.json
-            echo "📄 Using default connector versions:"
-            cat connector-versions.json
+            echo "🔄 Empty matrix - Reconstructing connector-versions.json with latest versions of DDN-enabled connectors"
+
+            # Initialize JSON object
+            echo "{}" > connector-versions.json
+
+            # Iterate through registry to find connectors with DDN workspace enabled
+            for namespace_dir in registry/*/; do
+              if [ -d "$namespace_dir" ]; then
+                namespace=$(basename "$namespace_dir")
+                echo "🔍 Scanning namespace: $namespace"
+
+                for connector_dir in "$namespace_dir"*/; do
+                  if [ -d "$connector_dir" ]; then
+                    connector_name=$(basename "$connector_dir")
+                    test_config="$connector_dir/tests/test-config.json"
+
+                    # Check if test-config.json exists and has DDN workspace enabled
+                    if [ -f "$test_config" ]; then
+                      DDN_ENABLED=$(jq -r '.ddn_workspace.enabled // false' "$test_config" 2>/dev/null)
+
+                      if [ "$DDN_ENABLED" = "true" ]; then
+                        echo "  ✅ Found DDN-enabled connector: $namespace/$connector_name"
+
+                        # Find the latest version from releases directory
+                        releases_dir="$connector_dir/releases"
+                        if [ -d "$releases_dir" ]; then
+                          latest_version=$(ls "$releases_dir" 2>/dev/null | grep -E '^v[0-9]' | sort -V | tail -1)
+
+                          if [ -n "$latest_version" ]; then
+                            echo "    📦 Latest version: $latest_version"
+
+                            # Create connector key in format "connector_name"
+                            connector_key="$connector_name"
+
+                            # Add to connector-versions.json in key-value format
+                            jq --arg key "$connector_key" --arg version "$latest_version" \
+                              '. + {($key): $version}' \
+                              connector-versions.json > tmp.json
+                            mv tmp.json connector-versions.json
+                          else
+                            echo "    ⚠️ No versions found in releases directory"
+                          fi
+                        else
+                          echo "    ⚠️ No releases directory found"
+                        fi
+                      fi
+                    fi
+                  fi
+                done
+              fi
+            done
+
+            echo "📋 Generated connector-versions.json:"
+            cat connector-versions.json | jq .
+
+            # Count DDN-enabled connectors
+            DDN_CONNECTOR_COUNT=$(cat connector-versions.json | jq 'length')
+            echo "✅ Found $DDN_CONNECTOR_COUNT connectors with DDN workspace enabled"
           else
             echo "🔍 Generating connector version overrides for changed connectors"
 
