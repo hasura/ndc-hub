@@ -7,7 +7,7 @@
     "tags": [
       "database"
     ],
-    "latest_version": "v1.2.0"
+    "latest_version": "v1.2.1"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -83,6 +83,11 @@
       {
         "tag": "oracle/v1.0.13",
         "hash": "16f916fede271489f645239201debc653f852453",
+        "is_verified": true
+      },
+      {
+        "tag": "oracle/v1.2.1",
+        "hash": "39d04f2871963ec2c38e037b8fa0f51f8211ce76",
         "is_verified": true
       }
     ]
