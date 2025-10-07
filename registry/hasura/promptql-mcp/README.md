@@ -41,6 +41,8 @@ The connector uses a JSON configuration file to define MCP server connections. C
 
 #### Stdio Transport (Local Processes)
 
+> **Note:** Docker-based MCP servers cannot be used with stdio transport due to Docker-in-Docker limitations.
+
 ```json
 {
   "servers": {
@@ -135,6 +137,8 @@ The connector uses a JSON configuration file to define MCP server connections. C
 - `args`: Array of command-line arguments
 - `env`: Environment variables (optional) - supports both literal values and `fromEnv` references
 - `env_file`: Path to a .env file to load additional environment variables (optional)
+
+**Important Limitation:** Docker-based stdio MCP servers are not supported due to Docker-in-Docker limitations. The MCP server process must be directly executable within the connector container.
 
 #### HTTP Transport
 
@@ -250,6 +254,7 @@ RUN cd /opt/my-custom-mcp-server && npm install
 - The base image provides a non-root `connector` user (UID 1000) for security
 - Use virtual environments for Python installations to avoid conflicts
 - Ensure installed MCP servers are available in the system PATH
+- **Docker-in-Docker limitation**: Cannot run Docker-based MCP servers via stdio transport. Install MCP servers directly in the container
 
 ### Introspect the connector
 
