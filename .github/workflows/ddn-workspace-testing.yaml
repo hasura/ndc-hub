@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - registry/**
+      - .github/workflows/ddn-workspace-testing.yaml
   workflow_dispatch:
     inputs:
       connectors:
@@ -182,11 +183,64 @@ jobs:
           echo "Test matrix: $MATRIX"
 
           if [ "$MATRIX" = "[]" ]; then
-            echo "🔍 Empty matrix - using default connector-versions.json from ddn-workspace/"
-            # Copy the default connector versions file
-            cp ddn-workspace/connector-versions.json connector-versions.json
-            echo "📄 Using default connector versions:"
-            cat connector-versions.json
+            echo "🔄 Empty matrix - Reconstructing connector-versions.json with latest versions of DDN-enabled connectors"
+
+            # Initialize JSON object
+            echo "{}" > connector-versions.json
+
+            # Iterate through registry to find connectors with DDN workspace enabled
+            for namespace_dir in registry/*/; do
+              if [ -d "$namespace_dir" ]; then
+                namespace=$(basename "$namespace_dir")
+                echo "🔍 Scanning namespace: $namespace"
+
+                for connector_dir in "$namespace_dir"*/; do
+                  if [ -d "$connector_dir" ]; then
+                    connector_name=$(basename "$connector_dir")
+                    test_config="$connector_dir/tests/test-config.json"
+
+                    # Check if test-config.json exists and has DDN workspace enabled
+                    if [ -f "$test_config" ]; then
+                      DDN_ENABLED=$(jq -r '.ddn_workspace.enabled // false' "$test_config" 2>/dev/null)
+
+                      if [ "$DDN_ENABLED" = "true" ]; then
+                        echo "  ✅ Found DDN-enabled connector: $namespace/$connector_name"
+
+                        # Find the latest version from releases directory
+                        releases_dir="$connector_dir/releases"
+                        if [ -d "$releases_dir" ]; then
+                          latest_version=$(ls "$releases_dir" 2>/dev/null | grep -E '^v[0-9]' | sort -V | tail -1)
+
+                          if [ -n "$latest_version" ]; then
+                            echo "    📦 Latest version: $latest_version"
+
+                            # Create connector key in format "connector_name"
+                            connector_key="$connector_name"
+
+                            # Add to connector-versions.json in key-value format
+                            jq --arg key "$connector_key" --arg version "$latest_version" \
+                              '. + {($key): $version}' \
+                              connector-versions.json > tmp.json
+                            mv tmp.json connector-versions.json
+                          else
+                            echo "    ⚠️ No versions found in releases directory"
+                          fi
+                        else
+                          echo "    ⚠️ No releases directory found"
+                        fi
+                      fi
+                    fi
+                  fi
+                done
+              fi
+            done
+
+            echo "📋 Generated connector-versions.json:"
+            cat connector-versions.json | jq .
+
+            # Count DDN-enabled connectors
+            DDN_CONNECTOR_COUNT=$(cat connector-versions.json | jq 'length')
+            echo "✅ Found $DDN_CONNECTOR_COUNT connectors with DDN workspace enabled"
           else
             echo "🔍 Generating connector version overrides for changed connectors"
 
@@ -356,6 +410,13 @@ jobs:
           path: ddn-workspace.tar.gz
           retention-days: 1
 
+      - name: Upload connector-versions.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: connector-versions
+          path: connector-versions.json
+          retention-days: 1
+
   test-connectors:
     needs: [setup-connector-tests, build-ddn-workspace]
     runs-on: ubuntu-latest
@@ -399,6 +460,25 @@ jobs:
       - name: Install dependencies
         working-directory: registry-automation/e2e-testing
         run: bun install
+
+      - name: Download connector-versions.json
+        uses: actions/download-artifact@v4
+        with:
+          name: connector-versions
+
+      - name: Verify and copy connector-versions.json
+        run: |
+          if [ -f "connector-versions.json" ]; then
+            echo "📄 Downloaded connector-versions.json:"
+            cat connector-versions.json | jq .
+
+            # Copy to ddn-workspace directory where the test script expects it
+            cp connector-versions.json ddn-workspace/connector-versions.json
+            echo "✅ Copied connector-versions.json to ddn-workspace/"
+          else
+            echo "❌ connector-versions.json not found!"
+            exit 1
+          fi
 
       - name: Download DDN Workspace image (if available)
         continue-on-error: true
@@ -463,27 +543,34 @@ jobs:
 
           echo "🎉 All DDN workspace tests completed successfully!"
 
-      - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
+      - name: Run Trivy vulnerability scanner (json output)
+        uses: aquasecurity/trivy-action@0.32.0
         with:
           image-ref: "ddn-workspace:test"
-          format: "sarif"
-          output: "trivy-results.sarif"
+          format: json
+          output: trivy-results.json
+          scanners: vuln
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+      - name: Upload Trivy scan results to PromptQL Security Agent
+        uses: hasura/security-agent-tools/upload-file@v1
         with:
-          sarif_file: "trivy-results.sarif"
+          file_path: trivy-results.json
+          security_agent_api_key: ${{ secrets.SECURITY_AGENT_API_KEY }}
+          tags: |
+            service=ddn-native-workspace
+            source_code_path=ddn-workspace
+            docker_file_path=ddn-workspace/Dockerfile
+            scanner=trivy
+            image_name=ddn-workspace:test
+            product_domain=hasura-ddn-workspace
 
-      - name: Print Trivy vulnerability scan results
-        uses: aquasecurity/trivy-action@master
+      - name: Fail build on High/Critical Vulnerabilities
+        uses: aquasecurity/trivy-action@0.32.0
         with:
+          skip-setup-trivy: true # setup was already done by the previous call to this action above
           image-ref: "ddn-workspace:test"
-          format: "table"
-          exit-code: 0
-          ignore-unfixed: true
-          vuln-type: "os,library"
+          format: table
           severity: "CRITICAL,HIGH"
-
-
+          scanners: vuln
+          ignore-unfixed: true
+          exit-code: 1
