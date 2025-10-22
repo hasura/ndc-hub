@@ -1,0 +1,14 @@
+{
+  "version": "v1.2.0",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/snowflake%2Fv1.2.0/snowflake-connector-v1.2.0.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "981c170d8ba5254974ca0f80614fa61bd2aced689a054a7c4ff05c5bceaab819"
+  },
+  "source": {
+    "hash": "4a3e86334d742996eb7423e6103361713e795814"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
