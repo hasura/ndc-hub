@@ -1,6 +1,6 @@
 {
   "version": "v1.9.8",
-  "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/untagged-3181b3955fd57b0e4a80/connector-definition.tgz",
+  "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.9.8/connector-definition.tgz",
   "checksum": {
     "type": "sha256",
     "value": "dbd866efd83d107c17cbc073fdc91ab691990c53d14e9bceae60b79c6115e5d9"
