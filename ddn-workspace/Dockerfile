@@ -1,7 +1,7 @@
 
 ######### Environment Configuration #########
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.8.0
+ARG DDN_CLI_VERSION=v3.8.1
 
 ######### Arg definitions  #########
 ARG POSTGRES_VERSION=v3.1.0
@@ -73,10 +73,10 @@ FROM --platform=amd64 ubuntu:24.04 AS workspace-builder
 # Use CODE_SERVER_VERSION from https://github.com/coder/code-server/releases
 ARG CODE_SERVER_VERSION=4.105.1
 # Use CLI_VERSION from https://github.com/hasura/v3-cli-go/releases
-ARG CLI_VERSION=v3.8.0
+ARG CLI_VERSION=v3.8.1
 # DDN Environment and CLI version (must be redeclared in each stage)
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.8.0
+ARG DDN_CLI_VERSION=v3.8.1
 
 ENV HOME=/home/hasura
 ENV BIN_PATH=${HOME}/.local/bin
