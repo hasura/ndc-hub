@@ -1,12 +1,12 @@
 
 ######### Environment Configuration #########
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.5.1
+ARG DDN_CLI_VERSION=v3.8.1
 
 ######### Arg definitions  #########
 ARG POSTGRES_VERSION=v3.1.0
 
-ARG ORACLE_VERSION=v1.1.4
+ARG ORACLE_VERSION=v1.2.3
 
 ARG TRINO_VERSION=v1.0.5
 
@@ -18,17 +18,17 @@ ARG BIGQUERY_VERSION=v2.0.1
 
 ARG OPENAPI_VERSION=v1.7.1
 
-ARG HTTP_VERSION=v0.12.2
+ARG HTTP_VERSION=v0.13.1
 
-ARG ELASTICSEARCH_VERSION=v1.9.6
+ARG ELASTICSEARCH_VERSION=v1.9.8
 
-ARG POSTGRES_PROMPTQL_VERSION=v1.2.14
+ARG POSTGRES_PROMPTQL_VERSION=v1.2.16
 
-ARG SNOWFLAKE_JDBC_VERSION=v1.2.18
+ARG SNOWFLAKE_JDBC_VERSION=v1.2.20
 
-ARG MYSQL_PROMPTQL_VERSION=v1.2.13
+ARG MYSQL_PROMPTQL_VERSION=v1.2.14
 
-ARG SQLSERVER_PROMPTQL_VERSION=v1.0.0
+ARG SQLSERVER_PROMPTQL_VERSION=v1.0.1
 
 ARG CONNECTORS_TO_INCLUDE=""
 
@@ -71,12 +71,12 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-sqlserver-jdbc-cli:${SQLSERVER_PROMPTQL
 FROM --platform=amd64 ubuntu:24.04 AS workspace-builder
 
 # Use CODE_SERVER_VERSION from https://github.com/coder/code-server/releases
-ARG CODE_SERVER_VERSION=4.103.2
+ARG CODE_SERVER_VERSION=4.105.1
 # Use CLI_VERSION from https://github.com/hasura/v3-cli-go/releases
-ARG CLI_VERSION=v3.5.1
+ARG CLI_VERSION=v3.8.1
 # DDN Environment and CLI version (must be redeclared in each stage)
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.5.1
+ARG DDN_CLI_VERSION=v3.8.1
 
 ENV HOME=/home/hasura
 ENV BIN_PATH=${HOME}/.local/bin
@@ -92,42 +92,42 @@ ENV CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR="plugin"
 
 # Set DDN directory based on environment
 RUN if [ "$DDN_ENVIRONMENT" = "production" ]; then \
-        echo "export DDN_DIR=.ddn" >> /etc/environment; \
-    else \
-        echo "export DDN_DIR=.ddn-staging" >> /etc/environment; \
-    fi
+  echo "export DDN_DIR=.ddn" >> /etc/environment; \
+  else \
+  echo "export DDN_DIR=.ddn-staging" >> /etc/environment; \
+  fi
 
 ENV SHELL=/bin/bash
 
 RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get install curl git -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p $HOME \
-    && mkdir -p /workspace \
-    && mkdir -p /sample-projects \
-    && mkdir -p $BIN_PATH  \
-    && mkdir -p $LIB_PATH  \
-    && mkdir -p $XDG_CONFIG_HOME \
-    && mkdir -p $XDG_DATA_HOME  \
-    && mkdir -p $XDG_STATE_HOME \
-    && mkdir -p $XDG_CACHE_HOME \
-    && chsh -s /bin/bash \
-    && chgrp -R 0 ${HOME} /workspace /sample-projects && chmod -R g=u ${HOME} /workspace /sample-projects \
-    && curl -fL  https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/bin/yq && \
-    chmod +x /usr/bin/yq
+  && apt-get upgrade -y \
+  && apt-get install curl git -y \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p $HOME \
+  && mkdir -p /workspace \
+  && mkdir -p /sample-projects \
+  && mkdir -p $BIN_PATH  \
+  && mkdir -p $LIB_PATH  \
+  && mkdir -p $XDG_CONFIG_HOME \
+  && mkdir -p $XDG_DATA_HOME  \
+  && mkdir -p $XDG_STATE_HOME \
+  && mkdir -p $XDG_CACHE_HOME \
+  && chsh -s /bin/bash \
+  && chgrp -R 0 ${HOME} /workspace /sample-projects && chmod -R g=u ${HOME} /workspace /sample-projects \
+  && curl -fL  https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/bin/yq && \
+  chmod +x /usr/bin/yq
 
 COPY scripts/install-code-server.sh scripts/entrypoint.sh ${BIN_PATH}/
 RUN chmod +x ${BIN_PATH}/install-code-server.sh \
-    && chmod +x ${BIN_PATH}/entrypoint.sh \
-    && ${BIN_PATH}/install-code-server.sh "${CODE_SERVER_VERSION}"
+  && chmod +x ${BIN_PATH}/entrypoint.sh \
+  && ${BIN_PATH}/install-code-server.sh "${CODE_SERVER_VERSION}"
 
 ######### Install Runtimes #########
 RUN curl https://mise.run | MISE_INSTALL_PATH=${BIN_PATH}/mise sh \
-    && echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
-    && mise use -g node@24  \
-    && mise use -g java@openjdk-21
+  && echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
+  && mise use -g node@24  \
+  && mise use -g java@openjdk-21
 
 ENV PATH="${XDG_DATA_HOME}/mise/shims:${PATH}"
 
@@ -137,11 +137,11 @@ RUN npm update -g npm
 ######### Install DDN CLI   #########
 ARG DDN_ENVIRONMENT
 RUN if [ "$DDN_ENVIRONMENT" = "production" ]; then \
-        curl -fsSL https://graphql-engine-cdn.hasura.io/ddn/cli/v4/get.sh | VERSION=${DDN_CLI_VERSION} INSTALL_PATH=${BIN_PATH} bash; \
-    else \
-        curl -fsSL https://graphql-engine-cdn.hasura.io/ddn/cli/internal/staging/main/latest/cli-ddn-linux-amd64 -o ${BIN_PATH}/ddn \
-        && chmod +x ${BIN_PATH}/ddn; \
-    fi
+  curl -fsSL https://graphql-engine-cdn.hasura.io/ddn/cli/v4/get.sh | VERSION=${DDN_CLI_VERSION} INSTALL_PATH=${BIN_PATH} bash; \
+  else \
+  curl -fsSL https://graphql-engine-cdn.hasura.io/ddn/cli/internal/staging/main/latest/cli-ddn-linux-amd64 -o ${BIN_PATH}/ddn \
+  && chmod +x ${BIN_PATH}/ddn; \
+  fi
 
 ######### Nodejs Lambda - NoOP #########
 
@@ -162,12 +162,12 @@ ARG POSTGRES_VERSION
 ARG DDN_ENVIRONMENT
 COPY --from=postgres  /bin/ndc-postgres ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-postgres
 RUN chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-postgres  \
-    && mkdir -p ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && curl -L "https://github.com/hasura/ndc-postgres/releases/download/${POSTGRES_VERSION}/ndc-postgres-cli-x86_64-unknown-linux-gnu" \
-       -o ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-postgres \
-    && chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-postgres \
-    && mkdir -p /nix/store/lmn7lwydprqibdkghw7wgcn21yhllz13-glibc-2.40-66/lib \
-    && ln -sf /lib64/ld-linux-x86-64.so.2 /nix/store/lmn7lwydprqibdkghw7wgcn21yhllz13-glibc-2.40-66/lib/ld-linux-x86-64.so.2
+  && mkdir -p ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+  && curl -L "https://github.com/hasura/ndc-postgres/releases/download/${POSTGRES_VERSION}/ndc-postgres-cli-x86_64-unknown-linux-gnu" \
+  -o ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-postgres \
+  && chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-postgres \
+  && mkdir -p /nix/store/lmn7lwydprqibdkghw7wgcn21yhllz13-glibc-2.40-66/lib \
+  && ln -sf /lib64/ld-linux-x86-64.so.2 /nix/store/lmn7lwydprqibdkghw7wgcn21yhllz13-glibc-2.40-66/lib/ld-linux-x86-64.so.2
 ######### Postgres End   #########
 
 ######### MongoDB Begin #########
@@ -177,15 +177,15 @@ COPY --from=mongodb  /nix/store/ /tmp/mongodb-connector/
 # Required as the mongo binary is hardcoded to look for ld-linux-x86-64.so.2 with nix (interpreter /nix/store/6q2m...)
 
 RUN mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR} \
-    && mv /tmp/mongodb-connector/*/bin/mongodb-connector ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
-    && rm -r /tmp/mongodb-connector \
-    && mkdir -p /nix/store/cg9s562sa33k78m63njfn1rw47dp9z0i-glibc-2.40-66/lib \
-    && ln -s /lib64/ld-linux-x86-64.so.2 /nix/store/cg9s562sa33k78m63njfn1rw47dp9z0i-glibc-2.40-66/lib/ld-linux-x86-64.so.2 \
-    && chmod +x ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
-    && mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && ddn plugin install ndc-mongodb --version ${MONGODB_VERSION} \
-    && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
-    && ln -s $HOME/$DDN_DIR/plugins/store/ndc-mongodb/$MONGODB_VERSION/hasura-ndc-mongodb ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb
+  && mv /tmp/mongodb-connector/*/bin/mongodb-connector ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
+  && rm -r /tmp/mongodb-connector \
+  && mkdir -p /nix/store/cg9s562sa33k78m63njfn1rw47dp9z0i-glibc-2.40-66/lib \
+  && ln -s /lib64/ld-linux-x86-64.so.2 /nix/store/cg9s562sa33k78m63njfn1rw47dp9z0i-glibc-2.40-66/lib/ld-linux-x86-64.so.2 \
+  && chmod +x ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
+  && mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+  && ddn plugin install ndc-mongodb --version ${MONGODB_VERSION} \
+  && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
+  && ln -s $HOME/$DDN_DIR/plugins/store/ndc-mongodb/$MONGODB_VERSION/hasura-ndc-mongodb ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb
 ######### MongoDB End   #########
 
 ######### GraphQL Begin #########
@@ -193,9 +193,9 @@ ARG GRAPHQL_VERSION
 ARG DDN_ENVIRONMENT
 COPY --from=graphql /usr/local/bin/ndc-graphql ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-graphql
 RUN ddn plugin install ndc-graphql --version ${GRAPHQL_VERSION} \
-    && mkdir -p ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
-    && ln -s $HOME/$DDN_DIR/plugins/store/ndc-graphql/$GRAPHQL_VERSION/hasura-ndc-graphql ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-graphql
+  && mkdir -p ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+  && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
+  && ln -s $HOME/$DDN_DIR/plugins/store/ndc-graphql/$GRAPHQL_VERSION/hasura-ndc-graphql ${LIB_PATH}/hasura/graphql/${GRAPHQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-graphql
 ######### GraphQL End   #########
 
 ######### BigQuery Begin #########
@@ -205,12 +205,12 @@ COPY --from=bigquery  /bin/ndc-bigquery ${LIB_PATH}/hasura/bigquery/${BIGQUERY_V
 # Required as the bigquery binary is hardcoded to look for ld-linux-x86-64.so.2 with nix (interpreter /nix/store/3dyw...)
 # Use -f to force it as Postgres also has the exact symlink
 RUN mkdir -p /nix/store/3dyw8dzj9ab4m8hv5dpyx7zii8d0w6fi-glibc-2.39-52/lib \
-    && ln -sf /lib64/ld-linux-x86-64.so.2 /nix/store/3dyw8dzj9ab4m8hv5dpyx7zii8d0w6fi-glibc-2.39-52/lib/ld-linux-x86-64.so.2 \
-    && chmod +x ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-bigquery \
-    && ddn plugin install ndc-bigquery --version ${BIGQUERY_VERSION} \
-    && mkdir -p ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
-    && ln -s $HOME/$DDN_DIR/plugins/store/ndc-bigquery/$BIGQUERY_VERSION/hasura-ndc-bigquery ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-bigquery
+  && ln -sf /lib64/ld-linux-x86-64.so.2 /nix/store/3dyw8dzj9ab4m8hv5dpyx7zii8d0w6fi-glibc-2.39-52/lib/ld-linux-x86-64.so.2 \
+  && chmod +x ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-bigquery \
+  && ddn plugin install ndc-bigquery --version ${BIGQUERY_VERSION} \
+  && mkdir -p ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+  && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
+  && ln -s $HOME/$DDN_DIR/plugins/store/ndc-bigquery/$BIGQUERY_VERSION/hasura-ndc-bigquery ${LIB_PATH}/hasura/bigquery/${BIGQUERY_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-bigquery
 ######### BigQuery End   #########
 
 ######### OpenAPI Begin #########
@@ -218,16 +218,16 @@ ARG OPENAPI_VERSION
 COPY --from=openapi-plugin  /app ${LIB_PATH}/hasura/openapi/${OPENAPI_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}
 # using install-bin-unsafe as it is runs without tests and is faster
 RUN cd ${LIB_PATH}/hasura/openapi/${OPENAPI_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && npm install && npm run install-bin-unsafe \
-    && ln -s $(npm config get prefix)/bin/ndc-oas-lambda ${LIB_PATH}/hasura/openapi/${OPENAPI_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/ndc-oas-lambda
+  && npm install && npm run install-bin-unsafe \
+  && ln -s $(npm config get prefix)/bin/ndc-oas-lambda ${LIB_PATH}/hasura/openapi/${OPENAPI_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/ndc-oas-lambda
 ######### OpenAPI End   #########
 
 ######### HTTP Begin #########
 ARG HTTP_VERSION
 COPY --from=http-plugin /ndc-cli ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-cli
 RUN ddn plugin install ndc-http --version ${HTTP_VERSION} \
-    && mkdir -p ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && ln -s $HOME/.ddn/plugins/store/ndc-http/$HTTP_VERSION/hasura-ndc-http ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-http
+  && mkdir -p ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+  && ln -s $HOME/.ddn/plugins/store/ndc-http/$HTTP_VERSION/hasura-ndc-http ${LIB_PATH}/hasura/http/${HTTP_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-http
 ######### HTTP End   #########
 
 ######### Elasticsearch Begin #########
@@ -235,37 +235,37 @@ ARG ELASTICSEARCH_VERSION
 ARG DDN_ENVIRONMENT
 COPY --from=elasticsearch /app/ndc-elasticsearch ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/ndc-elasticsearch
 RUN ddn plugin install elasticsearch --version ${ELASTICSEARCH_VERSION} \
-    && mkdir -p ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-    && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
-    && ln -s $HOME/$DDN_DIR/plugins/store/elasticsearch/$ELASTICSEARCH_VERSION/hasura-elasticsearch ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-elasticsearch
+  && mkdir -p ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
+  && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
+  && ln -s $HOME/$DDN_DIR/plugins/store/elasticsearch/$ELASTICSEARCH_VERSION/hasura-elasticsearch ${LIB_PATH}/hasura/elasticsearch/${ELASTICSEARCH_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-elasticsearch
 ######### Elasticsearch End   #########
 
 ######### Postgres PromptQL Begin #########
 ARG POSTGRES_PROMPTQL_VERSION
 COPY --from=postgres-promptql-connector  /app.jar /app.properties* ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/
 RUN printf '#!/bin/sh\n\
-    root_path=%s/hasura/postgres-promptql/%s/%s\n\
-    if [ -f "$root_path/app.properties" ]; then\n\
-    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
-    else\n\
-    DEFAULT_OPTS=""\n\
-    fi\n\
-    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
-    "${LIB_PATH}" "${POSTGRES_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
-    > ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+  root_path=%s/hasura/postgres-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${POSTGRES_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
 
 COPY --from=postgres-promptql-cli  /app.jar /app.properties* ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/
 RUN printf '#!/bin/sh\n\
-    root_path=%s/hasura/postgres-promptql/%s/%s\n\
-    if [ -f "$root_path/app.properties" ]; then\n\
-    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
-    else\n\
-    DEFAULT_OPTS=""\n\
-    fi\n\
-    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
-    "${LIB_PATH}" "${POSTGRES_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
-    > ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+  root_path=%s/hasura/postgres-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${POSTGRES_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 ######### Postgres PromptQL End   #########
 
@@ -273,28 +273,28 @@ RUN chmod +x ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/$
 ARG SNOWFLAKE_JDBC_VERSION
 COPY --from=snowflake-connector  /app.jar /app.properties* ${LIB_PATH}/hasura/snowflake-jdbc/${SNOWFLAKE_JDBC_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/
 RUN printf '#!/bin/sh\n\
-    root_path=%s/hasura/snowflake-jdbc/%s/%s\n\
-    if [ -f "$root_path/app.properties" ]; then\n\
-    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
-    else\n\
-    DEFAULT_OPTS=""\n\
-    fi\n\
-    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
-    "${LIB_PATH}" "${SNOWFLAKE_JDBC_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
-    > ${LIB_PATH}/hasura/snowflake-jdbc/${SNOWFLAKE_JDBC_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+  root_path=%s/hasura/snowflake-jdbc/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${SNOWFLAKE_JDBC_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/snowflake-jdbc/${SNOWFLAKE_JDBC_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/snowflake-jdbc/${SNOWFLAKE_JDBC_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
 
 COPY --from=snowflake-cli  /app.jar /app.properties* ${LIB_PATH}/hasura/snowflake-jdbc/${SNOWFLAKE_JDBC_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/
 RUN printf '#!/bin/sh\n\
-    root_path=%s/hasura/snowflake-jdbc/%s/%s\n\
-    if [ -f "$root_path/app.properties" ]; then\n\
-    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
-    else\n\
-    DEFAULT_OPTS=""\n\
-    fi\n\
-    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
-    "${LIB_PATH}" "${SNOWFLAKE_JDBC_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
-    > ${LIB_PATH}/hasura/snowflake-jdbc/${SNOWFLAKE_JDBC_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+  root_path=%s/hasura/snowflake-jdbc/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${SNOWFLAKE_JDBC_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/snowflake-jdbc/${SNOWFLAKE_JDBC_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/snowflake-jdbc/${SNOWFLAKE_JDBC_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 ######### Snowflake End   #########
 
@@ -302,28 +302,28 @@ RUN chmod +x ${LIB_PATH}/hasura/snowflake-jdbc/${SNOWFLAKE_JDBC_VERSION}/${CONNE
 ARG MYSQL_PROMPTQL_VERSION
 COPY --from=mysql-promptql-connector  /app.jar /app.properties* ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/
 RUN printf '#!/bin/sh\n\
-    root_path=%s/hasura/mysql-promptql/%s/%s\n\
-    if [ -f "$root_path/app.properties" ]; then\n\
-    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
-    else\n\
-    DEFAULT_OPTS=""\n\
-    fi\n\
-    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
-    "${LIB_PATH}" "${MYSQL_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
-    > ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+  root_path=%s/hasura/mysql-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${MYSQL_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
 
 COPY --from=mysql-promptql-cli  /app.jar /app.properties* ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/
 RUN printf '#!/bin/sh\n\
-    root_path=%s/hasura/mysql-promptql/%s/%s\n\
-    if [ -f "$root_path/app.properties" ]; then\n\
-    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
-    else\n\
-    DEFAULT_OPTS=""\n\
-    fi\n\
-    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
-    "${LIB_PATH}" "${MYSQL_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
-    > ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+  root_path=%s/hasura/mysql-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${MYSQL_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 ######### MySQL PromptQL End   #########
 
@@ -331,35 +331,35 @@ RUN chmod +x ${LIB_PATH}/hasura/mysql-promptql/${MYSQL_PROMPTQL_VERSION}/${CONNE
 ARG SQLSERVER_PROMPTQL_VERSION
 COPY --from=sqlserver-promptql-connector  /app.jar /app.properties* ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/
 RUN printf '#!/bin/sh\n\
-    root_path=%s/hasura/sqlserver-promptql/%s/%s\n\
-    if [ -f "$root_path/app.properties" ]; then\n\
-    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
-    else\n\
-    DEFAULT_OPTS=""\n\
-    fi\n\
-    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
-    "${LIB_PATH}" "${SQLSERVER_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
-    > ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+  root_path=%s/hasura/sqlserver-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${SQLSERVER_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
 
 COPY --from=sqlserver-promptql-cli  /app.jar /app.properties* ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/
 RUN printf '#!/bin/sh\n\
-    root_path=%s/hasura/sqlserver-promptql/%s/%s\n\
-    if [ -f "$root_path/app.properties" ]; then\n\
-    DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
-    else\n\
-    DEFAULT_OPTS=""\n\
-    fi\n\
-    exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
-    "${LIB_PATH}" "${SQLSERVER_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
-    > ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+  root_path=%s/hasura/sqlserver-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${SQLSERVER_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/sqlserver-promptql/${SQLSERVER_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 ######### SQLServer PromptQL End   #########
 
 COPY scripts/show_supported_connector_versions.sh ${BIN_PATH}/show_supported_connector_versions.sh
 RUN chmod +x ${BIN_PATH}/show_supported_connector_versions.sh
 RUN chgrp -R 0 ${HOME} /workspace /sample-projects \
-    && chmod -R g=u ${HOME} /workspace /sample-projects
+  && chmod -R g=u ${HOME} /workspace /sample-projects
 
 ##########################################################
 
@@ -381,21 +381,21 @@ ENV PATH="${XDG_DATA_HOME}/mise/shims:${PATH}"
 ENV SHELL=/bin/bash
 
 RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get install curl git jq openssl ca-certificates -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p $HOME \
-    && mkdir -p /workspace \
-    && mkdir -p /sample-projects \
-    && mkdir -p $BIN_PATH  \
-    && mkdir -p $LIB_PATH  \
-    && mkdir -p $XDG_CONFIG_HOME \
-    && mkdir -p $XDG_DATA_HOME  \
-    && mkdir -p $XDG_STATE_HOME \
-    && mkdir -p $XDG_CACHE_HOME \
-    && chsh -s /bin/bash \
-    && chgrp -R 0 ${HOME} /workspace /sample-projects && chmod -R g=u ${HOME} /workspace /sample-projects
+  && apt-get upgrade -y \
+  && apt-get install curl git jq openssl ca-certificates -y \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p $HOME \
+  && mkdir -p /workspace \
+  && mkdir -p /sample-projects \
+  && mkdir -p $BIN_PATH  \
+  && mkdir -p $LIB_PATH  \
+  && mkdir -p $XDG_CONFIG_HOME \
+  && mkdir -p $XDG_DATA_HOME  \
+  && mkdir -p $XDG_STATE_HOME \
+  && mkdir -p $XDG_CACHE_HOME \
+  && chsh -s /bin/bash \
+  && chgrp -R 0 ${HOME} /workspace /sample-projects && chmod -R g=u ${HOME} /workspace /sample-projects
 
 
 COPY --from=workspace-builder ${HOME} ${HOME}
