@@ -1,0 +1,14 @@
+{
+  "version": "v1.0.6",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/trino%2Fv1.0.6/trino-connector-v1.0.6.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "eb7f22054d14f0b810ef87b2d1c389af4acf09432a805e72d69c10837915456c"
+  },
+  "source": {
+    "hash": "ce6e468d18b12f9ef818986375c5d6b81893dd57"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
