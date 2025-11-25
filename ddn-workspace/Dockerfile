@@ -24,6 +24,10 @@ ARG ELASTICSEARCH_VERSION=v1.9.8
 
 ARG POSTGRES_PROMPTQL_VERSION=v1.2.16
 
+ARG ORACLE_PROMPTQL_VERSION=v1.1.0
+
+ARG TRINO_PROMPTQL_VERSION=v0.9.0
+
 ARG SNOWFLAKE_JDBC_VERSION=v1.2.20
 
 ARG MYSQL_PROMPTQL_VERSION=v1.2.14
@@ -55,6 +59,12 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-elasticsearch:${ELASTICSEARCH_VERSION} 
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-postgres-jdbc:${POSTGRES_PROMPTQL_VERSION} AS postgres-promptql-connector
 FROM --platform=amd64 ghcr.io/hasura/ndc-postgres-jdbc-cli:${POSTGRES_PROMPTQL_VERSION} AS postgres-promptql-cli
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-oracle-jdbc:${ORACLE_PROMPTQL_VERSION} AS oracle-promptql-connector
+FROM --platform=amd64 ghcr.io/hasura/ndc-oracle-jdbc-cli:${ORACLE_PROMPTQL_VERSION} AS oracle-promptql-cli
+
+FROM --platform=amd64 ghcr.io/hasura/ndc-trino-jdbc:${TRINO_PROMPTQL_VERSION} AS trino-promptql-connector
+FROM --platform=amd64 ghcr.io/hasura/ndc-trino-jdbc-cli:${TRINO_PROMPTQL_VERSION} AS trino-promptql-cli
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-snowflake-jdbc:${SNOWFLAKE_JDBC_VERSION} AS snowflake-connector
 FROM --platform=amd64 ghcr.io/hasura/ndc-snowflake-jdbc-cli:${SNOWFLAKE_JDBC_VERSION} AS snowflake-cli
@@ -268,6 +278,64 @@ RUN printf '#!/bin/sh\n\
   > ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 RUN chmod +x ${LIB_PATH}/hasura/postgres-promptql/${POSTGRES_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
 ######### Postgres PromptQL End   #########
+
+######### Oracle PromptQL Begin #########
+ARG ORACLE_PROMPTQL_VERSION
+COPY --from=oracle-promptql-connector  /app.jar /app.properties* ${LIB_PATH}/hasura/oracle-promptql/${ORACLE_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/
+RUN printf '#!/bin/sh\n\
+  root_path=%s/hasura/oracle-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${ORACLE_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/oracle-promptql/${ORACLE_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+RUN chmod +x ${LIB_PATH}/hasura/oracle-promptql/${ORACLE_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+
+COPY --from=oracle-promptql-cli  /app.jar /app.properties* ${LIB_PATH}/hasura/oracle-promptql/${ORACLE_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/
+RUN printf '#!/bin/sh\n\
+  root_path=%s/hasura/oracle-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${ORACLE_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/oracle-promptql/${ORACLE_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+RUN chmod +x ${LIB_PATH}/hasura/oracle-promptql/${ORACLE_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+######### Oracle PromptQL End   #########
+
+######### Trino PromptQL Begin #########
+ARG TRINO_PROMPTQL_VERSION
+COPY --from=trino-promptql-connector  /app.jar /app.properties* ${LIB_PATH}/hasura/trino-promptql/${TRINO_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/
+RUN printf '#!/bin/sh\n\
+  root_path=%s/hasura/trino-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${TRINO_PROMPTQL_VERSION}" "${CONNECTOR_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/trino-promptql/${TRINO_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+RUN chmod +x ${LIB_PATH}/hasura/trino-promptql/${TRINO_PROMPTQL_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/entrypoint.sh
+
+COPY --from=trino-promptql-cli  /app.jar /app.properties* ${LIB_PATH}/hasura/trino-promptql/${TRINO_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/
+RUN printf '#!/bin/sh\n\
+  root_path=%s/hasura/trino-promptql/%s/%s\n\
+  if [ -f "$root_path/app.properties" ]; then\n\
+  DEFAULT_OPTS=$(grep "jvm.opts" "$root_path/app.properties" | cut -d'"'"'='"'"' -f2-)\n\
+  else\n\
+  DEFAULT_OPTS=""\n\
+  fi\n\
+  exec java $DEFAULT_OPTS $JAVA_OPTS -jar "$root_path/app.jar" "$@"\n'\
+  "${LIB_PATH}" "${TRINO_PROMPTQL_VERSION}" "${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}" \
+  > ${LIB_PATH}/hasura/trino-promptql/${TRINO_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+RUN chmod +x ${LIB_PATH}/hasura/trino-promptql/${TRINO_PROMPTQL_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/entrypoint.sh
+######### Trino PromptQL End   #########
 
 ######### Snowflake Begin #########
 ARG SNOWFLAKE_JDBC_VERSION
