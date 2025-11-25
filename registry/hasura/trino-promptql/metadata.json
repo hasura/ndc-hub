@@ -1,0 +1,24 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to a Trino database and expose it to Hasura v3 Project",
+    "title": "Trino PromptQL Connector",
+    "logo": "logo.svg",
+    "tags": [
+      "database"
+    ],
+    "latest_version": "v0.9.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": true,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-jdbc",
+    "version": []
+  }
+}
