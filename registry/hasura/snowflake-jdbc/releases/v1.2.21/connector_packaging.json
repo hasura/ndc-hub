@@ -1,6 +1,6 @@
 {
   "version": "v1.2.21",
-  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/snowflake/1.2.20/snowflake-connector-v1.2.21.tar.gz",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/snowflake/1.2.21/snowflake-connector-v1.2.21.tar.gz",
   "checksum": {
     "type": "sha256",
     "value": "a91455d15c91fb74f33c6b131b1311d3b9971608c1f0f1a0b04c4cc1b8eca541"
