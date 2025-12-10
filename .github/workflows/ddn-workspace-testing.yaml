@@ -173,6 +173,25 @@ jobs:
         with:
           fetch_depth: 1
 
+      - name: Free up disk space
+        run: |
+          echo "🧹 Freeing up disk space..."
+          echo "Disk space before cleanup:"
+          df -h
+
+          # Remove unnecessary tools and packages
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+          # Clean up docker
+          docker system prune -af --volumes
+
+          echo "Disk space after cleanup:"
+          df -h
+
       - name: Generate connector version overrides
         id: connector-overrides
         run: |
@@ -264,18 +283,28 @@ jobs:
             cat connector-versions.json
           fi
 
+      - name: Check disk space before build
+        run: |
+          echo "💾 Checking disk space before build..."
+          df -h
+          AVAILABLE_GB=$(df -BG / | awk 'NR==2 {print $4}' | sed 's/G//')
+          echo "Available space: ${AVAILABLE_GB}GB"
+          if [ "$AVAILABLE_GB" -lt 10 ]; then
+            echo "⚠️  Warning: Less than 10GB available. Build might fail."
+          fi
+
       - name: Build DDN Workspace with updated connector versions
         timeout-minutes: 20
         run: |
           set -e
-          
+
           echo "🚀 Building DDN Workspace with updated connector versions"
-          
+
           # Check if connector versions file exists and has content
           if [ -f "connector-versions.json" ] && [ "$(jq 'keys | length' connector-versions.json)" -gt 0 ]; then
             echo "📄 Using connector versions file:"
             cat connector-versions.json
-            
+
             # Use the build script to build with custom versions
             # Determine DDN environment
             if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
@@ -309,6 +338,24 @@ jobs:
           fi
 
           echo "✅ DDN Workspace built successfully"
+
+          # Clean up build cache immediately after build to free space for docker save
+          echo "🧹 Cleaning up Docker build cache..."
+          docker builder prune -af || true
+          docker system prune -f || true
+
+          echo "💾 Disk space after cleanup:"
+          df -h
+
+      - name: Check disk space after build
+        run: |
+          echo "💾 Checking disk space after build..."
+          df -h
+          AVAILABLE_GB=$(df -BG / | awk 'NR==2 {print $4}' | sed 's/G//')
+          echo "Available space: ${AVAILABLE_GB}GB"
+          if [ "$AVAILABLE_GB" -lt 5 ]; then
+            echo "⚠️  Warning: Less than 5GB available. Image save might fail."
+          fi
 
       - name: Verify connector versions in workspace
         run: |
@@ -398,10 +445,49 @@ jobs:
 
 
 
+      - name: Verify DDN Workspace image exists
+        run: |
+          echo "🔍 Verifying ddn-workspace:test image exists..."
+          if ! docker images | grep -q "ddn-workspace.*test"; then
+            echo "❌ ddn-workspace:test image not found!"
+            echo "Available images:"
+            docker images
+            exit 1
+          fi
+          echo "✅ ddn-workspace:test image found"
+          docker images ddn-workspace:test
+
       - name: Save DDN Workspace image
         run: |
+          set -euo pipefail
+
           # Save the image for connector tests
+          echo "💾 Saving ddn-workspace:test image to tar.gz..."
+
+          # Check disk space before saving
+          df -h
+
+          # Save with error handling - pipefail ensures the whole pipeline fails if docker save fails
           docker save ddn-workspace:test | gzip > ddn-workspace.tar.gz
+
+          echo "✅ Image saved successfully"
+
+          # Verify the saved file
+          if [ ! -f "ddn-workspace.tar.gz" ]; then
+            echo "❌ Failed to create ddn-workspace.tar.gz"
+            df -h
+            exit 1
+          fi
+
+          FILE_SIZE=$(stat -f%z "ddn-workspace.tar.gz" 2>/dev/null || stat -c%s "ddn-workspace.tar.gz" 2>/dev/null)
+          echo "📦 Saved image size: $FILE_SIZE bytes ($(echo "scale=2; $FILE_SIZE/1024/1024" | bc)MB)"
+
+          if [ "$FILE_SIZE" -lt 1000000 ]; then
+            echo "❌ Image file is too small (< 1MB). This indicates a problem."
+            echo "Disk space:"
+            df -h
+            exit 1
+          fi
 
       - name: Upload DDN Workspace image
         uses: actions/upload-artifact@v4
@@ -480,21 +566,48 @@ jobs:
             exit 1
           fi
 
-      - name: Download DDN Workspace image (if available)
-        continue-on-error: true
+      - name: Download DDN Workspace image
         uses: actions/download-artifact@v4
         with:
           name: ddn-workspace-image
 
-      - name: Load DDN Workspace image (if available)
-        continue-on-error: true
+      - name: Verify downloaded artifact
         run: |
-          if [ -f "ddn-workspace.tar.gz" ]; then
-            docker load < ddn-workspace.tar.gz
-            docker images | grep ddn-workspace
-          else
-            echo "No DDN workspace image artifact found"
+          if [ ! -f "ddn-workspace.tar.gz" ]; then
+            echo "❌ ddn-workspace.tar.gz not found after download!"
+            ls -la
+            exit 1
           fi
+
+          FILE_SIZE=$(stat -f%z "ddn-workspace.tar.gz" 2>/dev/null || stat -c%s "ddn-workspace.tar.gz" 2>/dev/null)
+          echo "📦 Downloaded image size: $FILE_SIZE bytes"
+
+          if [ "$FILE_SIZE" -lt 1000000 ]; then
+            echo "❌ Image file is too small (< 1MB). Build likely failed."
+            echo "File contents:"
+            zcat ddn-workspace.tar.gz 2>/dev/null || cat ddn-workspace.tar.gz
+            exit 1
+          fi
+
+          echo "✅ Downloaded artifact looks valid"
+
+      - name: Load DDN Workspace image
+        run: |
+          set -euo pipefail
+
+          echo "📥 Loading ddn-workspace:test image from tar.gz..."
+          docker load < ddn-workspace.tar.gz
+
+          echo "🔍 Verifying loaded image..."
+          if ! docker images | grep -q "ddn-workspace.*test"; then
+            echo "❌ ddn-workspace:test image not found after loading!"
+            echo "Available images:"
+            docker images
+            exit 1
+          fi
+
+          echo "✅ Image loaded successfully"
+          docker images ddn-workspace:test
 
       - name: Run DDN workspace tests
         timeout-minutes: 20
