@@ -1,7 +1,7 @@
 query Query2 {
-  album(where: { albumId: { _eq: 50 } }) {
+  dboAlbum(where: { albumId: { _eq: 50 } }) {
     title
-    tracks {
+    dboTracks {
       name
     }
   }
