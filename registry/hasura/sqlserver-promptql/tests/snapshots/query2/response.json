@@ -1,9 +1,9 @@
 {
   "data": {
-    "album": [
+    "dboAlbum": [
       {
         "title": "The Final Concerts (Disc 2)",
-        "tracks": [
+        "dboTracks": [
           {
             "name": "Space Truckin'"
           },
