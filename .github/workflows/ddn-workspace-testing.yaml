@@ -676,6 +676,7 @@ jobs:
             scanner=trivy
             image_name=ddn-workspace:test
             product_domain=hasura-ddn-workspace
+            team=promptql
 
       - name: Fail build on High/Critical Vulnerabilities
         uses: aquasecurity/trivy-action@0.32.0
