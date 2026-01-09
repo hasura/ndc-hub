@@ -1,5 +1,5 @@
 query Query1 {
-  albums(where: {albumId: {_eq: 1}}) {
+  regencyPolecatBeehiveChinookAlbums(where: {albumId: {_eq: 1}}) {
     title
   }
 }
