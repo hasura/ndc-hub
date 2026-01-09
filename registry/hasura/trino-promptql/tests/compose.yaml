@@ -1,0 +1,24 @@
+services:
+  trino:
+    image: trinodb/trino:466
+    ports:
+      - "8090:8080"
+    volumes:
+      - ./data/trino/catalog:/etc/trino/catalog
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "trino",
+          "--server",
+          "localhost:8080",
+          "--catalog",
+          "postgres_promptql",
+          "--execute",
+          "SELECT 1;",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
