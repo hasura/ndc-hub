@@ -1,0 +1,14 @@
+{
+  "version": "v1.4.0",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/bigquery/1.4.0/bigquery-connector-v1.4.0.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "4b413cf88936c034756db9f7c38cf36489c9391f42712ecffc49db4862f9c561"
+  },
+  "source": {
+    "hash": "b8d5494fd097e4ce7529b891dc9925682b49b2f7"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "data": {
+    "postgresPromptqlPublicUsers": [
+      {
+        "email": "seandemo@hasura.io"
+      }
+    ]
+  }
+}
+

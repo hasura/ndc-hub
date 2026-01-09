@@ -1,0 +1,6 @@
+query Query1($email: String1!) {
+  postgresPromptqlPublicUsers(where: { email: { _eq: $email } }) {
+    email
+  }
+}
+
