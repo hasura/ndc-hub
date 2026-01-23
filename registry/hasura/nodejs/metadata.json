@@ -5,7 +5,7 @@
     "title": "NodeJS Lambda Connector",
     "logo": "logo.png",
     "tags": [],
-    "latest_version": "v1.16.0"
+    "latest_version": "v1.17.0"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -18,6 +18,11 @@
     "is_open_source": true,
     "repository": "https://github.com/hasura/ndc-nodejs-lambda/",
     "version": [
+      {
+        "tag": "v1.17.0",
+        "hash": "99e19e8bf107b74996525bc4bbd0eec2719077b2",
+        "is_verified": true
+      },
       {
         "tag": "v1.16.0",
         "hash": "a1c81fd4f1bf07a9f36d1e17262c9149c93df6d3",
