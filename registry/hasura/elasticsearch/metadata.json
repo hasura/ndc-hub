@@ -7,7 +7,7 @@
     "tags": [
       "search"
     ],
-    "latest_version": "v1.9.8"
+    "latest_version": "v1.9.9"
   },
   "author": {
     "support_email": "support@hasura.io",
@@ -16,124 +16,8 @@
   },
   "is_verified": true,
   "is_hosted_by_hasura": true,
-  "packages": [
-    {
-      "version": "0.1.0",
-      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v0.1.0/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "a856e10b6b30b516db2bb38af08037ad5db32bfd4ec072270fb8685872e13d5b"
-      },
-      "source": {
-        "hash": "4c6fabedaf3a28cdd6c55a18a37e1db974a83262"
-      }
-    },
-    {
-      "version": "0.1.1",
-      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v0.1.1/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "60629c9b24467fa4ed58c87732410203eedbdee31cdd18e90c635f10d23a8e23"
-      },
-      "source": {
-        "hash": "413a2a4ddfd1910757c40c38e9a18148bc3b3bdc"
-      }
-    },
-    {
-      "version": "0.2.0",
-      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v0.2.0/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "7ba4762ae3863a2ea149a5ecf4a93f19a7889f9d36dde27b1cb60b6758ad0e3a"
-      },
-      "source": {
-        "hash": "f5938f8c76829de7f16cf291c95a06f590b16d9a"
-      }
-    },
-    {
-      "version": "1.0.0",
-      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.0.0/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "6ca06b00361a272b0afd7ce5ac314a12460b9c99336e43a4a317de00f00ae6ae"
-      },
-      "source": {
-        "hash": "9f1f508f551b4a9dec02c49e3312f38c24bb16c4"
-      }
-    },
-    {
-      "version": "1.0.1",
-      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.0.1/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "83b0b4f5b1f60a50e303f6354c4d48d397fc7d0a361eb8a14d8fe11b63fe6abd"
-      },
-      "source": {
-        "hash": "72fad205f57e88781da6acafe1e03a7d220467c7"
-      }
-    },
-    {
-      "version": "1.0.2",
-      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.0.2/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "d9548c6463e29f2b7c2d40923cee2c2073b0ff7cefe83b68f7cb7b0d485cf8f1"
-      },
-      "source": {
-        "hash": "19c1dfbce44db9fb9a71e9ca68c93de2d5fade6c"
-      }
-    },
-    {
-      "version": "1.0.3",
-      "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.0.3/connector-definition.tgz",
-      "checksum": {
-        "type": "sha256",
-        "value": "42090a8ad64abe5002b2053041c308ab66dde430186eeb7b6ee76eb9bf8095be"
-      },
-      "source": {
-        "hash": "4993fed05687b9464c64d44140cd801471ef32b9"
-      }
-    }
-  ],
   "source_code": {
     "is_open_source": true,
-    "repository": "https://github.com/hasura/ndc-elasticsearch/",
-    "version": [
-      {
-        "tag": "v0.1.0",
-        "hash": "4c6fabedaf3a28cdd6c55a18a37e1db974a83262",
-        "is_verified": true
-      },
-      {
-        "tag": "v0.1.1",
-        "hash": "413a2a4ddfd1910757c40c38e9a18148bc3b3bdc",
-        "is_verified": true
-      },
-      {
-        "tag": "v0.2.0",
-        "hash": "f5938f8c76829de7f16cf291c95a06f590b16d9a",
-        "is_verified": true
-      },
-      {
-        "tag": "v1.0.0",
-        "hash": "9f1f508f551b4a9dec02c49e3312f38c24bb16c4",
-        "is_verified": true
-      },
-      {
-        "tag": "v1.0.1",
-        "hash": "72fad205f57e88781da6acafe1e03a7d220467c7",
-        "is_verified": true
-      },
-      {
-        "tag": "v1.0.2",
-        "hash": "19c1dfbce44db9fb9a71e9ca68c93de2d5fade6c",
-        "is_verified": true
-      },
-      {
-        "tag": "v1.0.3",
-        "hash": "4993fed05687b9464c64d44140cd801471ef32b9",
-        "is_verified": true
-      }
-    ]
+    "repository": "https://github.com/hasura/ndc-elasticsearch/"
   }
 }
