@@ -1,0 +1,6 @@
+query ListDashboards {
+  list_posthog_dashboards {
+    dashboards
+    totalCount
+  }
+}
