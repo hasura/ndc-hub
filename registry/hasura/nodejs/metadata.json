@@ -19,6 +19,16 @@
     "repository": "https://github.com/hasura/ndc-nodejs-lambda/",
     "version": [
       {
+        "tag": "v1.19.0",
+        "hash": "dec0339b4ec3d6bd684677880be527700f4b4fe2",
+        "is_verified": true
+      },
+      {
+        "tag": "v1.18.0",
+        "hash": "ef2f9394619819eda4d476ec106cd84761cd5e08",
+        "is_verified": true
+      },
+      {
         "tag": "v1.17.0",
         "hash": "99e19e8bf107b74996525bc4bbd0eec2719077b2",
         "is_verified": true
