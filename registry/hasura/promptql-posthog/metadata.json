@@ -1,0 +1,27 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connects to PostHog analytics and support executing HogQL queries, discovering dashboards, and retrieving insight definitions.",
+    "title": "PromptQL Posthog Connector",
+    "tags": [],
+    "latest_version": "v0.1.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": false,
+    "repository": "https://github.com/hasura/promptql-posthog/",
+    "version": [
+      {
+        "tag": "v0.1.0",
+        "hash": "5bb51144a6f86086410112e4a7b7fbfd3c1762cd",
+        "is_verified": true
+      }
+    ]
+  }
+}
