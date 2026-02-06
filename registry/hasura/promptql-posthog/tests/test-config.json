@@ -1,0 +1,5 @@
+{
+  "hub_id": "hasura/promptql-posthog",
+  "port": 8083,
+  "snapshots_dir": "snapshots"
+}

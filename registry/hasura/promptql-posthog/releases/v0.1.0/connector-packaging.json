@@ -1,0 +1,14 @@
+{
+  "version": "v0.1.0",
+  "uri": "https://github.com/hasura/promptql-posthog/releases/download/v0.1.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "5272f1629282798d57745bc098e35c5cfb60617b935e97894fe59824967b7b77"
+  },
+  "source": {
+    "hash": "5bb51144a6f86086410112e4a7b7fbfd3c1762cd"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
