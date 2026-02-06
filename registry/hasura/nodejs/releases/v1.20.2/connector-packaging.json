@@ -3,7 +3,7 @@
   "uri": "https://github.com/hasura/ndc-nodejs-lambda/releases/download/v1.20.2/connector-definition.tgz",
   "checksum": {
     "type": "sha256",
-    "value": "16c41b553c5f253bb62da1dba8e31c4b12063f927074c23abbea970c625c98cc"
+    "value": "34715823718e820d630902e8a0498ca3e2a561715cc104de36593eb2c17eec0c"
   },
   "source": {
     "hash": "6a90f10eccf1cab4a24ed1d1fbc267efe1e46141"
