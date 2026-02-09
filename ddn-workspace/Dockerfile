@@ -1,7 +1,7 @@
 
 ######### Environment Configuration #########
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.8.1
+ARG DDN_CLI_VERSION=v3.9.3
 
 ######### Arg definitions  #########
 ARG POSTGRES_VERSION=v3.1.0
@@ -78,15 +78,15 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-sqlserver-jdbc-cli:${SQLSERVER_PROMPTQL
 
 
 ######### Base DDN Workspace Image #########
-FROM --platform=amd64 ubuntu:24.04 AS workspace-builder
+FROM --platform=amd64 ubuntu:noble-20260113 AS workspace-builder
 
 # Use CODE_SERVER_VERSION from https://github.com/coder/code-server/releases
-ARG CODE_SERVER_VERSION=4.105.1
+ARG CODE_SERVER_VERSION=4.108.2
 # Use CLI_VERSION from https://github.com/hasura/v3-cli-go/releases
-ARG CLI_VERSION=v3.8.1
+ARG CLI_VERSION=v3.9.3
 # DDN Environment and CLI version (must be redeclared in each stage)
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.8.1
+ARG DDN_CLI_VERSION=v3.9.3
 
 ENV HOME=/home/hasura
 ENV BIN_PATH=${HOME}/.local/bin
@@ -114,6 +114,7 @@ RUN apt-get update \
   && apt-get install curl git -y \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
+  && rm -f /etc/ssl/private/ssl-cert-snakeoil.key /etc/ssl/certs/ssl-cert-snakeoil.pem
   && mkdir -p $HOME \
   && mkdir -p /workspace \
   && mkdir -p /sample-projects \
