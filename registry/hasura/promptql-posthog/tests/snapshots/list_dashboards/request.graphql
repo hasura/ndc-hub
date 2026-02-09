@@ -1,6 +1,8 @@
-query ListDashboards {
+query MyQuery {
   listPosthogDashboards {
-    dashboards
+    dashboards {
+      name
+    }
     totalCount
   }
 }
