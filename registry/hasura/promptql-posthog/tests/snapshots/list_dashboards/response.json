@@ -1,10 +1,8 @@
 {
   "data": {
-    "listPosthogDashboards": [
-      {
-        "dashboards": [],
-        "totalCount": 0
-      }
-    ]
+    "listPosthogDashboards": {
+      "dashboards": [],
+      "totalCount": 0
+    }
   }
 }
