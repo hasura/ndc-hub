@@ -1,0 +1,8 @@
+query MyQuery {
+  listPosthogDashboards {
+    dashboards {
+      name
+    }
+    totalCount
+  }
+}
