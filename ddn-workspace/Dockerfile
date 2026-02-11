@@ -114,7 +114,7 @@ RUN apt-get update \
   && apt-get install curl git -y \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
-  && rm -f /etc/ssl/private/ssl-cert-snakeoil.key /etc/ssl/certs/ssl-cert-snakeoil.pem
+  && rm -f /etc/ssl/private/ssl-cert-snakeoil.key /etc/ssl/certs/ssl-cert-snakeoil.pem \
   && mkdir -p $HOME \
   && mkdir -p /workspace \
   && mkdir -p /sample-projects \
