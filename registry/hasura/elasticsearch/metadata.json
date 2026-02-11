@@ -4,10 +4,8 @@
     "description": "The Hasura Elasticsearch Connector allows for connecting to a Elasticsearch search engine, giving you an instant GraphQL API on top of your Elasticsearch data.",
     "title": "Elasticsearch Native Data Connector",
     "logo": "logo.png",
-    "tags": [
-      "search"
-    ],
-    "latest_version": "v1.9.9"
+    "tags": ["search"],
+    "latest_version": "v1.9.10"
   },
   "author": {
     "support_email": "support@hasura.io",
