@@ -1,0 +1,14 @@
+{
+  "version": "v1.3.3",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/oracle/1.3.3/oracle-connector-v1.3.3.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "00a0cbc9eb9e5931e629793d120894ae715e62bb421f9b1c5ee0d388b2334334"
+  },
+  "source": {
+    "hash": "c7b2b5e3200bd8d57971dbfc34e404707ff1ac2b"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}

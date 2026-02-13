@@ -1,0 +1,14 @@
+{
+  "version": "v1.4.3",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/redshift/1.4.3/redshift-connector-v1.4.3.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "5173c8bd29358faf20b80b8af2e168e5a2095af2a37b75fcbf5c1c0918808fc8"
+  },
+  "source": {
+    "hash": "c7b2b5e3200bd8d57971dbfc34e404707ff1ac2b"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
