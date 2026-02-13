@@ -1,14 +1,17 @@
 {
-  "postgres": "v2.1.1",
-  "oracle": "v1.1.1",
-  "trino": "v1.0.4",
-  "mongodb": "v1.8.3",
-  "graphql": "v0.2.3",
+  "postgres": "v3.1.0",
+  "oracle": "v1.2.4",
+  "trino": "v1.0.6",
+  "mongodb": "v1.8.4",
+  "graphql": "v0.3.0",
   "bigquery": "v2.0.1",
-  "openapi": "v1.7.1",
-  "http": "v0.13.2",
-  "elasticsearch": "v1.9.9",
-  "postgres-promptql": "v1.2.12",
-  "snowflake-jdbc": "v1.2.12",
-  "mysql-promptql": "v1.2.7"
+  "openapi": "v1.8.0",
+  "http": "v0.13.3",
+  "elasticsearch": "v1.9.10",
+  "postgres-promptql": "v1.4.3",
+  "oracle-promptql": "v1.3.3",
+  "trino-promptql": "v1.1.3",
+  "snowflake-jdbc": "v1.5.4",
+  "mysql-promptql": "v1.4.3",
+  "slqserver-promptql": "v1.3.3"
 }
