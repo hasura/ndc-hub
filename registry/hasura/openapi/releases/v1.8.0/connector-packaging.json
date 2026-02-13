@@ -3,7 +3,7 @@
   "uri": "https://github.com/hasura/ndc-open-api-lambda/releases/download/v1.8.0/connector-definition.tgz",
   "checksum": {
     "type": "sha256",
-    "value": "1ad1d129ab1082914b3f3ae924f521ff8881b01256f4988448e8ad3b2a9827d7"
+    "value": "47b5e5942549e4b84257c0311fe2b642f4c6934bd3942534c93c968d3b6a1d71"
   },
   "source": {
     "hash": "143ec4cacb524186dc8cb9c457d1f975ebed1574"
