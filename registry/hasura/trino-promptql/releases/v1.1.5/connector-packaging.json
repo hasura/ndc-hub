@@ -1,0 +1,14 @@
+{
+  "version": "v1.1.5",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/trino/1.1.5/trino-connector-v1.1.5.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "cc47dca266b1574c23d614c20c5214ff34b804913396d62fe519c10db2c5d973"
+  },
+  "source": {
+    "hash": "86ed8297d9a7f3f2d00a3daf643fa48bd28a694b"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
