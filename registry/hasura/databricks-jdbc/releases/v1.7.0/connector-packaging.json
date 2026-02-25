@@ -1,0 +1,14 @@
+{
+  "version": "v1.7.0",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/databricks/1.7.0/databricks-connector-v1.7.0.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "a3e24e944aa3ba3310261e401d88ad6a677ce00486fcffa730ead71f1ce0cbd3"
+  },
+  "source": {
+    "hash": "c5d408a8b233da4ca96f3af16f4d20a299f701e5"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
