@@ -1,0 +1,14 @@
+{
+  "version": "v2.1.0",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/phoenix/2.1.0/phoenix-connector-v2.1.0.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "813ab73d12f8c3de465c618b521326432c2276a0362e10c59d0cd1e9c54b7fe0"
+  },
+  "source": {
+    "hash": "c5d408a8b233da4ca96f3af16f4d20a299f701e5"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
