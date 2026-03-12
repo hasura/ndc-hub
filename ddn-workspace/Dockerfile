@@ -183,7 +183,6 @@ RUN chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFAC
 
 ######### MongoDB Begin #########
 ARG MONGODB_VERSION
-ARG DDN_ENVIRONMENT
 COPY --from=mongodb  /nix/store/ /tmp/mongodb-connector/
 # Required as the mongo binary is hardcoded to look for ld-linux-x86-64.so.2 with nix (interpreter /nix/store/6q2m...)
 
@@ -194,9 +193,9 @@ RUN mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS
   && ln -s /lib64/ld-linux-x86-64.so.2 /nix/store/cg9s562sa33k78m63njfn1rw47dp9z0i-glibc-2.40-66/lib/ld-linux-x86-64.so.2 \
   && chmod +x ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
   && mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-  && ddn plugin install ndc-mongodb --version ${MONGODB_VERSION} \
-  && DDN_DIR=$(if [ "$DDN_ENVIRONMENT" = "production" ]; then echo ".ddn"; else echo ".ddn-staging"; fi) \
-  && ln -s $HOME/$DDN_DIR/plugins/store/ndc-mongodb/$MONGODB_VERSION/hasura-ndc-mongodb ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb
+  && curl -L "https://github.com/hasura/ndc-mongodb/releases/download/${MONGODB_VERSION}/mongodb-cli-plugin-x86_64-unknown-linux-musl" \
+  -o ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb \
+  && chmod +x ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb
 ######### MongoDB End   #########
 
 ######### GraphQL Begin #########
