@@ -106,6 +106,13 @@ func downloadPluginsManifestWithConnectorMetadata(md *ConnectorMetadataDefinitio
 		log.Printf("CLI Plugin for %s/%s:%s is a Docker Image, skipping binary download", md.Namespace, md.Name, md.VersionStr)
 		return nil, nil
 	}
+	if md.CliPlugin.Binary != nil && md.CliPlugin.Binary.Inline != nil {
+		log.Printf("CLI Plugin for %s/%s:%s is BinaryInline, skipping manifest download", md.Namespace, md.Name, md.VersionStr)
+		return nil, nil
+	}
+	if md.CliPlugin.Binary == nil || md.CliPlugin.Binary.External == nil {
+		return nil, fmt.Errorf("error downloading plugins manifest: no binary external plugin definition found for %s/%s:%s", md.Namespace, md.Name, md.VersionStr)
+	}
 	return downloadPluginsManifestWithNameAndVersion(md.CliPlugin.Binary.External.Name, md.CliPlugin.Binary.External.Version)
 }
 
