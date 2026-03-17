@@ -3,10 +3,10 @@
   "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v1.10.0/connector-definition.tgz",
   "checksum": {
     "type": "sha256",
-    "value": "d6678df1feaf7356bd5ca1203065e43a426b3eb3d0aa8e998209f9bf4b063da4"
+    "value": "011eac102279b7059a9aa0bb6c50188d2e3089fcd5e89b24862450a003a784fe"
   },
   "source": {
-    "hash": "28acd2ad57f4fa7b7d98b88a8f90b39a4fd450a5"
+    "hash": "945e745019ee1591c3cb27869a9a88b3a2e0d05b"
   },
   "test": {
     "test_config_path": "../../tests/test-config.json"
