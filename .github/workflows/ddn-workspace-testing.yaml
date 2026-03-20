@@ -679,7 +679,7 @@ jobs:
             team=promptql
 
       - name: Fail build on High/Critical Vulnerabilities
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           skip-setup-trivy: true # setup was already done by the previous call to this action above
           image-ref: "ddn-workspace:test"
