@@ -1,0 +1,14 @@
+{
+  "version": "v1.6.2",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/mysql/1.6.2/mysql-connector-v1.6.2.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "b0b62b73cc46616b1bfe2323f5252d8582e674d8ad18a5fda4fcc9830707a371"
+  },
+  "source": {
+    "hash": "311efc5f2076634cbfc0dcecfce221bbe843c8c9"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
