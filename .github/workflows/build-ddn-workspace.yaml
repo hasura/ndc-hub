@@ -28,14 +28,14 @@ jobs:
       connector_matrix: ${{ steps.check-changes.outputs.connector_matrix }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           # Fetch more history for PR events to detect changes
           fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
-        uses: tj-actions/changed-files@v46.0.1
+        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
         with:
           json: true
           escape_json: false
@@ -174,12 +174,12 @@ jobs:
     if: needs.detect-connector-changes.outputs.should_build == 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Setup gcloud
         env:
@@ -299,7 +299,7 @@ jobs:
 
       - name: Send Slack notification
         if: success()
-        uses: 8398a7/action-slack@v3
+        uses: 8398a7/action-slack@77eaa4f1c608a7d68b38af4e3f739dcd8cba273e # v3
         with:
           status: success
           channel: '#ddn-workspace-releases'

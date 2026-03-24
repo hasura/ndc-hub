@@ -22,13 +22,13 @@ jobs:
       matrix: ${{ steps.connector-matrix.outputs.matrix }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 1
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
-        uses: tj-actions/changed-files@v46.0.1
+        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
         with:
           json: true
           escape_json: false
@@ -45,7 +45,7 @@ jobs:
           cat changed_files.json
 
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@7b8cf10d4e4a01d4992d18a89f4d7dc5a3e6d6f4 # v4
         with:
           go-version: 1.21.x
 
@@ -169,7 +169,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
         with:
           fetch_depth: 1
 
@@ -490,14 +490,14 @@ jobs:
           fi
 
       - name: Upload DDN Workspace image
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ddn-workspace-image
           path: ddn-workspace.tar.gz
           retention-days: 1
 
       - name: Upload connector-versions.json
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: connector-versions
           path: connector-versions.json
@@ -512,7 +512,7 @@ jobs:
       SECRETS_JSON: ${{ toJson(secrets) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
         with:
           fetch_depth: 1
 
@@ -539,7 +539,7 @@ jobs:
           fi
 
       - name: Install bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: 1.2.4
 
@@ -548,7 +548,7 @@ jobs:
         run: bun install
 
       - name: Download connector-versions.json
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: connector-versions
 
@@ -567,7 +567,7 @@ jobs:
           fi
 
       - name: Download DDN Workspace image
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: ddn-workspace-image
 
@@ -657,7 +657,7 @@ jobs:
           echo "🎉 All DDN workspace tests completed successfully!"
 
       - name: Run Trivy vulnerability scanner (json output)
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
           image-ref: "ddn-workspace:test"
           format: json
@@ -665,7 +665,7 @@ jobs:
           scanners: vuln
 
       - name: Upload Trivy scan results to PromptQL Security Agent
-        uses: hasura/security-agent-tools/upload-file@v1
+        uses: hasura/security-agent-tools/upload-file@f16c24be07f6cc89535b6fcdab29e15b1ee799b0 # v1
         with:
           file_path: trivy-results.json
           security_agent_api_key: ${{ secrets.SECURITY_AGENT_API_KEY }}
@@ -679,7 +679,7 @@ jobs:
             team=promptql
 
       - name: Fail build on High/Critical Vulnerabilities
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           skip-setup-trivy: true # setup was already done by the previous call to this action above
           image-ref: "ddn-workspace:test"
