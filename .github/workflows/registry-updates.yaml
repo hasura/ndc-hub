@@ -1,7 +1,7 @@
 name: Update Hub DB from GH Registry (Staging)
 
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - main
     types: [opened, synchronize, reopened]
@@ -9,19 +9,12 @@ on:
       - registry/**
 jobs:
   update_registry_db:
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     environment: staging
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          # In the case of forked PRs, the forked repository will
-          # be checked out.
-          ref: ${{github.event.pull_request.head.ref}}
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          fetch-depth: 1
 
 
       - name: Get all connector version package changes
