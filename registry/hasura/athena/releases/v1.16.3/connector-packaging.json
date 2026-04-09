@@ -1,0 +1,14 @@
+{
+  "version": "v1.16.3",
+  "uri": "https://storage.googleapis.com/staging-connector-platform-registry/ndc-jdbc-assets/athena/1.16.3/athena-connector-v1.16.3.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "247ce7b6d618a4603aa51f088f6aa26c478ce11624f1c08358d1ab2467b32872"
+  },
+  "source": {
+    "hash": "c7e9f80ad14bf81074405790d73710949e243f40"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
