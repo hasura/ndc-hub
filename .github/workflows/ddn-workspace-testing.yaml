@@ -657,7 +657,7 @@ jobs:
           echo "🎉 All DDN workspace tests completed successfully!"
 
       - name: Run Trivy vulnerability scanner (json output)
-        uses: aquasecurity/trivy-action@854c61d34a550a9fcbab3bc59e55b868c15d1962
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: "ddn-workspace:test"
           format: json
@@ -679,7 +679,7 @@ jobs:
             team=promptql
 
       - name: Fail build on High/Critical Vulnerabilities
-        uses: aquasecurity/trivy-action@854c61d34a550a9fcbab3bc59e55b868c15d1962
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           skip-setup-trivy: true # setup was already done by the previous call to this action above
           image-ref: "ddn-workspace:test"
