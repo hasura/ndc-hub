@@ -10,6 +10,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "overrides": {
+    "diff": "4.0.4",
+    "minimatch": "10.2.5"
+  },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
     "typescript": "^5.6.2",
