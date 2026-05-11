@@ -7,7 +7,7 @@
   "bigquery": "v2.0.1",
   "openapi": "v1.8.0",
   "http": "v0.14.0",
-  "elasticsearch": "v1.10.0",
+  "elasticsearch": "v1.10.1",
   "postgres-promptql": "v1.4.3",
   "oracle-promptql": "v1.3.3",
   "trino-promptql": "v1.1.3",
