@@ -1,0 +1,14 @@
+{
+  "version": "v1.0.20",
+  "uri": "https://github.com/hasura/ndc-jvm-mono/releases/download/mysql%2Fv1.0.20/mysql-connector-v1.0.20.tar.gz",
+  "checksum": {
+    "type": "sha256",
+    "value": "9fef26d2b053b31667b2678f4e199f014f55c50ebd4f46fcf9f72ced881e7ab2"
+  },
+  "source": {
+    "hash": "7ea80f966e7abfeaba56957291ff555649e21809"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
