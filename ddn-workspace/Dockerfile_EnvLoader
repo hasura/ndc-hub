@@ -1,0 +1,14 @@
+ARG WORKSPACE_VERSION
+
+FROM us-docker.pkg.dev/hasura-ddn/ddn/lux-env-loader-entrypoint:20250508.rc1 AS utilsource
+
+FROM gcr.io/hasura-ee/ddn-native-workspace:${WORKSPACE_VERSION}
+
+# Copy env-loader utilities from utilsource
+COPY --from=utilsource /usr/local/bin/docker-entrypoint.sh /usr/local/bin/env-loader-entrypoint.sh
+COPY --from=utilsource /usr/local/bin/jq /usr/local/bin/jq
+COPY --from=utilsource /usr/local/bin/inotifywait /usr/local/bin/inotifywait
+
+# IMPORTANT: The entrypoint in ddn-native-workspace is at /home/hasura/.local/bin/entrypoint.sh
+# It's on PATH so we can just reference it as "entrypoint.sh"
+ENTRYPOINT ["/usr/local/bin/env-loader-entrypoint.sh", "entrypoint.sh"]
