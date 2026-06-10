@@ -297,6 +297,21 @@ jobs:
         run: |
           docker push gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
 
+      - name: Publish floating :main tag
+        # Only move the floating tag for real main-branch builds (push to main or a
+        # PR merged into main). Manual workflow_dispatch / test-mode runs are excluded
+        # so they never move :main. This is a server-side manifest copy (no rebuild,
+        # multi-arch safe) and reuses the gcloud docker credential helper configured above.
+        if: |
+          success() &&
+          (github.event_name == 'push' ||
+           (github.event_name == 'pull_request' && github.event.pull_request.merged == true))
+        run: |
+          docker buildx imagetools create \
+            -t gcr.io/hasura-ee/ddn-native-workspace:main \
+            gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
+          echo "✅ Published floating tag gcr.io/hasura-ee/ddn-native-workspace:main -> ${{ steps.meta.outputs.version_tag }}"
+
       - name: Send Slack notification
         if: success()
         uses: 8398a7/action-slack@v3
