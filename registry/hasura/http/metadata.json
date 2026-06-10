@@ -5,7 +5,7 @@
     "title": "HTTP Connector",
     "logo": "logo.png",
     "tags": ["http", "rest", "api", "openapi"],
-    "latest_version": "v0.14.0"
+    "latest_version": "v0.14.1"
   },
   "author": {
     "support_email": "support@hasura.io",
