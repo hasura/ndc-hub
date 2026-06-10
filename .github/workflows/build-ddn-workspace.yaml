@@ -3,9 +3,6 @@ name: Build and Push DDN Workspace
 on:
   push:
     branches: ['main']  # Run only when PRs are merged to main
-  pull_request:
-    types: [closed]  # Run when PRs are closed (merged or just closed)
-    branches: ['main']
   workflow_dispatch:
     inputs:
       test_mode:
@@ -298,18 +295,17 @@ jobs:
           docker push gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
 
       - name: Publish floating :main tag
-        # Only move the floating tag for real main-branch builds (push to main or a
-        # PR merged into main). Manual workflow_dispatch / test-mode runs are excluded
-        # so they never move :main. This is a server-side manifest copy (no rebuild,
-        # multi-arch safe) and reuses the gcloud docker credential helper configured above.
-        if: |
-          success() &&
-          (github.event_name == 'push' ||
-           (github.event_name == 'pull_request' && github.event.pull_request.merged == true))
+        # Move the floating :main tag for real main-branch builds only. Manual
+        # workflow_dispatch / test-mode runs are excluded so they never move :main.
+        # Use `gcloud container images add-tag` so :main becomes a true alias on the
+        # SAME image digest as the timestamp build tag (i.e. genuinely co-tagged),
+        # instead of `docker buildx imagetools create`, which wraps a single-arch
+        # manifest in a NEW OCI image index and lands :main on a separate digest.
+        if: success() && github.event_name == 'push'
         run: |
-          docker buildx imagetools create \
-            -t gcr.io/hasura-ee/ddn-native-workspace:main \
-            gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
+          gcloud container images add-tag --quiet \
+            gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }} \
+            gcr.io/hasura-ee/ddn-native-workspace:main
           echo "✅ Published floating tag gcr.io/hasura-ee/ddn-native-workspace:main -> ${{ steps.meta.outputs.version_tag }}"
 
       - name: Send Slack notification
