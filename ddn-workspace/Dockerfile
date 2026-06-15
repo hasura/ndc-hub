@@ -470,6 +470,17 @@ COPY --from=workspace-builder ${HOME} ${HOME}
 COPY --from=workspace-builder /sample-projects /sample-projects
 COPY --from=workspace-builder /nix/store /nix/store
 
+# The baked home is owned root:0 (OpenShift-style chgrp/chmod g=u above), which
+# relies on the pod being a member of GID 0. On clusters that forbid GID 0 the
+# pod runs as a non-zero UID (10001) and cannot write the DDN config dir, so
+# `ddn auth login` fails to write ~/.ddn/config.yaml. Targeted fix: hand the DDN
+# config dir to the runtime user. The dir name is environment-dependent (.ddn
+# for production, .ddn-staging otherwise), so chown whichever exists and don't
+# fail the build when one is absent.
+RUN for d in .ddn .ddn-staging; do \
+  if [ -d "${HOME}/$d" ]; then chown -R 10001:10001 "${HOME}/$d"; fi; \
+  done
+
 ENV CODE_SERVER_PORT=8123
 ENV DDN_WORKSPACE=true
 ENV DDN_USE_NATIVE_RUNTIME=true
