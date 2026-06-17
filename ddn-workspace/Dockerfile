@@ -431,7 +431,7 @@ RUN chgrp -R 0 ${HOME} /workspace /sample-projects \
 
 ##########################################################
 
-FROM --platform=amd64 ubuntu:24.04
+FROM --platform=amd64 us-docker.pkg.dev/hasura-container-images/external-images/docker.io/library/ubuntu:24.04-stable
 
 ENV HOME=/home/hasura
 ENV BIN_PATH=${HOME}/.local/bin
