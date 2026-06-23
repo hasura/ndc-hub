@@ -78,7 +78,7 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-sqlserver-jdbc-cli:${SQLSERVER_PROMPTQL
 
 
 ######### Base DDN Workspace Image #########
-FROM --platform=amd64 ubuntu:noble-20260113 AS workspace-builder
+FROM --platform=amd64 us-docker.pkg.dev/hasura-container-images/external-images/docker.io/library/ubuntu:noble-stable AS workspace-builder
 
 # Use CODE_SERVER_VERSION from https://github.com/coder/code-server/releases
 ARG CODE_SERVER_VERSION=4.108.2
@@ -431,7 +431,7 @@ RUN chgrp -R 0 ${HOME} /workspace /sample-projects \
 
 ##########################################################
 
-FROM --platform=amd64 ubuntu:24.04
+FROM --platform=amd64 us-docker.pkg.dev/hasura-container-images/external-images/docker.io/library/ubuntu:24.04-stable
 
 ENV HOME=/home/hasura
 ENV BIN_PATH=${HOME}/.local/bin
