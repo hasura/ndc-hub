@@ -470,6 +470,23 @@ COPY --from=workspace-builder ${HOME} ${HOME}
 COPY --from=workspace-builder /sample-projects /sample-projects
 COPY --from=workspace-builder /nix/store /nix/store
 
+# The baked home is owned root:0 (OpenShift-style chgrp 0 + chmod g=u above), so
+# access depends on the pod being a member of GID 0. Two cluster postures must both
+# be able to WRITE the DDN config dir (`ddn auth login` -> ~/.ddn/config.yaml):
+#   * OpenShift restricted SCC: arbitrary assigned UID (NOT 10001) but primary GID 0
+#     -> needs group-0 access preserved.
+#   * Clusters that FORBID GID 0 (e.g. Gatekeeper): pod runs as UID 10001 with a
+#     non-zero, non-0 group -> needs owner (10001) access.
+# So set owner=10001 (covers GID-0-forbidding clusters) while KEEPING group=0 and
+# group perms == owner perms (covers OpenShift's GID-0 pods). The dir name is
+# environment-dependent (.ddn for production, .ddn-staging otherwise); chown
+# whichever exists and don't fail the build when one is absent.
+RUN for d in .ddn .ddn-staging; do \
+  if [ -d "${HOME}/$d" ]; then \
+    chown -R 10001:0 "${HOME}/$d" && chmod -R g=u "${HOME}/$d"; \
+  fi; \
+  done
+
 ENV CODE_SERVER_PORT=8123
 ENV DDN_WORKSPACE=true
 ENV DDN_USE_NATIVE_RUNTIME=true
