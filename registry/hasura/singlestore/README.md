@@ -119,6 +119,26 @@ definition:
   description: The user details for a message
 ```
 
+## Release process
+
+To release a new version:
+
+1. Push a version tag using [semantic versioning](https://semver.org/) with a `v` prefix (`v<major>.<minor>.<patch>`, for example `v0.0.6`):
+
+   ```bash
+   git tag v0.0.6
+   git push origin v0.0.6
+   ```
+
+   This triggers the [Create and publish a Docker image](.github/workflows/docker.yml) workflow, which:
+
+   - Builds and pushes a Docker image to `ghcr.io/singlestore-labs/singlestore-hasura-connector`
+   - Builds a connector definition package (`connector-definition.tgz`)
+   - Creates a [draft GitHub Release](https://github.com/singlestore-labs/singlestore-hasura-connector/releases) with the connector definition attached
+   - Opens a [pull request](https://github.com/hasura/ndc-hub/pull/457) to [hasura/ndc-hub](https://github.com/hasura/ndc-hub) to register the new version in the [Hasura connector registry](https://hasura.io/connectors/singlestore)
+
+2. After the workflow completes, open the draft release on GitHub, review the generated release notes, and publish it.
+
 ## License
 
 The SingleStore connector is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
