@@ -1,0 +1,11 @@
+{
+  "version": "v0.1.0",
+  "uri": "https://github.com/hasura/ndc-mcp-rs/releases/download/v0.1.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "d345fc5b575895dc847df4d6e0444f85aecae840fb09ab0b87925751ee724b0f"
+  },
+  "source": {
+    "hash": "522b3b214db84f6135fff441b5387545e424e91d"
+  }
+}
