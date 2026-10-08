@@ -1,0 +1,15 @@
+ARG WORKSPACE_VERSION
+
+FROM us-docker.pkg.dev/hasura-ddn/ddn/lux-env-loader-entrypoint:20250508.rc1 AS utilsource
+
+FROM gcr.io/hasura-ee/ddn-native-workspace:${WORKSPACE_VERSION}
+
+# Install inotify-tools (provides inotifywait) - jq is already present at /usr/bin/jq
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends inotify-tools && rm -rf /var/lib/apt/lists/*
+USER hasura
+
+# Copy the env-loader entrypoint script
+COPY --from=utilsource /usr/local/bin/docker-entrypoint.sh /usr/local/bin/env-loader-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/env-loader-entrypoint.sh", "entrypoint.sh"]
