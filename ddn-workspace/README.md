@@ -156,3 +156,31 @@ docker exec -it <container-id> bash
 - Review connector integration guide
 - Check GitHub Actions logs for build issues
 - Contact DDN team for support
+
+## Image Variants
+
+### Standard Image
+`gcr.io/hasura-ee/ddn-native-workspace:<tag>`
+
+The standard image for DDN workspace with all native connector runtimes.
+
+### Env-Loader Variant
+`gcr.io/hasura-ee/ddn-native-workspace:<tag>-env-loader`
+
+This variant wraps the standard image with an env-loader entrypoint that:
+1. Reads JSON files from `/secrets/*.json`
+2. Exports each key-value pair as environment variables
+3. Executes the standard entrypoint
+
+Use this variant when deploying with external secrets managers (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault) via the secrets-management-proxy init container pattern.
+
+To build the env-loader variant:
+```bash
+# Using the GitHub Actions workflow
+# Go to Actions > Build and Push DDN Workspace Env-Loader > Run workflow
+# Enter the base tag (e.g., 2.7.9 or 20260511-174531-dbcfb1c)
+
+# Or build locally
+docker build -f Dockerfile_EnvLoader --build-arg WORKSPACE_VERSION=2.7.9 -t ddn-native-workspace:2.7.9-env-loader .
+```
+
