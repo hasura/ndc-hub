@@ -1,0 +1,14 @@
+{
+  "version": "v2.1.0",
+  "uri": "https://github.com/hasura/ndc-elasticsearch/releases/download/v2.1.0/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "f2bc39ceb0b235ab2cae28880bf28ac1a78d4a7a710a17d77b3c95f395768a2c"
+  },
+  "source": {
+    "hash": "99728ec8a9e70b2c853dbce1bc7e4a3d76b3729c"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
