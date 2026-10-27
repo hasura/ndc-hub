@@ -678,7 +678,33 @@ jobs:
             product_domain=hasura-ddn-workspace
             team=promptql
 
-      - name: Fail build on High/Critical Vulnerabilities
+      - name: Fail build on High/Critical Vulnerabilities in changed connectors
+        if: needs.setup-connector-tests.outputs.matrix != '[]'
+        env:
+          MATRIX: ${{ needs.setup-connector-tests.outputs.matrix }}
+        run: |
+          set -euo pipefail
+          # Gate only on the connectors this PR changes. The rest of the workspace image is
+          # still scanned and uploaded above, but its components are pinned at versions this
+          # PR doesn't touch, so failing on them blocks every release PR.
+          PATTERN=$(echo "$MATRIX" | jq -r '[.[] | "/hasura/\(.connector_name)/\(.connector_version)/|/plugins/store/(ndc-)?\(.connector_name)/\(.connector_version)/"] | join("|")')
+          echo "Gating on paths matching: $PATTERN"
+          FINDINGS=$(jq -r --arg re "$PATTERN" '
+            [ .Results[]? as $r | $r.Vulnerabilities[]?
+              | select(.Severity == "HIGH" or .Severity == "CRITICAL")
+              | select((.FixedVersion // "") != "")
+              | select(("/" + (.PkgPath // $r.Target)) | test($re))
+              | "\(.Severity)\t\(.VulnerabilityID)\t\(.PkgName) \(.InstalledVersion) -> \(.FixedVersion)\t\(.PkgPath // $r.Target)"
+            ] | unique | .[]' trivy-results.json)
+          if [ -n "$FINDINGS" ]; then
+            echo "❌ Fixable High/Critical vulnerabilities in changed connectors:"
+            echo "$FINDINGS"
+            exit 1
+          fi
+          echo "✅ No fixable High/Critical vulnerabilities in changed connectors"
+
+      - name: Fail build on High/Critical Vulnerabilities (full workspace)
+        if: needs.setup-connector-tests.outputs.matrix == '[]'
         uses: aquasecurity/trivy-action@v0.35.0
         with:
           skip-setup-trivy: true # setup was already done by the previous call to this action above

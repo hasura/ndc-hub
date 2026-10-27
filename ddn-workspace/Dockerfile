@@ -20,7 +20,7 @@ ARG OPENAPI_VERSION=v1.8.0
 
 ARG HTTP_VERSION=v0.14.3
 
-ARG ELASTICSEARCH_VERSION=v2.0.0
+ARG ELASTICSEARCH_VERSION=v2.1.0
 
 ARG POSTGRES_PROMPTQL_VERSION=v1.4.3
 
@@ -44,8 +44,6 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${ORACLE_VERSION}-oracle AS ora
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-trino:${TRINO_VERSION} AS trino-connector
 FROM --platform=amd64 ghcr.io/hasura/ndc-jvm-cli:${TRINO_VERSION}-trino AS trino-cli
-
-FROM --platform=amd64 ghcr.io/hasura/ndc-mongodb:${MONGODB_VERSION} AS mongodb
 
 FROM --platform=amd64 ghcr.io/hasura/ndc-graphql:${GRAPHQL_VERSION} AS graphql
 
@@ -183,17 +181,14 @@ RUN chmod +x ${LIB_PATH}/hasura/postgres/${POSTGRES_VERSION}/${CONNECTOR_ARTIFAC
 
 ######### MongoDB Begin #########
 ARG MONGODB_VERSION
-COPY --from=mongodb  /nix/store/ /tmp/mongodb-connector/
-# Required as the mongo binary is hardcoded to look for ld-linux-x86-64.so.2 with nix (interpreter /nix/store/6q2m...)
-
+# Use the static release binary rather than copying it out of the Nix-built image:
+# the image binary links against a Nix glibc whose store path changes with every flake update.
 RUN mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR} \
-  && mv /tmp/mongodb-connector/*/bin/mongodb-connector ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
-  && rm -r /tmp/mongodb-connector \
-  && mkdir -p /nix/store/cg9s562sa33k78m63njfn1rw47dp9z0i-glibc-2.40-66/lib \
-  && ln -s /lib64/ld-linux-x86-64.so.2 /nix/store/cg9s562sa33k78m63njfn1rw47dp9z0i-glibc-2.40-66/lib/ld-linux-x86-64.so.2 \
+  && curl -fL "https://github.com/hasura/ndc-mongodb/releases/download/${MONGODB_VERSION}/mongodb-connector-x86_64-linux" \
+  -o ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
   && chmod +x ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_ARTIFACTS_SUB_DIR}/mongodb-connector \
   && mkdir -p ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR} \
-  && curl -L "https://github.com/hasura/ndc-mongodb/releases/download/${MONGODB_VERSION}/mongodb-cli-plugin-x86_64-unknown-linux-musl" \
+  && curl -fL "https://github.com/hasura/ndc-mongodb/releases/download/${MONGODB_VERSION}/mongodb-cli-plugin-x86_64-unknown-linux-musl" \
   -o ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb \
   && chmod +x ${LIB_PATH}/hasura/mongodb/${MONGODB_VERSION}/${CONNECTOR_PLUGIN_ARTIFACTS_SUB_DIR}/hasura-ndc-mongodb
 ######### MongoDB End   #########
