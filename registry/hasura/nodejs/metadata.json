@@ -24,11 +24,6 @@
         "is_verified": true
       },
       {
-        "tag": "v1.20.4",
-        "hash": "0d2e3e8a02ef71016e4389ed3381101dab2a3acf",
-        "is_verified": true
-      },
-      {
         "tag": "v1.20.3",
         "hash": "f3ea8ee6638bb5a69054571d8d0c62d3f421cdc0",
         "is_verified": true
