@@ -6,7 +6,7 @@
   "graphql": "v0.3.0",
   "bigquery": "v2.0.1",
   "openapi": "v1.8.0",
-  "http": "v0.14.1",
+  "http": "v0.14.3",
   "elasticsearch": "v2.1.0",
   "postgres-promptql": "v1.4.3",
   "oracle-promptql": "v1.3.3",
