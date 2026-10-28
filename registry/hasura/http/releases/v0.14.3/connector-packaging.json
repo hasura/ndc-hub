@@ -1,0 +1,14 @@
+{
+  "version": "v0.14.3",
+  "uri": "https://github.com/hasura/ndc-http/releases/download/v0.14.3/connector-definition.tgz",
+  "checksum": {
+    "type": "sha256",
+    "value": "fd70ae8cb5f5ab0e6195f8d649e058ee9f5be822e604aba46f7062524e97a9a2"
+  },
+  "source": {
+    "hash": "f2e426cd3672eef992bd183242e4a5bac8f13e56"
+  },
+  "test": {
+    "test_config_path": "../../tests/test-config.json"
+  }
+}
