@@ -310,6 +310,9 @@ jobs:
 
       - name: Send Slack notification
         if: success()
+        # Notification only: the image is already pushed (and :main moved) by this
+        # point, so a Slack/webhook failure must not mark the build as failed.
+        continue-on-error: true
         uses: 8398a7/action-slack@v3
         with:
           status: success
