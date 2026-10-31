@@ -79,7 +79,8 @@ FROM --platform=amd64 ghcr.io/hasura/ndc-sqlserver-jdbc-cli:${SQLSERVER_PROMPTQL
 FROM --platform=amd64 us-docker.pkg.dev/hasura-container-images/external-images/docker.io/library/ubuntu:noble-stable AS workspace-builder
 
 # Use CODE_SERVER_VERSION from https://github.com/coder/code-server/releases
-ARG CODE_SERVER_VERSION=4.108.2
+# Includes the private Node 24.22.1 CA distrust and Brotli security fixes.
+ARG CODE_SERVER_VERSION=4.144.0
 # Use CLI_VERSION from https://github.com/hasura/v3-cli-go/releases
 ARG CLI_VERSION=v3.9.4
 # DDN Environment and CLI version (must be redeclared in each stage)
@@ -109,7 +110,16 @@ ENV SHELL=/bin/bash
 
 RUN apt-get update \
   && apt-get upgrade -y \
-  && apt-get install curl git -y \
+  && apt-get install curl git ca-certificates libbrotli1 -y \
+  # Require Noble's CA distrust and Brotli security backports, allowing newer revisions.
+  && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20260816ubuntu0.24.04.1 \
+  && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libbrotli1)" ge 1.1.0-2ubuntu0.1 \
+  # Also block the AAA cross-sign path; this can distrust other AAA-only chains.
+  && sed -i \
+    -e 's|^mozilla/emSign_ECC_Root_CA_-_G3.crt$|!&|' \
+    -e 's|^mozilla/Comodo_AAA_Services_root.crt$|!&|' \
+    /etc/ca-certificates.conf \
+  && update-ca-certificates --fresh \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && rm -f /etc/ssl/private/ssl-cert-snakeoil.key /etc/ssl/certs/ssl-cert-snakeoil.pem \
@@ -130,13 +140,27 @@ RUN apt-get update \
 COPY scripts/install-code-server.sh scripts/entrypoint.sh ${BIN_PATH}/
 RUN chmod +x ${BIN_PATH}/install-code-server.sh \
   && chmod +x ${BIN_PATH}/entrypoint.sh \
-  && ${BIN_PATH}/install-code-server.sh "${CODE_SERVER_VERSION}"
+  && ${BIN_PATH}/install-code-server.sh "${CODE_SERVER_VERSION}" \
+  && dpkg --compare-versions "$("${LIB_PATH}/code-server-${CODE_SERVER_VERSION}/lib/node" -p 'process.versions.node')" ge 24.22.1
 
 ######### Install Runtimes #########
 RUN curl https://mise.run | MISE_INSTALL_PATH=${BIN_PATH}/mise sh \
   && echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
-  && mise use -g node@24  \
+  && mise use -g node@24 \
+  && dpkg --compare-versions "$(mise exec -- node -p 'process.versions.node')" ge 24.22.1 \
   && mise use -g java@openjdk-21
+
+# mise's OpenJDK archive has a private cacerts, independent of Ubuntu's bundle.
+# Remove the affected root and AAA cross-sign anchor without changing the JDK provider.
+RUN LC_ALL=C mise exec -- keytool -list -v -cacerts -storepass changeit > /tmp/java-cacerts.txt \
+  && awk '/^Alias name: / { alias=substr($0, 13) } /^Owner: CN=(emSign ECC Root CA - G3|AAA Certificate Services),/ { print alias }' \
+    /tmp/java-cacerts.txt > /tmp/java-distrusted-aliases.txt \
+  && while IFS= read -r alias; do \
+    mise exec -- keytool -delete -cacerts -storepass changeit -alias "$alias" || exit 1; \
+  done < /tmp/java-distrusted-aliases.txt \
+  && LC_ALL=C mise exec -- keytool -list -v -cacerts -storepass changeit > /tmp/java-cacerts.txt \
+  && awk '/^Owner: CN=(emSign ECC Root CA - G3|AAA Certificate Services),/ { bad=1 } END { exit bad }' /tmp/java-cacerts.txt \
+  && rm /tmp/java-cacerts.txt /tmp/java-distrusted-aliases.txt
 
 ENV PATH="${XDG_DATA_HOME}/mise/shims:${PATH}"
 
@@ -445,7 +469,16 @@ ENV SHELL=/bin/bash
 
 RUN apt-get update \
   && apt-get upgrade -y \
-  && apt-get install curl git jq openssl ca-certificates -y \
+  && apt-get install curl git jq openssl ca-certificates libbrotli1 -y \
+  # Require Noble's CA distrust and Brotli security backports, allowing newer revisions.
+  && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20260816ubuntu0.24.04.1 \
+  && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libbrotli1)" ge 1.1.0-2ubuntu0.1 \
+  # Also block the AAA cross-sign path; this can distrust other AAA-only chains.
+  && sed -i \
+    -e 's|^mozilla/emSign_ECC_Root_CA_-_G3.crt$|!&|' \
+    -e 's|^mozilla/Comodo_AAA_Services_root.crt$|!&|' \
+    /etc/ca-certificates.conf \
+  && update-ca-certificates --fresh \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p $HOME \
