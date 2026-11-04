@@ -3,7 +3,7 @@
   "oracle": "v1.2.4",
   "trino": "v1.0.6",
   "mongodb": "v1.8.4",
-  "graphql": "v0.3.0",
+  "graphql": "v0.4.0",
   "bigquery": "v2.0.1",
   "openapi": "v1.8.0",
   "http": "v0.14.3",
