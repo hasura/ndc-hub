@@ -1,0 +1,72 @@
+name: Build and Push DDN Workspace Env-Loader
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_tag:
+        description: 'Base image tag to wrap (e.g., 20260511-174531-dbcfb1c or 2.7.9)'
+        required: true
+        type: string
+      env_loader_tag:
+        description: 'Tag for the env-loader image (defaults to base_tag-env-loader)'
+        required: false
+        type: string
+
+jobs:
+  build-env-loader:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Setup gcloud
+        env:
+          GCLOUD_EE_AUTH: ${{ secrets.GCLOUD_EE_AUTH }}
+        run: |
+          echo "$GCLOUD_EE_AUTH" | base64 -d > "$HOME"/gcloud.json
+          gcloud auth activate-service-account --key-file=$HOME/gcloud.json
+          gcloud auth configure-docker -q
+
+      - name: Determine tags
+        id: tags
+        run: |
+          BASE_TAG="${{ inputs.base_tag }}"
+          ENV_LOADER_TAG="${{ inputs.env_loader_tag }}"
+
+          if [ -z "$ENV_LOADER_TAG" ]; then
+            ENV_LOADER_TAG="${BASE_TAG}-env-loader"
+          fi
+
+          echo "base_tag=${BASE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "env_loader_tag=${ENV_LOADER_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Build env-loader image
+        working-directory: ddn-workspace
+        run: |
+          docker build \
+            -f Dockerfile_EnvLoader \
+            --build-arg WORKSPACE_VERSION=${{ steps.tags.outputs.base_tag }} \
+            -t gcr.io/hasura-ee/ddn-native-workspace:${{ steps.tags.outputs.env_loader_tag }} \
+            .
+
+      - name: Push env-loader image
+        run: |
+          docker push gcr.io/hasura-ee/ddn-native-workspace:${{ steps.tags.outputs.env_loader_tag }}
+
+      - name: Create summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # DDN Native Workspace Env-Loader Built
+
+          **Base image:** gcr.io/hasura-ee/ddn-native-workspace:${{ steps.tags.outputs.base_tag }}
+          **Env-loader image:** gcr.io/hasura-ee/ddn-native-workspace:${{ steps.tags.outputs.env_loader_tag }}
+
+          ## Usage with External Secrets
+
+          This image variant reads secrets from /secrets/*.json files and exports them as environment variables before starting the workspace.
+
+          Use with Helm charts that have external secrets support (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault).
+          EOF
