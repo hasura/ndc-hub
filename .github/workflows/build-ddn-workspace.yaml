@@ -182,6 +182,24 @@ jobs:
             echo "connector_matrix=[]" >> "$GITHUB_OUTPUT"
           fi
 
+  keepalive:
+    # GitHub disables scheduled workflows in public repos after 60 days without
+    # repository activity, and scheduled runs don't count as activity (ndc-hub had an
+    # 86-day gap in 2026). Re-enabling the workflow via the API on every weekly run
+    # resets that counter. Independent of the build so a failed build still keeps it alive.
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Keep the weekly schedule enabled
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh api -X PUT "repos/${{ github.repository }}/actions/workflows/build-ddn-workspace.yaml/enable"
+          echo "✅ Re-enabled build-ddn-workspace.yaml (resets the 60-day inactivity timer)"
+
   build-and-push-ddn-workspace:
     needs: detect-connector-changes
     runs-on: ubuntu-latest
