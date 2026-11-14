@@ -3,6 +3,10 @@ name: Build and Push DDN Workspace
 on:
   push:
     branches: ['main']  # Run only when PRs are merged to main
+  schedule:
+    # Weekly rebuild of main (Mondays 06:00 UTC) to pick up the latest
+    # code-server release and OS package updates even without a merge.
+    - cron: '0 6 * * 1'
   workflow_dispatch:
     inputs:
       test_mode:
@@ -14,9 +18,10 @@ on:
 jobs:
   detect-connector-changes:
     runs-on: ubuntu-latest
-    # Only run if it's a push to main, a merged PR, or manual workflow dispatch
+    # Only run if it's a push to main, the weekly schedule, a merged PR, or manual workflow dispatch
     if: |
       github.event_name == 'push' ||
+      github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     outputs:
@@ -32,6 +37,8 @@ jobs:
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
+        # Scheduled runs have no "before" commit to diff against and always build.
+        if: github.event_name != 'schedule'
         uses: tj-actions/changed-files@v46.0.1
         with:
           json: true
@@ -43,6 +50,7 @@ jobs:
             ddn-workspace/**
 
       - name: Print out all the changed files
+        if: github.event_name != 'schedule'
         env:
           ADDED_FILES: ${{ steps.connector-version-changed-files.outputs.added_files }}
           MODIFIED_FILES: ${{ steps.connector-version-changed-files.outputs.modified_files }}
@@ -70,6 +78,15 @@ jobs:
             ]'
             echo "connector_matrix=$(echo "$TEST_MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
             echo "🧪 Test mode - hardcoded connector changes for testing"
+            exit 0
+          fi
+
+          # Weekly scheduled rebuild of main: always build
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "changed_connectors=weekly-rebuild-$(echo ${{ github.sha }} | cut -c1-7)" >> "$GITHUB_OUTPUT"
+            echo "connector_matrix=[]" >> "$GITHUB_OUTPUT"
+            echo "🗓️ Weekly scheduled rebuild of main"
             exit 0
           fi
 
@@ -282,7 +299,10 @@ jobs:
 
           echo "timestamp=${TIMESTAMP}" >> "$GITHUB_OUTPUT"
           echo "commit_sha=${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
-          echo "version_tag=${TIMESTAMP}-${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+          # Weekly rebuilds get a -weekly suffix so they can be told apart from merge builds
+          SUFFIX=""
+          if [ "${{ github.event_name }}" = "schedule" ]; then SUFFIX="-weekly"; fi
+          echo "version_tag=${TIMESTAMP}-${COMMIT_SHA}${SUFFIX}" >> "$GITHUB_OUTPUT"
 
       - name: Build DDN Workspace image
         timeout-minutes: 45
@@ -349,14 +369,24 @@ jobs:
           docker push gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
 
       - name: Publish floating :main tag
-        # Move the floating :main tag for real main-branch builds only. Manual
-        # workflow_dispatch / test-mode runs are excluded so they never move :main.
+        # Move the floating :main tag for real main-branch builds only (merges and
+        # the weekly schedule). Manual workflow_dispatch / test-mode runs are
+        # excluded so they never move :main.
         # Use `gcloud container images add-tag` so :main becomes a true alias on the
         # SAME image digest as the timestamp build tag (i.e. genuinely co-tagged),
         # instead of `docker buildx imagetools create`, which wraps a single-arch
         # manifest in a NEW OCI image index and lands :main on a separate digest.
-        if: success() && github.event_name == 'push'
+        if: success() && (github.event_name == 'push' || github.event_name == 'schedule')
         run: |
+          set -euo pipefail
+          # Never move :main backwards. Merge builds and the weekly rebuild can overlap;
+          # only publish if the commit we built is still the tip of main.
+          REMOTE_HEAD=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$REMOTE_HEAD" != "${{ github.sha }}" ]; then
+            echo "⏭️ main has moved on (${REMOTE_HEAD:0:7} != ${GITHUB_SHA:0:7}); leaving :main unchanged."
+            echo "The image is still available as gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}"
+            exit 0
+          fi
           gcloud container images add-tag --quiet \
             gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }} \
             gcr.io/hasura-ee/ddn-native-workspace:main
@@ -378,7 +408,7 @@ jobs:
             gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
 
             🔍 *Trigger:* ${{ needs.detect-connector-changes.outputs.changed_connectors }}
-            📝 *Event:* ${{ github.event_name == 'pull_request' && format('PR #{0} merged', github.event.pull_request.number) || 'Push to main' }}
+            📝 *Event:* ${{ github.event_name == 'pull_request' && format('PR #{0} merged', github.event.pull_request.number) || github.event_name == 'schedule' && 'Weekly scheduled rebuild of main' || 'Push to main' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -399,7 +429,7 @@ jobs:
           - \`gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}\`
 
           ## � Build Trigger
-          - **Event:** ${{ github.event_name == 'pull_request' && format('PR #{0} merged to main', github.event.pull_request.number) || 'Direct push to main' }}
+          - **Event:** ${{ github.event_name == 'pull_request' && format('PR #{0} merged to main', github.event.pull_request.number) || github.event_name == 'schedule' && 'Weekly scheduled rebuild of main' || 'Direct push to main' }}
           - **Trigger:** ${CONNECTOR_LIST:-"No specific connectors detected (DDN workspace changes or manual trigger)"}
 
           ## 📋 Image Contents
