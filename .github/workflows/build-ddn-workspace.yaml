@@ -250,6 +250,29 @@ jobs:
           DDN_CONNECTOR_COUNT=$(cat ddn-workspace/connector-versions.json | jq 'length')
           echo "✅ Found $DDN_CONNECTOR_COUNT connectors with DDN workspace enabled"
 
+      - name: Resolve latest code-server version
+        id: code-server
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # releases/latest excludes drafts and prereleases.
+          # Strip the leading "v": install-code-server.sh adds it back when building the download URL.
+          CS_VERSION=$(gh api repos/coder/code-server/releases/latest --jq '.tag_name | ltrimstr("v")')
+          if ! [[ "$CS_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Unexpected code-server version: '$CS_VERSION'"
+            exit 1
+          fi
+          echo "📦 Latest code-server: $CS_VERSION"
+          echo "version=${CS_VERSION}" >> "$GITHUB_OUTPUT"
+
+          # build-with-versions.sh maps the "code-server" key to --build-arg CODE_SERVER_VERSION.
+          # Local builds without this key keep the Dockerfile's pinned default.
+          jq --arg v "$CS_VERSION" '. + {"code-server": $v}' \
+            ddn-workspace/connector-versions.json > tmp.json
+          mv tmp.json ddn-workspace/connector-versions.json
+
       - name: Generate build metadata
         id: meta
         run: |
@@ -289,6 +312,37 @@ jobs:
           fi
 
           echo "✅ DDN Workspace image built successfully with all DDN-enabled connectors"
+
+      - name: Smoke test code-server
+        # code-server now tracks the latest upstream release, so check that it
+        # installs and serves before the image is pushed and :main is moved.
+        env:
+          IMAGE: gcr.io/hasura-ee/ddn-native-workspace:${{ steps.meta.outputs.version_tag }}
+          EXPECTED_VERSION: ${{ steps.code-server.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          ACTUAL=$(docker run --rm --entrypoint code-server "$IMAGE" --version | head -1)
+          echo "code-server --version: $ACTUAL"
+          if [[ "$ACTUAL" != "$EXPECTED_VERSION "* ]]; then
+            echo "❌ Expected code-server $EXPECTED_VERSION"
+            exit 1
+          fi
+
+          docker run -d --name ws-smoke -p 8123:8123 -e CODE_SERVER_NO_AUTH=true "$IMAGE"
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8123/healthz; then
+              echo ""
+              echo "✅ code-server is serving"
+              docker rm -f ws-smoke >/dev/null
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "❌ code-server did not become healthy"
+          docker logs ws-smoke || true
+          docker rm -f ws-smoke >/dev/null || true
+          exit 1
 
       - name: Push DDN workspace image to GCP
         run: |
@@ -350,5 +404,7 @@ jobs:
 
           ## 📋 Image Contents
           The built image includes the latest versions of ALL connectors that have \`ddn_workspace: {\"enabled\": true}\` in their test configuration.
+
+          - **code-server:** \`${{ steps.code-server.outputs.version }}\` (latest upstream release at build time)
 
           This is a **production build** triggered by changes merged to the main branch.
