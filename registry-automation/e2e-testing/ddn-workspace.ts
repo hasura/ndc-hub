@@ -287,12 +287,14 @@ async function testConnector(connector: ConnectorTestConfig): Promise<void> {
     // Build environment variables
     const envVars: string[] = [];
     
-    if (process.env.HASURA_DDN_PAT) {
-      envVars.push('-e', `HASURA_DDN_PAT=${process.env.HASURA_DDN_PAT}`);
-    }
-    
+    // Pass exactly one DDN credential into the workspace. The DDN CLI reads HASURA_DDN_PAT as --pat
+    // and refuses `ddn auth login --access-token ...` when both are present ("Only one of --pat,
+    // --access-token, --oidc-access-token and --oidc-id-token can be used"). The workspace runs the
+    // staging CLI, so prefer the staging access token and fall back to HASURA_DDN_PAT only without it.
     if (process.env.DDN_WORKSPACE_ACCESS_TOKEN) {
       envVars.push('-e', `DDN_WORKSPACE_ACCESS_TOKEN=${process.env.DDN_WORKSPACE_ACCESS_TOKEN}`);
+    } else if (process.env.HASURA_DDN_PAT) {
+      envVars.push('-e', `HASURA_DDN_PAT=${process.env.HASURA_DDN_PAT}`);
     }
     
     // Add connector-specific environment variables
@@ -400,7 +402,11 @@ async function testConnector(connector: ConnectorTestConfig): Promise<void> {
         cd /tmp/test-project
 
         echo 'Authenticating with DDN...'
-        ddn auth login --access-token "$DDN_WORKSPACE_ACCESS_TOKEN" || echo 'DDN login failed, continuing...'
+        if [ -n "\${DDN_WORKSPACE_ACCESS_TOKEN:-}" ]; then
+          ddn auth login --access-token "$DDN_WORKSPACE_ACCESS_TOKEN" || { echo '❌ DDN login failed'; exit 1; }
+        else
+          ddn auth login || { echo '❌ DDN login failed'; exit 1; }
+        fi
         
         echo '1️⃣ Initializing supergraph...'
         ddn supergraph init .
