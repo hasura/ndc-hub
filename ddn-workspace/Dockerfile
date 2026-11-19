@@ -1,7 +1,7 @@
 
 ######### Environment Configuration #########
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.10.0
+ARG DDN_CLI_VERSION=v3.10.1
 
 ######### Arg definitions  #########
 ARG POSTGRES_VERSION=v3.1.0
@@ -82,10 +82,10 @@ FROM --platform=amd64 us-docker.pkg.dev/hasura-container-images/external-images/
 # Includes the private Node 24.22.1 CA distrust and Brotli security fixes.
 ARG CODE_SERVER_VERSION=4.144.0
 # Use CLI_VERSION from https://github.com/hasura/v3-cli-go/tags (also published at graphql-engine-cdn.hasura.io/ddn/cli/v4/<version>/)
-ARG CLI_VERSION=v3.10.0
+ARG CLI_VERSION=v3.10.1
 # DDN Environment and CLI version (must be redeclared in each stage)
 ARG DDN_ENVIRONMENT=staging
-ARG DDN_CLI_VERSION=v3.10.0
+ARG DDN_CLI_VERSION=v3.10.1
 
 ENV HOME=/home/hasura
 ENV BIN_PATH=${HOME}/.local/bin
