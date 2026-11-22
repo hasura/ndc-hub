@@ -1,0 +1,33 @@
+{
+  "overview": {
+    "namespace": "hasura",
+    "description": "Connect to Model Context Protocol (MCP) servers and expose their resources and tools to PromptQL agents",
+    "title": "PromptQL MCP Connector",
+    "tags": [
+      "mcp",
+      "model-context-protocol",
+      "ai",
+      "tools",
+      "resources"
+    ],
+    "latest_version": "v0.1.0"
+  },
+  "author": {
+    "support_email": "support@hasura.io",
+    "homepage": "https://hasura.io",
+    "name": "Hasura"
+  },
+  "is_verified": true,
+  "is_hosted_by_hasura": false,
+  "source_code": {
+    "is_open_source": true,
+    "repository": "https://github.com/hasura/ndc-mcp-rs/",
+    "version": [
+      {
+        "tag": "v0.1.0",
+        "hash": "522b3b214db84f6135fff441b5387545e424e91d",
+        "is_verified": true
+      }
+    ]
+  }
+}
