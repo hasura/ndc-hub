@@ -51,7 +51,7 @@ jobs:
         id: gcp-auth
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
-          workload_identity_provider: ${{ vars.NDC_HUB_STAGING_WIF_PROVIDER }}
+          workload_identity_provider: projects/194188942917/locations/global/workloadIdentityPools/ndc-hub-github/providers/github
           service_account: registry-writer-sa-staging@hasura-connector-deploy-stg.iam.gserviceaccount.com
           export_environment_variables: false
 
