@@ -1,9 +1,10 @@
 name: Update Hub DB from GH Registry (Staging)
 
 on:
-  push:
+  pull_request:
     branches:
       - main
+    types: [opened, synchronize, reopened]
     paths:
       - registry/**
 jobs:
@@ -16,14 +17,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+        uses: actions/checkout@v2
+
 
       - name: Get all connector version package changes
         id: connector-version-changed-files
-        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
+        uses: tj-actions/changed-files@v46.0.1
         with:
           json: true
           escape_json: false
