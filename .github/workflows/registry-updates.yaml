@@ -65,8 +65,7 @@ jobs:
       vars.NDC_HUB_STAGING_WIF_ENABLED == 'true' && needs.update_registry_db.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Main-only environment with staging secrets; no per-run reviewer or timer.
-    environment: staging-registry-publish
+    environment: staging
     permissions:
       contents: read
       id-token: write
