@@ -7,14 +7,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/hasura/ndc-hub/registry-automation/pkg"
+
 	"log"
 	"os"
 	"regexp"
 
 	"cloud.google.com/go/storage"
+
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
-	"github.com/hasura/ndc-hub/registry-automation/pkg"
 	"github.com/hasura/ndc-hub/registry-automation/pkg/ndchub"
 	"github.com/machinebox/graphql"
 	"github.com/spf13/cobra"
@@ -29,26 +32,9 @@ var ciCmd = &cobra.Command{
 }
 
 var ciCmdArgs ConnectorRegistryArgs
-var stagingInputDir string
-
-const stagingRegistryBucket = "staging-connector-platform-registry"
-
-func storageOptions(env, inputDir, bucket, jsonCredentials string) ([]option.ClientOption, error) {
-	if inputDir != "" {
-		if env != "staging" || bucket != stagingRegistryBucket || jsonCredentials != "" || os.Getenv("GOOGLE_APPLICATION_CREDENTIALS") == "" {
-			return nil, errors.New("verified staging input requires staging, the staging bucket, and ADC with no JSON fallback")
-		}
-		return nil, nil
-	}
-	if jsonCredentials == "" {
-		return nil, errors.New("GCP_SERVICE_ACCOUNT_DETAILS is not set")
-	}
-	return []option.ClientOption{option.WithCredentialsJSON([]byte(jsonCredentials))}, nil
-}
 
 func init() {
 	RootCmd.AddCommand(ciCmd)
-	ciCmd.Flags().StringVar(&stagingInputDir, "staging-input-dir", "", "read an offline, verified staging publication bundle")
 
 	// Path for the changed files in the PR
 	var changedFilesPathEnv = os.Getenv("CHANGED_FILES_PATH")
@@ -91,21 +77,30 @@ func buildContext() Context {
 		ciCmdArgs.ConnectorPublicationKey = connectorPublicationKey
 	}
 
+	// GCP service account details
+	gcpServiceAccountDetails := os.Getenv("GCP_SERVICE_ACCOUNT_DETAILS")
+	if gcpServiceAccountDetails == "" {
+		log.Fatalf("GCP_SERVICE_ACCOUNT_DETAILS is not set")
+	} else {
+		var err error
+		storageClient, err = storage.NewClient(context.Background(), option.WithCredentialsJSON([]byte(gcpServiceAccountDetails)))
+		if err != nil {
+			log.Fatalf("Failed to create Google bucket client: %v", err)
+		}
+		defer storageClient.Close()
+
+		storageWrapper = &StorageClientWrapper{storageClient}
+
+		ciCmdArgs.GCPServiceAccountDetails = gcpServiceAccountDetails
+	}
+
+	// GCP bucket name
 	gcpBucketName := os.Getenv("GCP_BUCKET_NAME")
 	if gcpBucketName == "" {
 		log.Fatalf("GCP_BUCKET_NAME is not set")
+	} else {
+		ciCmdArgs.GCPBucketName = gcpBucketName
 	}
-	ciCmdArgs.GCPBucketName = gcpBucketName
-	gcpServiceAccountDetails := os.Getenv("GCP_SERVICE_ACCOUNT_DETAILS")
-	opts, err := storageOptions(ciCmdArgs.PublicationEnv, stagingInputDir, gcpBucketName, gcpServiceAccountDetails)
-	if err != nil {
-		log.Fatal(err)
-	}
-	storageClient, err = storage.NewClient(context.Background(), opts...)
-	if err != nil {
-		log.Fatal("Failed to create Google bucket client")
-	}
-	storageWrapper = &StorageClientWrapper{storageClient}
 
 	cloudinaryUrl := os.Getenv("CLOUDINARY_URL")
 
@@ -359,9 +354,6 @@ func processNewConnector(ciCtx Context, connector Connector, metadataFile Metada
 // runCI is the main function that runs the CI workflow
 func runCI(cmd *cobra.Command, args []string) {
 	ctx := buildContext()
-	if client, ok := ctx.StorageClient.(*StorageClientWrapper); ok {
-		defer client.Client.Close()
-	}
 	changedFilesContent, err := os.Open(ciCmdArgs.ChangedFilesPath)
 	if err != nil {
 		log.Fatalf("Failed to open the file: %v, err: %v", ciCmdArgs.ChangedFilesPath, err)
@@ -621,30 +613,27 @@ func uploadConnectorVersionPackage(ciCtx Context, connector Connector, version s
 
 	var connectorVersion ConnectorVersion
 
-	var connectorVersionMetadata map[string]interface{}
-	var connectorMetadataTgzPath string
-	var err error
-	if stagingInputDir != "" {
-		connectorVersionMetadata, connectorMetadataTgzPath, err = readStagingPackage(changedConnectorVersionPath)
-	} else {
-		connectorVersionPackagingInfo, readErr := readJSONFile[map[string]interface{}](changedConnectorVersionPath)
-		if readErr != nil {
-			return connectorVersion, fmt.Errorf("failed to read the connector packaging file: %w", readErr)
-		}
-		tgzURL, ok := connectorVersionPackagingInfo["uri"].(string)
-		if !ok || tgzURL == "" {
-			return connectorVersion, errors.New("invalid or undefined TGZ URL")
-		}
-		connectorVersionMetadata, connectorMetadataTgzPath, _, err = pkg.GetConnectorVersionMetadata(tgzURL, connector.Namespace, connector.Name, version)
+	// connector version's metadata, `registry/mongodb/releases/v1.0.0/connector-packaging.json`
+	connectorVersionPackagingInfo, err := readJSONFile[map[string]interface{}](changedConnectorVersionPath) // Read metadata file
+	if err != nil {
+		return connectorVersion, fmt.Errorf("failed to read the connector packaging file: %v", err)
 	}
+	// Fetch, parse, and reupload the TGZ
+	tgzUrl, ok := connectorVersionPackagingInfo["uri"].(string)
+
+	// Check if the TGZ URL is valid
+	if !ok || tgzUrl == "" {
+		return connectorVersion, fmt.Errorf("invalid or undefined TGZ URL: %v", tgzUrl)
+	}
+
+	connectorVersionMetadata, connectorMetadataTgzPath,  _, err := pkg.GetConnectorVersionMetadata(tgzUrl,
+		connector.Namespace, connector.Name, version)
 	if err != nil {
 		return connectorVersion, err
 	}
-	if v := connectorVersionMetadata["version"]; v != nil {
-		packagingSpecVersion, ok := v.(string)
-		if !ok {
-			return connectorVersion, errors.New("invalid connector metadata version")
-		}
+
+	if connectorVersionMetadata["version"] != nil {
+		packagingSpecVersion := connectorVersionMetadata["version"].(string)
 		if packagingSpecVersion == "v2" {
 			return connectorVersion, errV2Connector
 		}

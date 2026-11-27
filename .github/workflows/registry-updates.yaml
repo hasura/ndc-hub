@@ -1,113 +1,71 @@
 name: Update Hub DB from GH Registry (Staging)
 
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
-    paths: ['registry/**']
   push:
-    branches: [main]
-    paths: ['registry/**']
-
-permissions:
-  contents: read
-
-# Serialize main push ranges without dropping intermediate pending publications.
-concurrency:
-  group: ndc-hub-staging-${{ github.event_name == 'push' && 'publish' || github.run_id }}
-  queue: max
-
+    branches:
+      - main
+    paths:
+      - registry/**
 jobs:
   update_registry_db:
-    if: >-
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && github.repository == 'hasura/ndc-hub' &&
-      github.ref == 'refs/heads/main' && github.ref_protected && vars.NDC_HUB_STAGING_WIF_ENABLED == 'true')
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Validate PR registry data without publication credentials
-        if: github.event_name == 'pull_request'
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: python3 registry-automation/staging-inputs/prepare.py --pr "$PR_NUMBER" --head "$PR_HEAD_SHA" --output "$RUNNER_TEMP/registry-validation"
-      - name: Prepare registry data from the merged push without publication credentials
-        if: github.event_name == 'push'
-        id: prepare
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.sha }}
-        run: |
-          python3 registry-automation/staging-inputs/prepare.py --before "$BEFORE_SHA" --head "$AFTER_SHA" --output "$RUNNER_TEMP/staging-bundle"
-          jq -r '"has_changes=\((.added_files + .modified_files) | length > 0)"' "$RUNNER_TEMP/staging-bundle/changed-files.json" >> "$GITHUB_OUTPUT"
-      - name: Hand off validated data from this main push only
-        if: github.event_name == 'push' && steps.prepare.outputs.has_changes == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: staging-inputs-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/staging-bundle/
-          retention-days: 1
-          if-no-files-found: error
-    outputs:
-      has_changes: ${{ steps.prepare.outputs.has_changes }}
-
-  publish:
-    needs: update_registry_db
-    if: >-
-      github.event_name == 'push' && github.repository == 'hasura/ndc-hub' &&
-      github.ref == 'refs/heads/main' && github.ref_protected &&
-      vars.NDC_HUB_STAGING_WIF_ENABLED == 'true' && needs.update_registry_db.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
     environment: staging
     permissions:
       contents: read
       id-token: write
+
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+
+      - name: Get all connector version package changes
+        id: connector-version-changed-files
+        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
         with:
-          go-version-file: registry-automation/go.mod
-          cache: false
-      - name: Build the publisher from the protected main commit
-        working-directory: registry-automation
-        run: go build -mod=readonly -o "$RUNNER_TEMP/registry-publisher" .
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: staging-inputs-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/staging-bundle
-      - name: Verify this push's data bundle before configuring Google credentials
+          json: true
+          escape_json: false
+          files: |
+            registry/**
+
+      - name: Print out all the changed filse
         env:
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.sha }}
-        run: python3 registry-automation/staging-inputs/prepare.py --verify --before "$BEFORE_SHA" --head "$AFTER_SHA" --output "$RUNNER_TEMP/staging-bundle"
+          ADDED_FILES: ${{ steps.connector-version-changed-files.outputs.added_files }}
+          MODIFIED_FILES: ${{ steps.connector-version-changed-files.outputs.modified_files }}
+          DELETED_FILES: ${{ steps.connector-version-changed-files.outputs.deleted_files }}
+        run: |
+          echo "{\"added_files\": $ADDED_FILES, \"modified_files\": $MODIFIED_FILES, \"deleted_files\": $DELETED_FILES}" > changed_files.json
+
+      - name: List changed files
+        id: list_files
+        run: |
+          cat changed_files.json
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+
       - name: Authenticate to staging Google Cloud
+        id: gcp-auth
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
           workload_identity_provider: ${{ vars.NDC_HUB_STAGING_WIF_PROVIDER }}
           service_account: registry-writer-sa-staging@hasura-connector-deploy-stg.iam.gserviceaccount.com
-      - name: Publish verified registry data to staging
-        working-directory: registry-automation
+          export_environment_variables: false
+
+      - name: Run registry automation program
         env:
-          PUBLICATION_ENV: staging
-          GCP_BUCKET_NAME: staging-connector-platform-registry
+          CHANGED_FILES_PATH: "changed_files.json"
+          PUBLICATION_ENV: "staging"
           CONNECTOR_REGISTRY_GQL_URL: ${{ secrets.CONNECTOR_REGISTRY_GQL_URL }}
+          GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+          GOOGLE_WIF_CREDENTIALS_FILE: ${{ steps.gcp-auth.outputs.credentials_file_path }}
           CONNECTOR_PUBLICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
           CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
         run: |
-          ulimit -c 0
-          umask 077
-          if ! "$RUNNER_TEMP/registry-publisher" ci --changed-files-path "$RUNNER_TEMP/staging-bundle/changed-files.json" --staging-input-dir "$RUNNER_TEMP/staging-bundle" >"$RUNNER_TEMP/staging-publisher.log" 2>&1; then
-            echo '::error::Staging registry publication failed. Check approved registry and GCS telemetry before retrying.'
-            exit 1
-          fi
-          echo 'Staging registry publication completed.'
+          mv changed_files.json registry-automation/changed_files.json
+          cd registry-automation
+          GCP_SERVICE_ACCOUNT_DETAILS="$(cat -- "$GOOGLE_WIF_CREDENTIALS_FILE")" go run main.go ci
