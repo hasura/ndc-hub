@@ -204,13 +204,24 @@ def write(out, name, data):
         f.write(data)
 
 
-def prepare(pr, head, out):
+def validate_push_range(before, head, checkout):
+    if not SHA.fullmatch(before) or before == "0" * 40 or not SHA.fullmatch(head) or head != checkout or before == head:
+        fail("main push needs a non-zero before SHA and exact checked-out after SHA")
+
+
+def prepare(pr, head, out, *, before=None):
     base = git("rev-parse", "HEAD").decode().strip()
-    ref = f"refs/pull/{pr}/head"
-    git("fetch", "--no-tags", "--no-recurse-submodules", "origin", ref)
-    if git("rev-parse", "FETCH_HEAD").decode().strip() != head:
-        fail("the reviewed PR head changed")
-    ancestor = git("merge-base", base, head).decode().strip()
+    if before is None:
+        validate_identity(pr, head)
+        git("fetch", "--no-tags", "--no-recurse-submodules", "origin", f"refs/pull/{pr}/head")
+        if git("rev-parse", "FETCH_HEAD").decode().strip() != head:
+            fail("the PR head changed")
+        ancestor = git("merge-base", base, head).decode().strip()
+    else:
+        validate_push_range(before, head, base)
+        if git("merge-base", before, head).decode().strip() != before:
+            fail("main push is not a forward-only update")
+        ancestor = before
     r = git("diff", "--name-status", "-z", "--no-renames", ancestor, head, "--", "registry/").split(b"\0")
     if r[-1] != b"" or len(r) % 2 != 1 or (len(r) - 1) // 2 > MAX_DIFF:
         fail("invalid or oversized registry change set")
@@ -232,7 +243,7 @@ def prepare(pr, head, out):
             continue  # Test fixtures, scripts and all non-publication paths are never copied.
         if status not in {"A", "M"} or (is_release and status != "A"):
             fail("publication paths cannot be removed or change type, and package definitions are immutable")
-        if git("ls-tree", "-z", ancestor, "--", name) != git("ls-tree", "-z", base, "--", name):
+        if before is None and git("ls-tree", "-z", ancestor, "--", name) != git("ls-tree", "-z", base, "--", name):
             fail("main changed a publication path since the PR diverged; rebase and review again")
         raw = read_blob(head, name)
         pkg = validate_data(name, raw)
@@ -254,8 +265,8 @@ def prepare(pr, head, out):
             if prefix + "README.md" not in added or not any(prefix + logo in added for logo in ("logo.png", "logo.svg")):
                 fail("new connector publication requires a new README and logo")
     write(out, "changed-files.json", json.dumps({"added_files": added, "modified_files": modified, "deleted_files": []}, sort_keys=True).encode())
-    write(out, "manifest.json", json.dumps({"pr": pr, "head": head, "base": base, "sha256": manifest}, sort_keys=True).encode())
-    verify(pr, head, out)
+    write(out, "manifest.json", json.dumps({"pr": pr, "before": before, "head": head, "base": base, "sha256": manifest}, sort_keys=True).encode())
+    verify(pr, head, out, before=before)
 
 
 def bundle_file(out, name, max_size):
@@ -272,14 +283,18 @@ def bundle_file(out, name, max_size):
         return f.read(max_size + 1)
 
 
-def verify(pr, head, out):
+def verify(pr, head, out, *, before=None):
     base = git("rev-parse", "HEAD").decode().strip()
+    if before is None:
+        validate_identity(pr, head)
+    else:
+        validate_push_range(before, head, base)
     if out.is_symlink() or not out.is_dir():
         fail("invalid bundle directory")
     m = read_json(bundle_file(out, "manifest.json", MAX_DATA))
     d = read_json(bundle_file(out, "changed-files.json", MAX_DATA))
-    if not isinstance(m, dict) or set(m) != {"pr", "head", "base", "sha256"} or (m["pr"], m["head"], m["base"]) != (pr, head, base) or not isinstance(m["sha256"], dict):
-        fail("bundle must match the exact PR, head and trusted workflow commit")
+    if not isinstance(m, dict) or set(m) != {"pr", "before", "head", "base", "sha256"} or (m["pr"], m["before"], m["head"], m["base"]) != (pr, before, head, base) or not isinstance(m["sha256"], dict):
+        fail("bundle does not match the exact Git event and checkout commit")
     if not isinstance(d, dict) or set(d) != {"added_files", "modified_files", "deleted_files"} or not all(isinstance(v, list) for v in d.values()) or d["deleted_files"] or sum(len(v) for v in d.values()) > MAX_DIFF:
         fail("invalid bundle change manifest")
     names, total = set(), 0
@@ -305,7 +320,9 @@ def verify(pr, head, out):
                 metadata = bundle_file(out, mn, MAX_DATA)
                 names.add(mn)
                 total += len(metadata)
-                if not metadata or m["sha256"].get(mn) != digest(metadata) or metadata != validate_archive(data):
+                # The unprivileged job extracted and validated this metadata. The
+                # publish job only rechecks the exact immutable bundle's digests.
+                if not metadata or m["sha256"].get(mn) != digest(metadata):
                     fail("package metadata digest mismatch")
     if total > MAX_BUNDLE:
         fail("bundle exceeds size limit")
@@ -319,18 +336,19 @@ def verify(pr, head, out):
         actual.update(str((Path(parent) / f).relative_to(out)) for f in files)
     if actual != names | {"manifest.json", "changed-files.json"}:
         fail("bundle contains undeclared files")
-    print(f"Validated {len(d['added_files']) + len(d['modified_files'])} publication inputs for the exact PR head.")
+    print(f"Validated {len(d['added_files']) + len(d['modified_files'])} publication inputs for the exact Git event.")
 
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--pr", required=True)
+    event = p.add_mutually_exclusive_group(required=True)
+    event.add_argument("--pr")
+    event.add_argument("--before")
     p.add_argument("--head", required=True)
     p.add_argument("--output", required=True, type=Path)
     p.add_argument("--verify", action="store_true")
     args = p.parse_args()
-    validate_identity(args.pr, args.head)
-    (verify if args.verify else prepare)(args.pr, args.head, args.output)
+    (verify if args.verify else prepare)(args.pr, args.head, args.output, before=args.before)
 
 
 if __name__ == "__main__":

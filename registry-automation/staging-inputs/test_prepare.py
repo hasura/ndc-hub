@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import tarfile
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -30,7 +31,7 @@ def bundle(out):
     files = {RELEASE: json.dumps({'version': 'v1.2.3', 'uri': 'https://github.com/hasura/example/releases/download/v1.2.3/example.tar.gz', 'checksum': {'type': 'sha256', 'value': p.digest(data)}}).encode(), p.package_path(RELEASE): data, p.metadata_path(RELEASE): METADATA}
     for name, raw in files.items():
         p.write(out, name, raw)
-    p.write(out, 'manifest.json', json.dumps({'pr': '42', 'head': HEAD, 'base': BASE, 'sha256': {n: p.digest(raw) for n, raw in files.items()}}).encode())
+    p.write(out, 'manifest.json', json.dumps({'pr': '42', 'before': None, 'head': HEAD, 'base': BASE, 'sha256': {n: p.digest(raw) for n, raw in files.items()}}).encode())
     p.write(out, 'changed-files.json', json.dumps({'added_files': [RELEASE], 'modified_files': [], 'deleted_files': []}).encode())
 
 
@@ -75,6 +76,35 @@ class StagingInputTests(unittest.TestCase):
             (out / p.metadata_path(RELEASE)).write_bytes(b'not the archive metadata')
             with self.assertRaises(p.InputError):
                 p.verify('42', HEAD, out)
+
+    def test_protected_main_push_range_uses_merged_blobs_only(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            def cmd(*args):
+                return subprocess.check_output(['git', '-c', 'user.name=Test', '-c', 'user.email=test@example.com', *args], cwd=root)
+            cmd('init', '-q')
+            path = Path('registry/hasura/example/README.md')
+            (root / path).parent.mkdir(parents=True)
+            (root / path).write_text('before')
+            cmd('add', '.'); cmd('commit', '-qm', 'before')
+            before = cmd('rev-parse', 'HEAD').decode().strip()
+            (root / path).write_text('merged registry data')
+            (root / path.parent / 'test.sh').write_text('# not a publication file')
+            cmd('add', '.'); cmd('commit', '-qm', 'after')
+            after = cmd('rev-parse', 'HEAD').decode().strip()
+            (root / path).write_text('untracked worktree data')
+            with patch.object(p, 'git', side_effect=cmd):
+                out = root / 'bundle'
+                p.prepare(None, after, out, before=before)
+                self.assertEqual('merged registry data', (out / path).read_text())
+                self.assertFalse((out / path.parent / 'test.sh').exists())
+                p.verify(None, after, out, before=before)
+                with self.assertRaises(p.InputError):
+                    p.verify(None, after, out, before='d' * 40)
+                with self.assertRaises(p.InputError):
+                    p.prepare(None, after, root / 'bad', before='0' * 40)
+                with self.assertRaises(p.InputError):
+                    p.prepare(None, before, root / 'bad', before=after)
 
     def test_new_connector_paths_are_data_only(self):
         self.assertIsNone(p.OVERVIEW.fullmatch('registry/hasura/example/tests/script.sh'))
