@@ -11,6 +11,9 @@ jobs:
   update_registry_db:
     runs-on: ubuntu-latest
     environment: staging
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -44,16 +47,24 @@ jobs:
         with:
           go-version: 1.21.x
 
+      - name: Authenticate to staging Google Cloud
+        id: gcp-auth
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+        with:
+          workload_identity_provider: projects/194188942917/locations/global/workloadIdentityPools/ndc-hub-github/providers/github
+          service_account: registry-writer-sa-staging@hasura-connector-deploy-stg.iam.gserviceaccount.com
+          export_environment_variables: false
+
       - name: Run registry automation program
         env:
           CHANGED_FILES_PATH: "changed_files.json"
           PUBLICATION_ENV: "staging"
           CONNECTOR_REGISTRY_GQL_URL: ${{ secrets.CONNECTOR_REGISTRY_GQL_URL }}
           GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
-          GCP_SERVICE_ACCOUNT_DETAILS: ${{ secrets.GCP_SERVICE_ACCOUNT_DETAILS }}
+          GOOGLE_WIF_CREDENTIALS_FILE: ${{ steps.gcp-auth.outputs.credentials_file_path }}
           CONNECTOR_PUBLICATION_KEY: ${{ secrets.CONNECTOR_PUBLICATION_KEY }}
           CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
         run: |
           mv changed_files.json registry-automation/changed_files.json
           cd registry-automation
-          go run main.go ci
+          GCP_SERVICE_ACCOUNT_DETAILS="$(cat -- "$GOOGLE_WIF_CREDENTIALS_FILE")" go run main.go ci
